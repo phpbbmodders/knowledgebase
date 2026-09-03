@@ -112,15 +112,59 @@ Decisions settled so far, ahead of writing the migration/code:
   checked the same way (via `acl_kb_get()`, which already resolves
   through the acting user's own group memberships) regardless of
   whether the article's author is set to a user or a group.
-- **Reapproval on edit is existing behavior, not new**: `posting.php`
-  already recomputes `approved` from the *editing user's own*
-  `kb_u_add_noapprove` permission on every submit (add or edit) — an
-  editor without that permission already sends an article back to
-  pending today. This carries over to group-authored articles with no
-  new mechanism, since the check is already per-editor, not
-  per-article-author.
+- **Editing a not-yet-live article (New/Reviewed) updates in place** —
+  same as `posting.php` today, still gated by the editor's own
+  `kb_u_add_noapprove`/`kb_u_edit`/`kb_m_edit` permissions via
+  `acl_kb_get()`. No live content exists yet to protect, so there's
+  nothing to queue.
+- **Editing an already-Active (live) article queues a revision
+  instead of overwriting it** (see "State machine" below) — the live
+  article stays visible unchanged until the revision is approved.
 
-Still open: the exact New/Reviewed/Active/Inactive/Revision state
-transitions (what moves an article between states, and who's allowed
-to trigger each transition), and the ACP checkbox UI specifics for
-picking team usergroups.
+### State machine
+
+States: New → Reviewed → Active ⇄ Inactive, plus Revision (a
+sub-state that only applies to an already-Active article being
+edited).
+
+- **Submit new article** → **New**, unassigned to any team by default.
+- **Assign to a team**: requires `kb_m_approve` or `a_manage_kb`
+  (reuses the existing approval permission — no new permission
+  invented for assignment authority). An unassigned New article
+  cannot progress past New; there is no "approve directly, skip
+  review" bypass — assignment is a hard prerequisite.
+- **New → Reviewed**: any member of the article's assigned team.
+  Informational/organizational checkpoint ("a team member has looked
+  at this").
+- **Reviewed → Active**: requires `kb_m_approve`, same permission
+  gate as today's `approve.php`. This is the real publish step.
+- **New/Reviewed → denied**: same as today's disapprove flow — the
+  article record is deleted (not soft-hidden), same
+  `kb_m_approve`-gated action and `disapprove` notification as exist
+  today. Nothing changes here; it's not a new state, just the deny
+  path out of New/Reviewed instead of only out of New.
+- **Active → Inactive**: `kb_m_approve`/`a_manage_kb` can deactivate a
+  live article — hides it from the public without deleting it.
+  Reversible.
+- **Inactive → Active**: same permission, reactivate.
+- **Active + edit submitted → Revision**: the edit is stored in a new
+  `kb_article_revisions` table (article_id, and every editable field —
+  title, description, body, bbcode fields, category/version tags,
+  submitted_by, submitted_date) rather than overwriting the live row.
+  At most one pending revision per article; a second edit while one's
+  already pending replaces it rather than queuing multiple. The live
+  article's status shows Revision (informational — it's still fully
+  visible/Active to the public) while a revision is pending.
+- **Revision approved**: `kb_m_approve` copies the revision's fields
+  onto the live `kb_articles` row, deletes the revision row, status
+  → Active.
+- **Revision rejected**: `kb_m_approve` deletes the pending revision
+  row, status → Active, live article unchanged.
+- **Scope simplification (flagged, not solved)**: attachment changes
+  made alongside a pending revision apply immediately to the live
+  article rather than being staged with the revision. Full
+  attachment-revisioning is out of scope for Phase 1.
+
+Still open: the ACP checkbox UI specifics for picking team usergroups
+(expected to follow the existing file-extension-groups checkbox
+pattern in `acp_controller.php::settings()`).
