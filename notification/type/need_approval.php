@@ -105,7 +105,7 @@ class need_approval extends \phpbb\notification\type\base
 			{
 				$users = array_merge($has_permission, $auth_approve[0]['a_manage_kb']);
 				$users = array_unique($users);
-				$available = ((in_array($this->user->data['author_id'], $users)));
+				$available = ((in_array($this->user->data['user_id'], $users)));
 			}
 			else
 			{
