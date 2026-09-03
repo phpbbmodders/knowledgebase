@@ -203,6 +203,16 @@ class posting
 			trigger_error('RULES_KB_ADD_CANNOT');
 		}
 
+		// The article's actual primary category - not necessarily $cat_id,
+		// which is just whichever category (primary or cross-listed) this
+		// request was reached through. Everything that decides where the
+		// article actually lives must key off this, not $cat_id, or
+		// editing through a cross-listed link can silently reassign the
+		// primary category. Defaults to $cat_id for a brand new article,
+		// where that ambiguity doesn't exist yet; overwritten below once
+		// an existing article is loaded.
+		$article_category_id = $cat_id;
+
 		add_form_key('kb_posting');
 
 		$row = '';
@@ -328,6 +338,7 @@ class posting
 			$article_status = (int) ($row['status'] ?? functions_kb::STATUS_NEW);
 			$is_redirect = $is_redirect || !empty($row['is_redirect']);
 			$redirect_url = (string) ($row['redirect_url'] ?? '');
+			$article_category_id = (int) $row['article_category_id'];
 
 			$article_text = $this->decode_message($article_text, $row['bbcode_uid']);
 
@@ -472,18 +483,23 @@ class posting
 					// action (approve.php) or, for an Active article, the revision
 					// queue below.
 					unset($sql_data['approved'], $sql_data['status']);
+					// The article's real primary category, not wherever this
+					// edit happened to be reached from (see $article_category_id
+					// above) - fixes a bug where editing via a cross-listed
+					// category link would silently reassign the primary category.
+					$sql_data['article_category_id'] = $article_category_id;
 					$redirect = $this->helper->route('phpbbmodders_knowledgebase_article', ['k' => $art_id]);
 
 					// Only move into a category that actually exists and that the
 					// editor could post into directly - same guard the cross-listing
 					// select already applies. An invalid/unauthorised destination is
 					// silently ignored rather than trusted from the request.
-					if ($to_id !== $cat_id && (!$this->kb->get_cat_info($to_id) || !$this->kb->acl_kb_get($to_id, 'kb_u_add')))
+					if ($to_id !== $article_category_id && (!$this->kb->get_cat_info($to_id) || !$this->kb->acl_kb_get($to_id, 'kb_u_add')))
 					{
-						$to_id = $cat_id;
+						$to_id = $article_category_id;
 					}
 
-					$moving_category = ($cat_id !== $to_id);
+					$moving_category = ($article_category_id !== $to_id);
 					if ($moving_category)
 					{
 						$sql_data['article_category_id'] = $to_id;
@@ -535,7 +551,7 @@ class posting
 					{
 						$sql = 'UPDATE ' . $this->categories_table . '
 							SET number_articles = number_articles - 1
-							WHERE category_id = ' . $cat_id;
+							WHERE category_id = ' . $article_category_id;
 						$this->db->sql_query($sql);
 
 						$sql = 'UPDATE ' . $this->categories_table . '
@@ -548,7 +564,7 @@ class posting
 						$this->db->sql_query($sql);
 
 						$sql = 'UPDATE ' . $this->articles_table . ' SET display_order = display_order - 1
-							WHERE article_category_id = ' . $cat_id . '
+							WHERE article_category_id = ' . $article_category_id . '
 							AND display_order > ' . $order;
 						$this->db->sql_query($sql);
 					}
@@ -733,8 +749,8 @@ class posting
 				'S_ATTACH_DATA'           => (count($attachment_data)) ? json_encode($attachment_data) : '[]',
 				'MAX_ATTACHMENT_FILESIZE' => $this->config['kb_max_filesize'] > 0 ? $this->language->lang('MAX_ATTACHMENT_FILESIZE', get_formatted_filesize($this->config['kb_max_filesize'])) : '',
 
-				'CATS_BOX'       => '<option value="0" disabled="disabled">' . $this->language->lang('CATEGORIES_LIST') . '</option>' . $this->kb->make_category_select($cat_id, [], false),
-				'CROSS_CATS_BOX' => $this->kb->make_category_select($cross_categories_display, [$cat_id], false),
+				'CATS_BOX'       => '<option value="0" disabled="disabled">' . $this->language->lang('CATEGORIES_LIST') . '</option>' . $this->kb->make_category_select($article_category_id, [], false),
+				'CROSS_CATS_BOX' => $this->kb->make_category_select($cross_categories_display, [$article_category_id], false),
 
 				'S_CAN_POST_AS_TEAM' => $this->auth->acl_get('a_manage_kb') || $this->kb->acl_kb_get($cat_id, 'kb_m_approve'),
 				'TEAM_OPTIONS'       => $this->get_team_select_options(),
@@ -837,6 +853,14 @@ class posting
 		$filename = $this->request->file('fileupload');
 		$json_response = new \phpbb\json_response();
 		$thumbnail = false;
+
+		// These two submit independently of the main article submit
+		// button, so they need their own form-token check rather than
+		// relying on the one guarding $submit further down.
+		if (($delete_file || $add_file) && !check_form_key('kb_posting'))
+		{
+			trigger_error('FORM_INVALID');
+		}
 
 		$this->plupload->set_upload_directories($this->upload_dir, $this->upload_dir . '/plupload');
 
@@ -1039,16 +1063,18 @@ class posting
 			{
 				$hidden = '';
 				$attach_row['real_filename'] = utf8_basename($attach_row['real_filename']);
+				$filename = htmlspecialchars($attach_row['real_filename']);
+				$comment = htmlspecialchars($attach_row['attach_comment'] ?? '');
 
 				foreach ($attach_row as $key => $value)
 				{
-					$hidden .= '<input type="hidden" name="attachment_data[' . $count . '][' . $key . ']" value="' . $value . '" />';
+					$hidden .= '<input type="hidden" name="attachment_data[' . $count . '][' . $key . ']" value="' . htmlspecialchars((string) $value) . '" />';
 				}
 
 				$this->template->assign_block_vars('attach_row', [
-						'FILENAME'     => utf8_basename($attach_row['real_filename']),
-						'A_FILENAME'   => addslashes(utf8_basename($attach_row['real_filename'])),
-						'FILE_COMMENT' => $attach_row['attach_comment'],
+						'FILENAME'     => $filename,
+						'A_FILENAME'   => addslashes($filename),
+						'FILE_COMMENT' => $comment,
 						'ATTACH_ID'    => $attach_row['attach_id'],
 						'S_IS_ORPHAN'  => $attach_row['is_orphan'],
 						'ASSOC_INDEX'  => $count,
@@ -1059,7 +1085,7 @@ class posting
 					]
 				);
 
-				$s_inline_attachment_options .= '<option value="' . $i . '">' . utf8_basename($attach_row['real_filename']) . '</option>';
+				$s_inline_attachment_options .= '<option value="' . $i . '">' . $filename . '</option>';
 				$i++;
 			}
 			$this->template->assign_var('S_INLINE_ATTACHMENT_OPTIONS', $s_inline_attachment_options);
@@ -1082,9 +1108,14 @@ class posting
 					'attach_comment' => $attach_row['attach_comment'],
 					'article_id'     => $id,
 				];
+				// Only claim an attachment that's still an unclaimed upload from
+				// this user, or already belongs to this same article (a resave
+				// while editing) - otherwise a user could resubmit an attach_id
+				// from one of their own older articles and move it here.
 				$sql = 'UPDATE ' . $this->attachments_table . ' SET ' . $this->db->sql_build_array('UPDATE', $attach_sql) . '
 					WHERE attach_id = ' . (int) $attach_row['attach_id'] . '
-						AND poster_id = ' . (int) $this->user->data['user_id'];
+						AND poster_id = ' . (int) $this->user->data['user_id'] . '
+						AND (is_orphan = 1 OR article_id = ' . (int) $id . ')';
 				$this->db->sql_query($sql);
 			}
 		}
