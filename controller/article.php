@@ -133,8 +133,9 @@ class article
 
 		$fid = $this->config['kb_forum_id'];
 		$cat_id = $row['article_category_id'];
+		$article_categories = $this->kb->get_article_categories($art_id);
 
-		$can_moderate = $this->auth->acl_get('a_manage_kb') || $this->kb->acl_kb_get($cat_id, 'kb_m_approve');
+		$can_moderate = $this->auth->acl_get('a_manage_kb') || $this->kb->acl_kb_get_any($article_categories, 'kb_m_approve');
 		$can_review = (int) $row['status'] === functions_kb::STATUS_NEW && !empty($row['assigned_team_id']) &&
 			$this->kb->is_team_member([(int) $row['assigned_team_id']]);
 		$is_own_article = ((int) $row['author_type'] === 1)
@@ -157,6 +158,20 @@ class article
 			'CATS_DROPBOX'     => $this->kb->make_category_dropbox(),
 			'S_ACTION'         => $this->helper->route('phpbbmodders_knowledgebase_category', ['id' => $cat_id]),
 		]);
+
+		foreach ($article_categories as $article_category_id)
+		{
+			$cross_catrow = ($article_category_id === (int) $cat_id) ? $catrow : $this->kb->get_cat_info($article_category_id);
+			if (empty($cross_catrow))
+			{
+				continue;
+			}
+			$this->template->assign_block_vars('article_category', [
+				'CATEGORY_NAME' => $cross_catrow['category_name'],
+				'U_CATEGORY'    => $this->helper->route('phpbbmodders_knowledgebase_category', ['id' => $article_category_id]),
+				'S_PRIMARY'     => $article_category_id === (int) $cat_id,
+			]);
+		}
 
 		$comment_topic_id = $row['topic_id'];
 
@@ -229,8 +244,8 @@ class article
 			'U_DIRECT_LINK'       => generate_board_url() . '/knowledgebase/article?k=' . $art_id,
 			'COMMENTS'            => ($comment_topic_id) ? $this->language->lang('COMMENTS') . $this->language->lang('COLON') . ' ' . $count : '',
 			'U_COMMENTS'          => ($comment_topic_id) ? $temp_url : '',
-			'S_CAN_EDIT'          => $this->kb->acl_kb_get($cat_id, 'kb_m_edit') || ($is_own_article && $this->kb->acl_kb_get($cat_id, 'kb_u_edit') || $this->auth->acl_get('a_manage_kb')),
-			'S_CAN_DELETE'        => $this->kb->acl_kb_get($cat_id, 'kb_m_delete') || ($is_own_article && $this->kb->acl_kb_get($cat_id, 'kb_u_delete') || $this->auth->acl_get('a_manage_kb')),
+			'S_CAN_EDIT'          => $this->kb->acl_kb_get_any($article_categories, 'kb_m_edit') || ($is_own_article && $this->kb->acl_kb_get_any($article_categories, 'kb_u_edit') || $this->auth->acl_get('a_manage_kb')),
+			'S_CAN_DELETE'        => $this->kb->acl_kb_get_any($article_categories, 'kb_m_delete') || ($is_own_article && $this->kb->acl_kb_get_any($article_categories, 'kb_u_delete') || $this->auth->acl_get('a_manage_kb')),
 			'S_CAN_APPROVE'       => $can_moderate || $can_review,
 			'COUNT_COMMENTS'      => ($comment_topic_id) ? '[' . $this->language->lang('LEAVE_COMMENTS') . ']' : '',
 			'U_FORUM'             => generate_board_url() . '/',

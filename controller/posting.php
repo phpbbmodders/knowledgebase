@@ -210,14 +210,16 @@ class posting
 				? $this->kb->is_team_member([(int) $article_author_id])
 				: $this->user->data['user_id'] == $article_author_id;
 
-			$edit_allowed = ($this->kb->acl_kb_get($cat_id, 'kb_m_edit') || (
+			$article_categories = $this->kb->get_article_categories($art_id);
+
+			$edit_allowed = ($this->kb->acl_kb_get_any($article_categories, 'kb_m_edit') || (
 					$is_own_article &&
-					$this->kb->acl_kb_get($cat_id, 'kb_u_edit'))
+					$this->kb->acl_kb_get_any($article_categories, 'kb_u_edit'))
 			);
 
-			$delete_allowed = ($this->kb->acl_kb_get($cat_id, 'kb_m_delete') || (
+			$delete_allowed = ($this->kb->acl_kb_get_any($article_categories, 'kb_m_delete') || (
 					$is_own_article &&
-					$this->kb->acl_kb_get($cat_id, 'kb_u_delete'))
+					$this->kb->acl_kb_get_any($article_categories, 'kb_u_delete'))
 			);
 		}
 
@@ -339,6 +341,24 @@ class posting
 		{
 			trigger_error($this->language->lang('CAT_NO_EXISTS'));
 		}
+
+		// Cross-listed categories: only ever kept for a category the user
+		// could have posted a new article into directly - the same guard
+		// make_category_select() already uses to disable options in the UI.
+		// (The article's actual primary category is excluded by
+		// set_cross_listed_categories() itself, regardless of what's sent
+		// here, so a category move happening in the same submit is handled
+		// correctly without duplicating that check here.)
+		$cross_categories = array_filter(array_map('intval', $this->request->variable('cross_categories', [0])));
+		$cross_categories = array_values(array_filter($cross_categories, function ($category_id) {
+			return $this->kb->acl_kb_get($category_id, 'kb_u_add');
+		}));
+
+		// What to show as pre-selected in the multi-select: whatever was
+		// just submitted if this is a (possibly failed) submit attempt,
+		// otherwise the article's existing cross-listings on a fresh edit
+		// load, or nothing for a brand new article.
+		$cross_categories_display = $submit ? $cross_categories : (($art_id) ? $this->kb->get_cross_listed_categories($art_id) : []);
 
 		include($this->phpbb_root_path . 'includes/functions_posting.' . $this->php_ext);
 		generate_smilies('inline', 0);
@@ -469,6 +489,7 @@ class posting
 						$this->db->sql_query($sql);
 					}
 
+					$this->kb->set_cross_listed_categories($art_id, $cross_categories);
 					$this->insert_attachments($attachment_data, $art_id);
 
 					$msg .= '<br><br>' . sprintf($this->language->lang('RETURN_ARTICLE'), '<a href="' . $redirect . '">', '</a>');
@@ -486,6 +507,7 @@ class posting
 						' . $this->db->sql_build_array('INSERT', $sql_data);
 					$this->db->sql_query($sql);
 					$new = $this->db->sql_nextid();
+					$this->kb->set_cross_listed_categories($new, $cross_categories);
 					$this->insert_attachments($attachment_data, $new);
 
 					$articles_count++;
@@ -626,7 +648,8 @@ class posting
 				'S_ATTACH_DATA'           => (count($attachment_data)) ? json_encode($attachment_data) : '[]',
 				'MAX_ATTACHMENT_FILESIZE' => $this->config['kb_max_filesize'] > 0 ? $this->language->lang('MAX_ATTACHMENT_FILESIZE', get_formatted_filesize($this->config['kb_max_filesize'])) : '',
 
-				'CATS_BOX' => '<option value="0" disabled="disabled">' . $this->language->lang('CATEGORIES_LIST') . '</option>' . $this->kb->make_category_select($cat_id, [], false),
+				'CATS_BOX'       => '<option value="0" disabled="disabled">' . $this->language->lang('CATEGORIES_LIST') . '</option>' . $this->kb->make_category_select($cat_id, [], false),
+				'CROSS_CATS_BOX' => $this->kb->make_category_select($cross_categories_display, [$cat_id], false),
 
 				'S_CAN_POST_AS_TEAM' => $this->auth->acl_get('a_manage_kb') || $this->kb->acl_kb_get($cat_id, 'kb_m_approve'),
 				'TEAM_OPTIONS'       => $this->get_team_select_options(),

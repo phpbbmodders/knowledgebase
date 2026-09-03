@@ -141,7 +141,7 @@ class approve
 
 		$is_moderator = $this->user->data['user_type'] == USER_FOUNDER ||
 			$this->auth->acl_get('a_manage_kb') ||
-			$this->kb->acl_kb_get($kb_article_info['article_category_id'], 'kb_m_approve');
+			$this->kb->acl_kb_get_any($this->kb->get_article_categories($art_id), 'kb_m_approve');
 
 		$redirect = $this->helper->route('phpbbmodders_knowledgebase_category', ['id' => $kb_article_info['article_category_id']]);
 

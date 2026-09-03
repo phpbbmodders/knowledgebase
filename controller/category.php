@@ -275,7 +275,8 @@ class category
 		$sql = 'SELECT a.*, u.user_colour, u.username
 			FROM ' . $this->articles_table . ' a
 			LEFT JOIN ' . USERS_TABLE . ' u ON (u.user_id = a.author_id AND a.author_type = 0)
-			WHERE a.article_category_id = ' . (int) $cat_id . '
+			WHERE (a.article_category_id = ' . (int) $cat_id . '
+				OR a.article_id IN (SELECT article_id FROM ' . $this->kb->get_article_categories_table() . ' WHERE category_id = ' . (int) $cat_id . '))
 			' . $sql_where
 			. $order_by;
 
@@ -284,6 +285,11 @@ class category
 		{
 			$art_id = $art_row['article_id'];
 			$author_id = $art_row['author_id'] ?? ANONYMOUS;
+			$article_categories = $this->kb->get_article_categories($art_id);
+			$is_own_article = ((int) $art_row['author_type'] === 1)
+				? $this->kb->is_team_member([(int) $author_id])
+				: $this->user->data['user_id'] == $author_id;
+
 			$this->template->assign_block_vars('art_row', [
 				'ID'                  => $art_id,
 				'ORDER_ID'            => $art_row['display_order'],
@@ -295,10 +301,11 @@ class category
 				'ART_VIEWS'           => $art_row['views'],
 				'U_DELETE'            => $this->helper->route('phpbbmodders_knowledgebase_posting', ['id' => $cat_id, 'mode' => 'delete', 'k' => $art_id]),
 				'U_EDIT_ART'          => $this->helper->route('phpbbmodders_knowledgebase_posting', ['id' => $cat_id, 'mode' => 'edit', 'k' => $art_id]),
-				'S_CAN_DELETE'        => $this->kb->acl_kb_get($cat_id, 'kb_m_delete') || ($this->kb->acl_kb_get($cat_id, 'kb_u_delete') && $this->user->data['user_id'] == $author_id),
-				'S_CAN_EDIT'          => $this->kb->acl_kb_get($cat_id, 'kb_m_edit') || ($this->kb->acl_kb_get($cat_id, 'kb_u_edit') && $this->user->data['user_id'] == $author_id),
+				'S_CAN_DELETE'        => $this->kb->acl_kb_get_any($article_categories, 'kb_m_delete') || ($is_own_article && $this->kb->acl_kb_get_any($article_categories, 'kb_u_delete')),
+				'S_CAN_EDIT'          => $this->kb->acl_kb_get_any($article_categories, 'kb_m_edit') || ($is_own_article && $this->kb->acl_kb_get_any($article_categories, 'kb_u_edit')),
 				'S_APPROVED'          => (bool) $art_row['approved'],
 				'STATUS'              => (int) $art_row['status'],
+				'S_CROSS_LISTED'      => (int) $art_row['article_category_id'] !== (int) $cat_id,
 			]);
 		}
 		$this->db->sql_freeresult($result);

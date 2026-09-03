@@ -28,6 +28,12 @@
 					</dl>
 				{% endif %}
 				<dl style="clear: left;">
+					<dt><label for="cross_categories">{{ lang('KB_CROSS_CATEGORIES') }}{{ lang('COLON') }}</label><br>
+						<span>{{ lang('KB_CROSS_CATEGORIES_EXPLAIN') }}</span></dt>
+					<dd><label><select name="cross_categories[]" id="cross_categories" multiple="multiple"
+								size="6">{{ CROSS_CATS_BOX }}</select></label></dd>
+				</dl>
+				<dl style="clear: left;">
 					<dt><label for="subject">{{ lang('ARTICLE_TITLE') }}{{ lang('COLON') }}</label></dt>
 					<dd><input type="text" name="subject" id="subject" size="60" maxlength="60" tabindex="2"
 							value="{{ SUBJECT }}" class="inputbox autowidth"/></dd>

@@ -66,6 +66,8 @@
 						<dt>
 							<div>
 								<a class="topictitle" href="{{ art_row.U_ARTICLE }}">{{ art_row.ARTICLE_TITLE }}</a>
+								{% if art_row.S_CROSS_LISTED %}<i class="icon fa-tag fa-fw" aria-hidden="true"
+										title="{{ lang('KB_CROSS_LISTED') }}"></i>{% endif %}
 								{% if art_row.ARTICLE_DESCRIPTION %}<br>{{ art_row.ARTICLE_DESCRIPTION }}{% endif %}
 							</div>
 						</dt>

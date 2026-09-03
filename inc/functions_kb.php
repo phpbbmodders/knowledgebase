@@ -97,6 +97,9 @@ class functions_kb
 	/** @var string */
 	protected string $revisions_table;
 
+	/** @var string */
+	protected string $article_categories_table;
+
 	/** @var group_helper */
 	protected group_helper $group_helper;
 
@@ -127,6 +130,7 @@ class functions_kb
 	 * @param string           $kb_users_table
 	 * @param string           $kb_groups_table
 	 * @param string           $revisions_table
+	 * @param string           $article_categories_table
 	 * @param group_helper     $group_helper
 	 */
 	public function __construct(
@@ -134,7 +138,7 @@ class functions_kb
 		language $language, auth $auth, template $template, user $user, cache $cache, log $log,
 		string $phpbb_root_path, string $php_ext, string $articles_table, string $categories_table,
 		string $kb_logs_table, string $attachments_table, string $options_table, string $kb_users_table,
-		string $kb_groups_table, string $revisions_table, group_helper $group_helper
+		string $kb_groups_table, string $revisions_table, string $article_categories_table, group_helper $group_helper
 	)
 	{
 		$this->db = $db;
@@ -158,6 +162,7 @@ class functions_kb
 		$this->kb_users_table = $kb_users_table;
 		$this->kb_groups_table = $kb_groups_table;
 		$this->revisions_table = $revisions_table;
+		$this->article_categories_table = $article_categories_table;
 		$this->group_helper = $group_helper;
 
 		$this->upload_dir = $this->ext_manager->get_extension_path('phpbbmodders/knowledgebase', true) . 'files/';
@@ -388,6 +393,105 @@ class functions_kb
 			$total = ACL_YES;
 		}
 		return $total && $total > 0;
+	}
+
+	/**
+	 * Does ANY of the given categories grant the permission? (permissive
+	 * union, used for permission checks on an article that may be
+	 * cross-listed into more than one category.)
+	 *
+	 * @param int[]  $category_ids
+	 * @param string $permission
+	 * @return bool
+	 */
+	public function acl_kb_get_any(array $category_ids, string $permission): bool
+	{
+		foreach ($category_ids as $category_id)
+		{
+			if ($this->acl_kb_get($category_id, $permission))
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function get_article_categories_table(): string
+	{
+		return $this->article_categories_table;
+	}
+
+	/**
+	 * Every category an article appears in: its primary category first,
+	 * then any cross-listed categories.
+	 *
+	 * @param int $article_id
+	 * @return int[]
+	 */
+	public function get_article_categories(int $article_id): array
+	{
+		$info = $this->get_kb_article_info($article_id);
+		return array_merge([(int) $info['article_category_id']], $this->get_cross_listed_categories($article_id));
+	}
+
+	/**
+	 * Only the cross-listed (non-primary) categories an article appears in.
+	 *
+	 * @param int $article_id
+	 * @return int[]
+	 */
+	public function get_cross_listed_categories(int $article_id): array
+	{
+		$category_ids = [];
+
+		$sql = 'SELECT category_id
+			FROM ' . $this->article_categories_table . '
+			WHERE article_id = ' . $article_id;
+		$result = $this->db->sql_query($sql);
+		while ($row = $this->db->sql_fetchrow($result))
+		{
+			$category_ids[] = (int) $row['category_id'];
+		}
+		$this->db->sql_freeresult($result);
+
+		return $category_ids;
+	}
+
+	/**
+	 * Replace an article's full set of cross-listed categories. The
+	 * article's own primary category is silently excluded if present,
+	 * since it's already implied and shouldn't be duplicated.
+	 *
+	 * @param int   $article_id
+	 * @param int[] $category_ids
+	 * @return void
+	 */
+	public function set_cross_listed_categories(int $article_id, array $category_ids): void
+	{
+		$primary_category_id = (int) $this->get_kb_article_info($article_id)['article_category_id'];
+
+		$sql = 'DELETE FROM ' . $this->article_categories_table . '
+			WHERE article_id = ' . $article_id;
+		$this->db->sql_query($sql);
+
+		$category_ids = array_unique(array_diff(array_map('intval', $category_ids), [$primary_category_id]));
+		if (empty($category_ids))
+		{
+			return;
+		}
+
+		$sql_ary = [];
+		foreach ($category_ids as $category_id)
+		{
+			$sql_ary[] = [
+				'article_id'  => $article_id,
+				'category_id' => $category_id,
+			];
+		}
+		$this->db->sql_multi_insert($this->article_categories_table, $sql_ary);
 	}
 
 	/**

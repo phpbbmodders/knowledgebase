@@ -110,19 +110,23 @@ class kb_fulltext_native extends kb_base implements kb_search_backend_interface
 	/** @var string */
 	protected $wordlist_table;
 
+	/** @var string */
+	protected string $article_categories_table;
+
 	/**
 	 * Initialises the fulltext_native search backend with min/max word length
 	 *
-	 * @param config           $config               Config object
-	 * @param driver_interface $db                   Database object
+	 * @param config           $config                    Config object
+	 * @param driver_interface $db                        Database object
 	 * @param language         $language
-	 * @param user             $user                 User object
-	 * @param string           $articles_table       Articles_table
-	 * @param string           $search_results_table Search_results_table
-	 * @param string           $wordmatch_table      Wordmatch_table
-	 * @param string           $wordlist_table       Wordlist_table
-	 * @param string           $phpbb_root_path      phpBB root path
-	 * @param string           $phpEx                PHP file extension
+	 * @param user             $user                      User object
+	 * @param string           $articles_table            Articles_table
+	 * @param string           $search_results_table      Search_results_table
+	 * @param string           $wordmatch_table           Wordmatch_table
+	 * @param string           $wordlist_table            Wordlist_table
+	 * @param string           $article_categories_table  Article_categories_table
+	 * @param string           $phpbb_root_path           phpBB root path
+	 * @param string           $phpEx                     PHP file extension
 	 */
 	public function __construct(
 		config $config,
@@ -133,6 +137,7 @@ class kb_fulltext_native extends kb_base implements kb_search_backend_interface
 		string $search_results_table,
 		string $wordmatch_table,
 		string $wordlist_table,
+		string $article_categories_table,
 		string $phpbb_root_path,
 		string $phpEx
 	)
@@ -145,6 +150,7 @@ class kb_fulltext_native extends kb_base implements kb_search_backend_interface
 		$this->articles_table = $articles_table;
 		$this->wordmatch_table = $wordmatch_table;
 		$this->wordlist_table = $wordlist_table;
+		$this->article_categories_table = $article_categories_table;
 
 		$this->phpbb_root_path = $phpbb_root_path;
 		$this->php_ext = $phpEx;
@@ -750,7 +756,8 @@ class kb_fulltext_native extends kb_base implements kb_search_backend_interface
 
 		if ($category_id)
 		{
-			$sql_where[] = 'p.article_category_id = ' . $category_id;
+			$sql_where[] = '(p.article_category_id = ' . $category_id . '
+				OR p.article_id IN (SELECT article_id FROM ' . $this->article_categories_table . ' WHERE category_id = ' . $category_id . '))';
 		}
 
 		if (count($author_ary))
@@ -905,7 +912,8 @@ class kb_fulltext_native extends kb_base implements kb_search_backend_interface
 		$sql_author = $this->db->sql_in_set('p.author_id', $author_ary);
 		$sql_fora = (count($ex_fid_ary)) ? ' AND ' . $this->db->sql_in_set('p.article_category_id', $ex_fid_ary, true) : '';
 		$sql_time = ($sort_days) ? ' AND p.article_date >= ' . (time() - ($sort_days * 86400)) : '';
-		$sql_category_id = ($category_id) ? ' AND p.article_category_id = ' . $category_id : '';
+		$sql_category_id = ($category_id) ? ' AND (p.article_category_id = ' . $category_id . '
+			OR p.article_id IN (SELECT article_id FROM ' . $this->article_categories_table . ' WHERE category_id = ' . $category_id . '))' : '';
 		$post_visibility = ' AND p.approved = 1 ';
 
 		// Build sql strings for sorting

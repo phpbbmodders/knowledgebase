@@ -152,6 +152,7 @@ services:
             - '%tables.kb_users_table%'
             - '%tables.kb_groups_table%'
             - '%tables.kb_revisions_table%'
+            - '%tables.kb_article_categories_table%'
             - '@group_helper'
 
     phpbbmodders.knowledgebase.controller.kb_file:

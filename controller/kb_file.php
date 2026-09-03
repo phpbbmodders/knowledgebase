@@ -124,7 +124,7 @@ class kb_file
 			$article = $this->db->sql_fetchrow($result);
 			$this->db->sql_freeresult($result);
 
-			if (!$article || (!$article['approved'] && !($this->auth->acl_get('a_manage_kb') || $this->kb->acl_kb_get($article['article_category_id'], 'kb_m_approve'))))
+			if (!$article || (!$article['approved'] && !($this->auth->acl_get('a_manage_kb') || $this->kb->acl_kb_get_any($this->kb->get_article_categories((int) $attachment['article_id']), 'kb_m_approve'))))
 			{
 				send_status_line(403, 'Forbidden');
 				trigger_error('NOT_AUTHORISED');

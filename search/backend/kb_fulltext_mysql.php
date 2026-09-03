@@ -69,18 +69,22 @@ class kb_fulltext_mysql extends kb_base implements kb_search_backend_interface
 	/** @var string */
 	protected string $search_results_table;
 
+	/** @var string */
+	protected string $article_categories_table;
+
 	/**
 	 * Constructor
 	 * Creates a new \phpbb\search\backend\fulltext_mysql, which is used as a search backend
 	 *
-	 * @param config           $config               Config object
-	 * @param driver_interface $db                   Database object
+	 * @param config           $config                   Config object
+	 * @param driver_interface $db                       Database object
 	 * @param language         $language
-	 * @param user             $user                 User object
-	 * @param string           $articles_table       Articles_table
-	 * @param string           $search_results_table Search_results_table
-	 * @param string           $phpbb_root_path      Relative path to phpBB root
-	 * @param string           $phpEx                PHP file extension
+	 * @param user             $user                     User object
+	 * @param string           $articles_table           Articles_table
+	 * @param string           $search_results_table     Search_results_table
+	 * @param string           $article_categories_table Article_categories_table
+	 * @param string           $phpbb_root_path          Relative path to phpBB root
+	 * @param string           $phpEx                    PHP file extension
 	 */
 	public function __construct(
 		config $config,
@@ -89,6 +93,7 @@ class kb_fulltext_mysql extends kb_base implements kb_search_backend_interface
 		user $user,
 		string $articles_table,
 		string $search_results_table,
+		string $article_categories_table,
 		string $phpbb_root_path,
 		string $phpEx
 	)
@@ -102,6 +107,7 @@ class kb_fulltext_mysql extends kb_base implements kb_search_backend_interface
 
 		$this->articles_table = $articles_table;
 		$this->search_results_table = $search_results_table;
+		$this->article_categories_table = $article_categories_table;
 
 		/**
 		 * Load the UTF tools
@@ -435,7 +441,8 @@ class kb_fulltext_mysql extends kb_base implements kb_search_backend_interface
 			$sql_author = '';
 		}
 
-		$sql_where_options = ($category_id) ? ' AND p.article_category_id = ' . $category_id : '';
+		$sql_where_options = ($category_id) ? ' AND (p.article_category_id = ' . $category_id . '
+			OR p.article_id IN (SELECT article_id FROM ' . $this->article_categories_table . ' WHERE category_id = ' . $category_id . '))' : '';
 		$sql_where_options .= (count($ex_fid_ary)) ? ' AND ' . $this->db->sql_in_set('p.article_category_id', $ex_fid_ary, true) : '';
 		$sql_where_options .= $sql_author;
 		$sql_where_options .= ($sort_days) ? ' AND p.article_date >= ' . (time() - ($sort_days * 86400)) : '';
@@ -538,7 +545,8 @@ class kb_fulltext_mysql extends kb_base implements kb_search_backend_interface
 		$sql_author = $this->db->sql_in_set('p.author_id', $author_ary) . ' AND p.approved=1 ';
 
 		$sql_fora = (count($ex_fid_ary)) ? ' AND ' . $this->db->sql_in_set('p.article_category_id', $ex_fid_ary, true) : '';
-		$sql_category_id = ($category_id) ? ' AND p.article_category_id = ' . $category_id : '';
+		$sql_category_id = ($category_id) ? ' AND (p.article_category_id = ' . $category_id . '
+			OR p.article_id IN (SELECT article_id FROM ' . $this->article_categories_table . ' WHERE category_id = ' . $category_id . '))' : '';
 		$sql_time = ($sort_days) ? ' AND p.article_date >= ' . (time() - ($sort_days * 86400)) : '';
 
 		// Build sql strings for sorting

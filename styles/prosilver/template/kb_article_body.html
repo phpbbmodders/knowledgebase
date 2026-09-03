@@ -10,7 +10,13 @@
 			<dt><br><strong>{{ lang('ARTICLE_AUTHOR') }}{{ lang('COLON') }}</strong> {{ ARTICLE_AUTHOR }}</dt>
 			<dd class="profile-rank">{{ RANK }}</dd>
 			<dd><br><strong>{{ lang('ARTICLE_DATE') }}{{ lang('COLON') }}</strong> {{ ARTICLE_DATE }}</dd>
-			<dd><strong>{{ lang('CATEGORY') }}{{ lang('COLON') }}</strong> {{ ARTICLE_CATEGORY }}</dd>
+			<dd><strong>{{ lang('CATEGORY') }}{{ lang('COLON') }}</strong>
+				{% if loops.article_category|length %}
+					{% for article_category in loops.article_category %}<a href="{{ article_category.U_CATEGORY }}">{{ article_category.CATEGORY_NAME }}</a>{% if not loop.last %}, {% endif %}{% endfor %}
+				{% else %}
+					{{ ARTICLE_CATEGORY }}
+				{% endif %}
+			</dd>
 			<dd><br><strong>{{ lang('VIEWS') }}{{ lang('COLON') }}</strong> {{ VIEWS }}</dd>
 			<dd><strong>{{ COMMENTS }}</strong></dd>
 			<dd><br></dd>

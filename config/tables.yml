@@ -10,3 +10,4 @@ parameters:
     tables.wordmatch_table: '%core.table_prefix%kb_src_wrdmtch'
     tables.wordlist_table: '%core.table_prefix%kb_src_wrdlist'
     tables.kb_revisions_table: '%core.table_prefix%kb_article_revisions'
+    tables.kb_article_categories_table: '%core.table_prefix%kb_article_categories'

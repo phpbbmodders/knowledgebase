@@ -10,6 +10,7 @@ services:
             - '@user'
             - '%tables.articles_table%'
             - '%tables.search_result_table%'
+            - '%tables.kb_article_categories_table%'
             - '%core.root_path%'
             - '%core.php_ext%'
         tags:
@@ -26,6 +27,7 @@ services:
             - '%tables.search_result_table%'
             - '%tables.wordmatch_table%'
             - '%tables.wordlist_table%'
+            - '%tables.kb_article_categories_table%'
             - '%core.root_path%'
             - '%core.php_ext%'
         tags:
@@ -40,6 +42,7 @@ services:
             - '@user'
             - '%tables.articles_table%'
             - '%tables.search_result_table%'
+            - '%tables.kb_article_categories_table%'
             - '%core.root_path%'
             - '%core.php_ext%'
         tags:
