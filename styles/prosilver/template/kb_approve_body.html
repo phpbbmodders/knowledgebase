@@ -4,19 +4,52 @@
 <div class="panel bg2">
 	<div class="inner">
 		<br>
-		<p style="display: flex; justify-content: center; align-items: center;">
-			<i class="icon icon-green fa-check-square-o fa-2x"></i>&nbsp;<b>{{ lang('APPROVE') }}?</b>
-		</p>
 		<p class="author" style="font-size: 105%; line-height: 1.5; margin-left: 20px;">
 			<strong>{{ lang('ARTICLE_AUTHOR') }}{{ lang('COLON') }}</strong> {{ ARTICLE_AUTHOR }}<br>
 			<strong>{{ lang('ARTICLE_TITLE') }}{{ lang('COLON') }}</strong> {{ ARTICLE_TITLE }}<br>
 			<strong>{{ lang('ARTICLE_DESCRIPTION') }}{{ lang('COLON') }}</strong> {{ ARTICLE_DESCRIPTION }}<br>
-			<strong>{{ lang('CATEGORY') }}{{ lang('COLON') }}</strong> {{ ARTICLE_CATEGORY }}
+			<strong>{{ lang('CATEGORY') }}{{ lang('COLON') }}</strong> {{ ARTICLE_CATEGORY }}<br>
+			<strong>{{ lang('KB_STATUS') }}{{ lang('COLON') }}</strong>
+			{% if S_STATUS_NEW %}{{ lang('KB_STATUS_NEW') }}
+			{% elseif S_STATUS_REVIEWED %}{{ lang('KB_STATUS_REVIEWED') }}
+			{% elseif S_STATUS_ACTIVE %}{{ lang('KB_STATUS_ACTIVE') }}{% if S_HAS_REVISION %} &bull; {{ lang('KB_STATUS_REVISION') }}{% endif %}
+			{% elseif S_STATUS_INACTIVE %}{{ lang('KB_STATUS_INACTIVE') }}
+			{% endif %}
 		</p>
+
 		<form action="{{ S_ACTION }}" method="post">
 			<fieldset class="submit-buttons" style="border: none;">
-				<input class="button1" id="continue" name="approve" type="submit" value="{{ lang('APPROVE') }}"/>&nbsp;&nbsp;
-				<input class="button2" id="cancel" name="disapprove" type="submit" value="{{ lang('DISAPPROVE') }}"/>
+				{% if S_STATUS_NEW and S_IS_MODERATOR %}
+					<label>{{ lang('KB_ASSIGN_TO') }}{{ lang('COLON') }}
+						<select name="team_id">{{ S_TEAM_OPTIONS }}</select>
+					</label>
+					<button class="button2" type="submit" name="action" value="assign">{{ lang('KB_ASSIGN') }}</button>&nbsp;&nbsp;
+				{% endif %}
+
+				{% if S_CAN_REVIEW %}
+					<button class="button1" type="submit" name="action" value="review">{{ lang('KB_MARK_REVIEWED') }}</button>&nbsp;&nbsp;
+				{% endif %}
+
+				{% if S_STATUS_REVIEWED and S_IS_MODERATOR %}
+					<button class="button1" type="submit" name="action" value="approve">{{ lang('APPROVE') }}</button>&nbsp;&nbsp;
+				{% endif %}
+
+				{% if (S_STATUS_NEW or S_STATUS_REVIEWED) and S_IS_MODERATOR %}
+					<button class="button2" type="submit" name="action" value="deny">{{ lang('DISAPPROVE') }}</button>&nbsp;&nbsp;
+				{% endif %}
+
+				{% if S_STATUS_ACTIVE and S_IS_MODERATOR %}
+					<button class="button2" type="submit" name="action" value="deactivate">{{ lang('KB_DEACTIVATE') }}</button>&nbsp;&nbsp;
+				{% endif %}
+
+				{% if S_STATUS_INACTIVE and S_IS_MODERATOR %}
+					<button class="button1" type="submit" name="action" value="reactivate">{{ lang('KB_REACTIVATE') }}</button>&nbsp;&nbsp;
+				{% endif %}
+
+				{% if S_HAS_REVISION and S_IS_MODERATOR %}
+					<button class="button1" type="submit" name="action" value="approve_revision">{{ lang('KB_APPROVE_REVISION') }}</button>&nbsp;&nbsp;
+					<button class="button2" type="submit" name="action" value="reject_revision">{{ lang('KB_REJECT_REVISION') }}</button>
+				{% endif %}
 			</fieldset>
 		</form>
 		<br>

@@ -119,9 +119,9 @@ class article
 		}
 
 		$sql = 'SELECT a.*, u.user_colour, u.username
-			FROM ' . $this->articles_table . ' a, ' . USERS_TABLE . ' u
-			WHERE a.article_id = ' . (int) $art_id . '
-			AND u.user_id = a.author_id ';
+			FROM ' . $this->articles_table . ' a
+			LEFT JOIN ' . USERS_TABLE . ' u ON (u.user_id = a.author_id AND a.author_type = 0)
+			WHERE a.article_id = ' . (int) $art_id;
 		$result = $this->db->sql_query($sql);
 		$row = $this->db->sql_fetchrow($result);
 		$this->db->sql_freeresult($result);
@@ -134,7 +134,14 @@ class article
 		$fid = $this->config['kb_forum_id'];
 		$cat_id = $row['article_category_id'];
 
-		if (!$row['approved'] && !($this->auth->acl_get('a_manage_kb') || $this->kb->acl_kb_get($cat_id, 'kb_m_approve')))
+		$can_moderate = $this->auth->acl_get('a_manage_kb') || $this->kb->acl_kb_get($cat_id, 'kb_m_approve');
+		$can_review = (int) $row['status'] === functions_kb::STATUS_NEW && !empty($row['assigned_team_id']) &&
+			$this->kb->is_team_member([(int) $row['assigned_team_id']]);
+		$is_own_article = ((int) $row['author_type'] === 1)
+			? $this->kb->is_team_member([(int) $row['author_id']])
+			: $this->user->data['user_id'] == $row['author_id'];
+
+		if (!$row['approved'] && !$can_moderate && !$can_review)
 		{
 			redirect($this->helper->route('phpbbmodders_knowledgebase_category', ['id' => $cat_id]));
 		}
@@ -206,7 +213,7 @@ class article
 		$rank = phpbb_get_user_rank($this->user->data, false);
 
 		$this->template->assign_vars([
-			'ARTICLE_AUTHOR'      => get_username_string('full', $row['author_id'], $row['username'], $row['user_colour']),
+			'ARTICLE_AUTHOR'      => ((int) $row['author_type'] === 1) ? $row['author'] : get_username_string('full', $row['author_id'], $row['username'], $row['user_colour']),
 			'ARTICLE_DESCRIPTION' => $row['article_description'],
 			'ARTICLE_DATE'        => $this->user->format_date($row['article_date']),
 			'ART_VIEWS'           => $row['views'],
@@ -222,9 +229,9 @@ class article
 			'U_DIRECT_LINK'       => generate_board_url() . '/knowledgebase/article?k=' . $art_id,
 			'COMMENTS'            => ($comment_topic_id) ? $this->language->lang('COMMENTS') . $this->language->lang('COLON') . ' ' . $count : '',
 			'U_COMMENTS'          => ($comment_topic_id) ? $temp_url : '',
-			'S_CAN_EDIT'          => $this->kb->acl_kb_get($cat_id, 'kb_m_edit') || ($this->user->data['user_id'] == $row['author_id'] && $this->kb->acl_kb_get($cat_id, 'kb_u_edit') || $this->auth->acl_get('a_manage_kb')),
-			'S_CAN_DELETE'        => $this->kb->acl_kb_get($cat_id, 'kb_m_delete') || ($this->user->data['user_id'] == $row['author_id'] && $this->kb->acl_kb_get($cat_id, 'kb_u_delete') || $this->auth->acl_get('a_manage_kb')),
-			'S_CAN_APPROVE'       => $this->auth->acl_get('a_manage_kb') || $this->kb->acl_kb_get($cat_id, 'kb_m_approve'),
+			'S_CAN_EDIT'          => $this->kb->acl_kb_get($cat_id, 'kb_m_edit') || ($is_own_article && $this->kb->acl_kb_get($cat_id, 'kb_u_edit') || $this->auth->acl_get('a_manage_kb')),
+			'S_CAN_DELETE'        => $this->kb->acl_kb_get($cat_id, 'kb_m_delete') || ($is_own_article && $this->kb->acl_kb_get($cat_id, 'kb_u_delete') || $this->auth->acl_get('a_manage_kb')),
+			'S_CAN_APPROVE'       => $can_moderate || $can_review,
 			'COUNT_COMMENTS'      => ($comment_topic_id) ? '[' . $this->language->lang('LEAVE_COMMENTS') . ']' : '',
 			'U_FORUM'             => generate_board_url() . '/',
 			'S_APPROVED'          => $row['approved'],

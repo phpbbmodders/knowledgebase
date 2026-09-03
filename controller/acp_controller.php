@@ -280,6 +280,21 @@ class acp_controller
 			]);
 		}
 
+		$team_groups = $this->kb->get_kb_team_groups();
+		$sql = 'SELECT group_id, group_name
+			FROM ' . GROUPS_TABLE . '
+			ORDER BY group_name';
+		$result = $this->db->sql_query($sql);
+		while ($row = $this->db->sql_fetchrow($result))
+		{
+			$this->template->assign_block_vars('team_group', [
+				'GROUP_ID'   => $row['group_id'],
+				'GROUP_NAME' => $this->group_helper->get_name($row['group_name']),
+				'S_CHECKED'  => in_array((int) $row['group_id'], $team_groups, true),
+			]);
+		}
+		$this->db->sql_freeresult($result);
+
 		$this->template->assign_vars([
 			'S_NOT_WRITABLE'           => !$dirIsWritable,
 			'S_EXT_GROUP_SIZE_OPTIONS' => size_select_options($identifier),
@@ -339,6 +354,9 @@ class acp_controller
 		$this->config->set('kb_max_attachments', $this->request->variable('max_attachments', 2));
 		$this->config->set('kb_max_filesize', $max_filesize, 0);
 		$this->config_text->set('kb_extensions', json_encode($extension_list));
+
+		$team_groups = array_map('intval', $this->request->variable('team_groups', [0]));
+		$this->config_text->set('kb_team_groups', json_encode($team_groups));
 	}
 	/** END - Settings management functions */
 
@@ -879,6 +897,21 @@ class acp_controller
 	 */
 
 	/**
+	 * @param int $status
+	 * @return string
+	 */
+	protected function get_status_icon(int $status): string
+	{
+		return match ($status)
+		{
+			functions_kb::STATUS_ACTIVE => '<i class="icon fa-thumbs-o-up fa-fw acp-icon-settings" title="' . $this->language->lang('KB_STATUS_ACTIVE') . '"></i>',
+			functions_kb::STATUS_REVIEWED => '<i class="icon fa-eye fa-fw acp-icon-resync" title="' . $this->language->lang('KB_STATUS_REVIEWED') . '"></i>',
+			functions_kb::STATUS_INACTIVE => '<i class="icon fa-eye-slash fa-fw acp-icon-resync" title="' . $this->language->lang('KB_STATUS_INACTIVE') . '"></i>',
+			default => '<i class="icon fa fa-exclamation-triangle fa-fw acp-icon-resync" aria-hidden="true" title="' . $this->language->lang('KB_STATUS_NEW') . '"></i>',
+		};
+	}
+
+	/**
 	 * Article management functions
 	 *
 	 * @return void
@@ -938,7 +971,7 @@ class acp_controller
 			$this->template->assign_block_vars('articles', [
 					'ID'               => $row['article_id'],
 					'ARTICLE_TITLE'    => $row['article_title'],
-					'ARTICLE_APPROVED' => ($row['approved']) ? '<i class="icon fa-thumbs-o-up fa-fw acp-icon-settings"></i>' : '<i class="icon fa fa-exclamation-triangle fa-fw acp-icon-resync" aria-hidden="true" title="' . $this->language->lang('NEED_APPROVE') . '"></i>',
+					'ARTICLE_APPROVED' => $this->get_status_icon((int) $row['status']),
 					'CATEGORY_ID'      => $row['article_category_id'],
 					'CATEGORY'         => ($category_data['category_name']) ?: $this->language->lang('CAT_NO_EXISTS'),
 					'U_CATEGORY'       => $this->helper->route('phpbbmodders_knowledgebase_index', ['i' => '-phpbbmodders-knowledgebase-acp-manage_module', 'mode' => 'manage', 'parent_id' => $row['article_category_id']]),

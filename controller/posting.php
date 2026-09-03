@@ -207,13 +207,17 @@ class posting
 
 			$article_author_id = $row['author_id'];
 
+			$is_own_article = ((int) $row['author_type'] === 1)
+				? $this->kb->is_team_member([(int) $article_author_id])
+				: $this->user->data['user_id'] == $article_author_id;
+
 			$edit_allowed = ($this->kb->acl_kb_get($cat_id, 'kb_m_edit') || (
-					$this->user->data['user_id'] == $article_author_id &&
+					$is_own_article &&
 					$this->kb->acl_kb_get($cat_id, 'kb_u_edit'))
 			);
 
 			$delete_allowed = ($this->kb->acl_kb_get($cat_id, 'kb_m_delete') || (
-					$this->user->data['user_id'] == $article_author_id &&
+					$is_own_article &&
 					$this->kb->acl_kb_get($cat_id, 'kb_u_delete'))
 			);
 		}
@@ -298,9 +302,11 @@ class posting
 			$article_text = (string) $row['article_body'];
 			$article_description = (string) $row['article_description'];
 			$article_author = (string) $row['author'];
+			$article_author_type = (int) ($row['author_type'] ?? 0);
 			$views = (int) $row['views'];
 			$article_date = (int) $row['article_date'];
 			$order = (int) $row['display_order'];
+			$article_status = (int) ($row['status'] ?? functions_kb::STATUS_NEW);
 
 			$article_text = $this->decode_message($article_text, $row['bbcode_uid']);
 
@@ -348,17 +354,32 @@ class posting
 				// generate_text_for_storage function
 				generate_text_for_storage($article_text, $bbcode_uid, $bbcode_bitfield, $options, true, true, true);
 
+				// Post-as-team: only offered to users who can already moderate this category's approvals.
+				$post_as_group = 0;
+				if ($this->auth->acl_get('a_manage_kb') || $this->kb->acl_kb_get($cat_id, 'kb_m_approve'))
+				{
+					$post_as_group = $this->request->variable('post_as_group', 0);
+				}
+				$posting_as_group = $post_as_group && in_array($post_as_group, $this->kb->get_kb_team_groups(), true);
+				$author_type = $posting_as_group ? functions_kb::AUTHOR_TYPE_GROUP : functions_kb::AUTHOR_TYPE_USER;
+				$author_id = $posting_as_group ? $post_as_group : (int) $this->user->data['user_id'];
+				$author_name = $posting_as_group ? ($this->kb->get_kb_team_group_names()[$post_as_group] ?? '') : $this->user->data['username'];
+
+				$can_add_noapprove = $this->kb->acl_kb_get($cat_id, 'kb_u_add_noapprove');
+
 				$sql_data = [
 					'article_category_id' => $cat_id,
 					'article_title'       => $article_title,
 					'article_description' => $article_description,
 					'article_date'        => time(),
-					'author_id'           => $this->user->data['user_id'],
+					'author_id'           => $author_id,
+					'author_type'         => $author_type,
 					'bbcode_uid'          => substr(md5(rand()), 0, 8),
 					'article_body'        => $article_text,
 					'views'               => 0,
-					'author'              => $this->user->data['username'],
-					'approved'            => ($this->kb->acl_kb_get($cat_id, 'kb_u_add_noapprove')) ? 1 : 0,
+					'author'              => $author_name,
+					'approved'            => $can_add_noapprove ? 1 : 0,
+					'status'              => $can_add_noapprove ? functions_kb::STATUS_ACTIVE : functions_kb::STATUS_NEW,
 				];
 
 				$root = $this->helper->route('phpbbmodders_knowledgebase_category', ['id' => $cat_id]);
@@ -367,23 +388,67 @@ class posting
 				{
 					$sql_data['author_id'] = $article_author_id;
 					$sql_data['author'] = $article_author;
+					$sql_data['author_type'] = $article_author_type;
 					$sql_data['views'] = $views;
 					$sql_data['article_date'] = $article_date;
-					$sql_data['edit_date'] = time();
+					if ($article_status === functions_kb::STATUS_INACTIVE)
+					{
+						// Deliberately deactivated by a moderator - editing shouldn't
+						// silently reactivate it; that's a separate explicit action.
+						unset($sql_data['approved'], $sql_data['status']);
+					}
+					// New/Reviewed: approved/status stay as computed above (from the
+					// editor's own kb_u_add_noapprove permission), same as a fresh submit.
 					$redirect = $this->helper->route('phpbbmodders_knowledgebase_article', ['k' => $art_id]);
 
-					if ($cat_id !== $to_id) // Move article to another category
+					$moving_category = ($cat_id !== $to_id);
+					if ($moving_category)
 					{
 						$sql_data['article_category_id'] = $to_id;
 						$sql_data['display_order'] = 0;
 					}
 
-					$sql = 'UPDATE ' . $this->articles_table . '
-						SET ' . $this->db->sql_build_array('UPDATE', $sql_data) . '
-						WHERE article_id = ' . $art_id;
-					$this->db->sql_query($sql);
+					if ($article_status === functions_kb::STATUS_ACTIVE)
+					{
+						// Live article: queue the content edit as a pending revision rather
+						// than touching the published content.
+						$this->kb->save_article_revision($art_id, [
+							'article_title'       => $article_title,
+							'article_description' => $article_description,
+							'article_body'        => $article_text,
+							'bbcode_uid'          => $bbcode_uid,
+							'bbcode_bitfield'     => $bbcode_bitfield,
+						], (int) $this->user->data['user_id']);
 
-					if ($cat_id !== $to_id) // Move article to another category
+						if ($moving_category)
+						{
+							$sql = 'UPDATE ' . $this->articles_table . '
+								SET article_category_id = ' . $to_id . ', display_order = 0
+								WHERE article_id = ' . $art_id;
+							$this->db->sql_query($sql);
+						}
+
+						$msg = $this->language->lang('ARTICLE_REVISION_SUBMITTED');
+					}
+					else
+					{
+						$sql_data['edit_date'] = time();
+
+						$sql = 'UPDATE ' . $this->articles_table . '
+							SET ' . $this->db->sql_build_array('UPDATE', $sql_data) . '
+							WHERE article_id = ' . $art_id;
+						$this->db->sql_query($sql);
+
+						// Upd search index
+						if ($kb_search)
+						{
+							$kb_search->index('edit', $art_id, $article_text, $article_title, $article_description, (int) $article_author_id);
+						}
+
+						$msg = $this->language->lang('ARTICLE_EDITED');
+					}
+
+					if ($moving_category)
 					{
 						$sql = 'UPDATE ' . $this->categories_table . '
 							SET number_articles = number_articles - 1
@@ -405,15 +470,8 @@ class posting
 						$this->db->sql_query($sql);
 					}
 
-					// Upd search index
-					if ($kb_search)
-					{
-						$kb_search->index('edit', $art_id, $article_text, $article_title, $article_description, (int) $article_author_id);
-					}
-
 					$this->insert_attachments($attachment_data, $art_id);
 
-					$msg = $this->language->lang('ARTICLE_EDITED');
 					$msg .= '<br><br>' . sprintf($this->language->lang('RETURN_ARTICLE'), '<a href="' . $redirect . '">', '</a>');
 					$msg .= '<br><br>' . sprintf($this->language->lang('RETURN_CAT'), '<a href="' . $root . '">', '</a>');
 					$this->log->add('admin', $this->user->data['user_id'], $this->user->data['user_ip'], 'LOG_LIBRARY_EDIT_ARTICLE', time(), [$article_title, $category_name]);
@@ -438,19 +496,19 @@ class posting
 						WHERE category_id = ' . $cat_id;
 					$this->db->sql_query($sql);
 
-					if ($this->kb->acl_kb_get($cat_id, 'kb_u_add_noapprove'))
+					if ($can_add_noapprove)
 					{
 						$redirect = $this->helper->route('phpbbmodders_knowledgebase_article', ['k' => $new]);
 
 						if (isset($kb_search))
 						{
 							// Add search index
-							$kb_search->index('add', (int) $new, $article_text, $article_title, $article_description, (int) $this->user->data['user_id']);
+							$kb_search->index('add', (int) $new, $article_text, $article_title, $article_description, $author_id);
 						}
 
 						if (!empty($this->config['kb_forum_id']) && $this->config['kb_anounce'])
 						{
-							$this->kb->submit_article($cat_id, $fid, $article_title, $article_description, $this->user->data['username'], $category_name, $new);
+							$this->kb->submit_article($cat_id, $fid, $article_title, $article_description, $author_name, $category_name, $new);
 						}
 
 						$msg = $this->language->lang('ARTICLE_SUBMITTED');
@@ -463,7 +521,8 @@ class posting
 
 						// Add notification
 						$notification_data = [
-							'author_id'           => $this->user->data['user_id'],
+							'author_id'           => $author_id,
+							'author_type'         => $author_type,
 							'title'               => $article_title,
 							'article_category_id' => $cat_id,
 							'item_id'             => $new,
@@ -570,6 +629,9 @@ class posting
 
 				'CATS_BOX' => '<option value="0" disabled="disabled">' . $this->language->lang('CATEGORIES_LIST') . '</option>' . $this->kb->make_category_select($cat_id, [], false),
 
+				'S_CAN_POST_AS_TEAM' => $this->auth->acl_get('a_manage_kb') || $this->kb->acl_kb_get($cat_id, 'kb_m_approve'),
+				'TEAM_OPTIONS'       => $this->get_team_select_options(),
+
 				'U_KB'           => $this->helper->route('phpbbmodders_knowledgebase_index'),
 				'S_POST_ACTION'  => $action,
 				'S_POST_ARTICLE' => true,
@@ -618,6 +680,19 @@ class posting
 		$match = get_preg_expression('bbcode_htm');
 		$replace = ['\1', '\1', '\2', '\1', '', ''];
 		return preg_replace($match, $replace, $message);
+	}
+
+	/**
+	 * @return string
+	 */
+	public function get_team_select_options(): string
+	{
+		$options = '<option value="0">' . $this->language->lang('POST_AS_MYSELF') . '</option>';
+		foreach ($this->kb->get_kb_team_group_names() as $group_id => $group_name)
+		{
+			$options .= '<option value="' . $group_id . '">' . $group_name . '</option>';
+		}
+		return $options;
 	}
 
 	/**

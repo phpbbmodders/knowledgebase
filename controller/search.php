@@ -309,9 +309,9 @@ class search
 			$sql_sort = $sort_by_sql[$sort_key] . (($sort_dir == 'a') ? ' ASC' : ' DESC');
 
 			$sql = 'SELECT DISTINCT a.*, u.user_id, u.username, u.user_colour
-					FROM ' . $this->articles_table . ' a, ' . USERS_TABLE . ' u
+					FROM ' . $this->articles_table . ' a
+					LEFT JOIN ' . USERS_TABLE . ' u ON (a.author_id = u.user_id AND a.author_type = 0)
 					WHERE ' . $this->db->sql_in_set('article_id', $id_ary) . '
-						AND (a.author_id = u.user_id)
 						AND a.approved = 1';
 			if ($author && $keywords)
 			{
@@ -362,7 +362,7 @@ class search
 					'U_VIEW'    => $this->helper->route('phpbbmodders_knowledgebase_article', ['k' => $article_id]),
 					'CATEGORY'  => $category['category_name'],
 					'U_CAT'     => $this->helper->route('phpbbmodders_knowledgebase_category', ['id' => $category_id]),
-					'USER_FULL' => get_username_string('full', $row['user_id'], $row['username'], $row['user_colour']),
+					'USER_FULL' => ((int) $row['author_type'] === 1) ? $row['author'] : get_username_string('full', $row['user_id'], $row['username'], $row['user_colour']),
 					'ID'        => $article_id,
 				]);
 			}

@@ -173,6 +173,20 @@
 			</dl>
 		{% endfor %}
 	</fieldset>
+	<fieldset>
+		<legend>{{ lang('KB_TEAMS') }}</legend>
+		<dl>{{ lang('KB_TEAMS_EXPLAIN') }}</dl>
+		<dl>
+			{% for row in loops.team_group %}
+				<dd>
+					<label>
+						<input type="checkbox" name="team_groups[]" value="{{ row.GROUP_ID }}"
+							{% if row.S_CHECKED %}checked="checked"{% endif %}/> {{ row.GROUP_NAME }}
+					</label>
+				</dd>
+			{% endfor %}
+		</dl>
+	</fieldset>
 	<fieldset class="submit-buttons">
 		<legend>{{ lang('SUBMIT') }}</legend>
 		<input class="button1" type="submit" id="submit" name="submit" value="{{ lang('SUBMIT') }}"/>&nbsp;

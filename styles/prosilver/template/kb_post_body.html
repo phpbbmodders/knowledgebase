@@ -21,6 +21,12 @@
 						<dd><label><select name="to_id">{{ CATS_BOX }}</select></label></dd>
 					</dl>
 				{% endif %}
+				{% if not S_EDIT_POST and S_CAN_POST_AS_TEAM %}
+					<dl style="clear: left;">
+						<dt><label for="post_as_group">{{ lang('KB_POST_AS') }}{{ lang('COLON') }}</label></dt>
+						<dd><label><select name="post_as_group" id="post_as_group">{{ TEAM_OPTIONS }}</select></label></dd>
+					</dl>
+				{% endif %}
 				<dl style="clear: left;">
 					<dt><label for="subject">{{ lang('ARTICLE_TITLE') }}{{ lang('COLON') }}</label></dt>
 					<dd><input type="text" name="subject" id="subject" size="60" maxlength="60" tabindex="2"

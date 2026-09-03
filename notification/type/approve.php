@@ -12,6 +12,7 @@
 namespace phpbbmodders\knowledgebase\notification\type;
 
 use phpbb\controller\helper;
+use phpbb\group\helper as group_helper;
 use phpbb\user_loader;
 
 class approve extends \phpbb\notification\type\base
@@ -30,6 +31,8 @@ class approve extends \phpbb\notification\type\base
 	protected helper $helper;
 	/** @var \phpbb\user_loader */
 	protected user_loader $user_loader;
+	/** @var group_helper */
+	protected group_helper $group_helper;
 	/** @var string */
 	protected string $kb_options_table;
 	/** @var string */
@@ -71,6 +74,15 @@ class approve extends \phpbb\notification\type\base
 	public function set_user_loader(\phpbb\user_loader $user_loader): void
 	{
 		$this->user_loader = $user_loader;
+	}
+
+	/**
+	 * @param group_helper $group_helper
+	 * @return void
+	 */
+	public function set_group_helper(group_helper $group_helper): void
+	{
+		$this->group_helper = $group_helper;
 	}
 
 	/**
@@ -119,8 +131,51 @@ class approve extends \phpbb\notification\type\base
 	{
 		$options = array_merge(['ignore_users' => [],], $options);
 
-		$users = [(int) $type_data['author_id']];
+		$users = $this->get_author_user_ids((int) $type_data['author_id'], (int) ($type_data['author_type'] ?? 0));
 		return $this->check_user_notification_options($users, $options);
+	}
+
+	/**
+	 * @param int $group_id
+	 * @return string
+	 */
+	protected function get_author_group_name(int $group_id): string
+	{
+		$sql = 'SELECT group_name
+			FROM ' . GROUPS_TABLE . '
+			WHERE group_id = ' . $group_id;
+		$result = $this->db->sql_query($sql);
+		$group_name = $this->db->sql_fetchfield('group_name');
+		$this->db->sql_freeresult($result);
+
+		return $group_name ? $this->group_helper->get_name($group_name) : '';
+	}
+
+	/**
+	 * @param int $author_id
+	 * @param int $author_type 0 = user, 1 = group
+	 * @return array
+	 */
+	protected function get_author_user_ids(int $author_id, int $author_type): array
+	{
+		if ($author_type !== 1)
+		{
+			return [$author_id];
+		}
+
+		$user_ids = [];
+		$sql = 'SELECT user_id
+			FROM ' . USER_GROUP_TABLE . '
+			WHERE group_id = ' . $author_id . '
+				AND user_pending = 0';
+		$result = $this->db->sql_query($sql);
+		while ($row = $this->db->sql_fetchrow($result))
+		{
+			$user_ids[] = (int) $row['user_id'];
+		}
+		$this->db->sql_freeresult($result);
+
+		return $user_ids;
 	}
 
 	/**
@@ -181,10 +236,12 @@ class approve extends \phpbb\notification\type\base
 	 */
 	public function get_email_template_variables(): array
 	{
-		$username = $this->user_loader->get_username($this->get_data('author_id'), 'username');
+		$username = ((int) $this->get_data('author_type')) === 1
+			? $this->get_author_group_name((int) $this->get_data('author_id'))
+			: $this->user_loader->get_username($this->get_data('author_id'), 'username');
 		return [
 			'USERNAME'       => htmlspecialchars_decode($username),
-			'MODERATOR'      => htmlspecialchars_decode($this->user_loader->get_username($this->get_data('author_id'), 'username')),
+			'MODERATOR'      => htmlspecialchars_decode($this->user_loader->get_username($this->get_data('moderator'), 'username')),
 			'ARTICLE_TITLE'  => htmlspecialchars_decode(censor_text($this->get_data('title'))),
 			'U_VIEW_ARTICLE' => generate_board_url() . '/knowledgebase/article?k=' . $this->get_data('item_id'),
 		];
@@ -228,6 +285,7 @@ class approve extends \phpbb\notification\type\base
 	public function create_insert_array($type_data, $pre_create_data = []): void
 	{
 		$this->set_data('author_id', $type_data['author_id']);
+		$this->set_data('author_type', $type_data['author_type'] ?? 0);
 		$this->set_data('title', $type_data['title']);
 		$this->set_data('moderator', $type_data['moderator']);
 		$this->set_data('item_id', $type_data['item_id']);

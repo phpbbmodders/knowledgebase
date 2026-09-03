@@ -86,9 +86,11 @@
 									<li><a href="{{ art_row.U_EDIT_ART }}" title="{{ lang('EDIT') }}"
 										class="button button-icon-only"><i class="icon fa-pencil fa-fw blue"
 											aria-hidden="true"></i></a></li>{% endif %}
-								{% if not art_row.S_APPROVED %}
-									<li><a href="{{ art_row.U_ARTICLE }}" title="{{ lang('NEED_APPROVE') }}"
-										class="button button-icon-only"><i class="icon fa-check fa-fw orange"
+								{% if art_row.STATUS != 2 %}
+									<li><a href="{{ art_row.U_ARTICLE }}"
+										title="{% if art_row.STATUS == 3 %}{{ lang('KB_STATUS_INACTIVE') }}{% else %}{{ lang('NEED_APPROVE') }}{% endif %}"
+										class="button button-icon-only"><i
+											class="icon fa-{% if art_row.STATUS == 3 %}eye-slash{% else %}check{% endif %} fa-fw orange"
 											aria-hidden="true"></i></a></li>{% endif %}
 							</ul>
 						</dd>

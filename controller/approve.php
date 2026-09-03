@@ -126,117 +126,358 @@ class approve
 	 */
 	public function approve_article(): \Symfony\Component\HttpFoundation\Response
 	{
-		// If not logged in
-		$dd = $this->user->data;
 		if ($this->user->data['user_id'] == ANONYMOUS)
 		{
-			$mode = '';
-			login_box('', (($this->language->is_set('LOGIN_EXPLAIN_' . strtoupper($mode))) ? $this->language->lang('LOGIN_EXPLAIN_' . strtoupper($mode)) : $this->language->lang('LOGIN_EXPLAIN_APPROVE')));
+			login_box('', $this->language->lang('LOGIN_EXPLAIN_APPROVE'));
 		}
 
 		$art_id = $this->request->variable('id', 0);
-		$approve = $this->request->variable('approve', false);
-		$disapprove = $this->request->variable('disapprove', false);
+		$action = $this->request->variable('action', '');
 
 		$kb_article_info = $this->kb->get_kb_article_info($art_id);
 		$kb_category_info = $this->kb->get_cat_info($kb_article_info['article_category_id']);
 		$category_name = $kb_category_info['category_name'];
+		$status = (int) $kb_article_info['status'];
+
+		$is_moderator = $this->user->data['user_type'] == USER_FOUNDER ||
+			$this->auth->acl_get('a_manage_kb') ||
+			$this->kb->acl_kb_get($kb_article_info['article_category_id'], 'kb_m_approve');
 
 		$redirect = $this->helper->route('phpbbmodders_knowledgebase_category', ['id' => $kb_article_info['article_category_id']]);
 
-		if ($this->user->data['user_type'] != USER_FOUNDER &&
-			!$this->kb->acl_kb_get($kb_article_info['article_category_id'], 'kb_m_approve') &&
-			!$this->auth->acl_get('a_manage_kb')
-		)
+		if ($action)
+		{
+			if (!$is_moderator && $action != 'review')
+			{
+				trigger_error('RULES_KB_APPROVE_MOD_CANNOT');
+			}
+
+			switch ($action)
+			{
+				case 'assign':
+					$this->do_assign($art_id, $status);
+				break;
+
+				case 'review':
+					$this->do_review($art_id, $status, $kb_article_info, $is_moderator);
+				break;
+
+				case 'approve':
+					$this->do_approve($art_id, $status, $kb_article_info, $kb_category_info, $redirect);
+				break;
+
+				case 'deny':
+					$this->do_deny($art_id, $status, $kb_article_info, $kb_category_info, $redirect);
+				break;
+
+				case 'deactivate':
+					$this->do_set_active($art_id, $status, functions_kb::STATUS_ACTIVE, functions_kb::STATUS_INACTIVE, $redirect);
+				break;
+
+				case 'reactivate':
+					$this->do_set_active($art_id, $status, functions_kb::STATUS_INACTIVE, functions_kb::STATUS_ACTIVE, $redirect);
+				break;
+
+				case 'approve_revision':
+					$this->do_approve_revision($art_id, $status, $kb_article_info, $redirect);
+				break;
+
+				case 'reject_revision':
+					$this->do_reject_revision($art_id, $status, $redirect);
+				break;
+			}
+		}
+
+		$this->template->assign_vars([
+			'ARTICLE_AUTHOR'        => $kb_article_info['author'],
+			'ARTICLE_TITLE'         => $kb_article_info['article_title'],
+			'ARTICLE_DESCRIPTION'   => $kb_article_info['article_description'],
+			'ARTICLE_CATEGORY'      => $kb_category_info['category_name'],
+			'S_STATUS_NEW'          => $status === functions_kb::STATUS_NEW,
+			'S_STATUS_REVIEWED'     => $status === functions_kb::STATUS_REVIEWED,
+			'S_STATUS_ACTIVE'       => $status === functions_kb::STATUS_ACTIVE,
+			'S_STATUS_INACTIVE'     => $status === functions_kb::STATUS_INACTIVE,
+			'S_HAS_REVISION'        => $status === functions_kb::STATUS_ACTIVE && $this->kb->article_has_pending_revision($art_id),
+			'S_IS_MODERATOR'        => $is_moderator,
+			'S_IS_ASSIGNED'         => (bool) $kb_article_info['assigned_team_id'],
+			'S_CAN_REVIEW'          => $status === functions_kb::STATUS_NEW && (bool) $kb_article_info['assigned_team_id'] &&
+				($is_moderator || $this->kb->is_team_member([(int) $kb_article_info['assigned_team_id']])),
+			'S_TEAM_OPTIONS'        => $this->get_team_options((int) $kb_article_info['assigned_team_id']),
+			'S_ACTION'              => $this->helper->route('phpbbmodders_knowledgebase_approve', ['id' => $art_id]),
+		]);
+
+		return $this->helper->render('@phpbbmodders_knowledgebase/kb_approve_body.html', ($this->language->lang('LIBRARY') . ' &raquo; ' . $this->language->lang('APPROVE')));
+	}
+
+	/**
+	 * @param int $art_id
+	 * @param int $status
+	 * @return void
+	 */
+	protected function do_assign(int $art_id, int $status): void
+	{
+		if ($status !== functions_kb::STATUS_NEW)
+		{
+			return;
+		}
+
+		$team_id = $this->request->variable('team_id', 0);
+		if (!in_array($team_id, $this->kb->get_kb_team_groups(), true))
+		{
+			trigger_error('NO_SUCH_TEAM', E_USER_WARNING);
+		}
+
+		$sql = 'UPDATE ' . $this->articles_table . ' SET assigned_team_id = ' . $team_id . ' WHERE article_id = ' . $art_id;
+		$this->db->sql_query($sql);
+	}
+
+	/**
+	 * @param int   $art_id
+	 * @param int   $status
+	 * @param array $kb_article_info
+	 * @param bool  $is_moderator
+	 * @return void
+	 */
+	protected function do_review(int $art_id, int $status, array $kb_article_info, bool $is_moderator): void
+	{
+		if ($status !== functions_kb::STATUS_NEW || empty($kb_article_info['assigned_team_id']))
+		{
+			return;
+		}
+
+		if (!$is_moderator && !$this->kb->is_team_member([(int) $kb_article_info['assigned_team_id']]))
 		{
 			trigger_error('RULES_KB_APPROVE_MOD_CANNOT');
 		}
 
-		if ($kb_article_info['approved'])
+		$sql = 'UPDATE ' . $this->articles_table . ' SET status = ' . functions_kb::STATUS_REVIEWED . ' WHERE article_id = ' . $art_id;
+		$this->db->sql_query($sql);
+	}
+
+	/**
+	 * @param int    $art_id
+	 * @param int    $status
+	 * @param array  $kb_article_info
+	 * @param array  $kb_category_info
+	 * @param string $redirect
+	 * @return void
+	 */
+	protected function do_approve(int $art_id, int $status, array $kb_article_info, array $kb_category_info, string $redirect): void
+	{
+		if ($status !== functions_kb::STATUS_REVIEWED)
 		{
-			trigger_error('NO_NEED_APPROVE');
+			return;
 		}
 
-		if ($approve)
+		include_once($this->phpbb_root_path . 'includes/functions_posting.' . $this->php_ext);
+
+		try
 		{
-			include_once($this->phpbb_root_path . 'includes/functions_posting.' . $this->php_ext);
-
-			// Select which method we'll use to obtain the post_id or topic_id information
-			try
+			$kb_search = $this->search_factory->get_active();
+		}
+		catch (RuntimeException $e)
+		{
+			if (str_starts_with($e->getMessage(), 'No service found'))
 			{
-				$kb_search = $this->search_factory->get_active();
+				trigger_error('NO_SUCH_SEARCH_MODULE');
 			}
-			catch (RuntimeException $e)
+			else
 			{
-				if (str_starts_with($e->getMessage(), 'No service found'))
-				{
-					trigger_error('NO_SUCH_SEARCH_MODULE');
-				}
-				else
-				{
-					throw $e;
-				}
-			}
-
-			$sql = 'UPDATE ' . $this->articles_table . ' SET approved = 1 WHERE article_id = ' . (int) $art_id;
-			$this->db->sql_query($sql);
-
-			if (isset($kb_search))
-			{
-				// Add search index
-				$this->cache->purge();
-				$kb_search->index('add', (int) $art_id, $kb_article_info['article_body'], $kb_article_info['article_title'], $kb_article_info['article_description'], (int) $kb_article_info['author']);
-			}
-
-			if (!empty($this->config['kb_forum_id']) && $this->config['kb_anounce'])
-			{
-				$this->kb->submit_article($kb_article_info['article_category_id'], $this->config['kb_forum_id'], $kb_article_info['article_title'], $kb_article_info['article_description'], $kb_article_info['author'], $category_name, $art_id);
+				throw $e;
 			}
 		}
-		else if ($disapprove)
+
+		$sql = 'UPDATE ' . $this->articles_table . ' SET status = ' . functions_kb::STATUS_ACTIVE . ', approved = 1 WHERE article_id = ' . $art_id;
+		$this->db->sql_query($sql);
+
+		if (isset($kb_search))
 		{
-			$sql = 'DELETE FROM ' . $this->articles_table . ' WHERE article_id = ' . (int) $art_id;
-			$this->db->sql_query($sql);
+			$this->cache->purge();
+			$kb_search->index('add', $art_id, $kb_article_info['article_body'], $kb_article_info['article_title'], $kb_article_info['article_description'], (int) $kb_article_info['author_id']);
 		}
 
-		if ($approve || $disapprove)
+		if (!empty($this->config['kb_forum_id']) && $this->config['kb_anounce'])
 		{
-			// add log
-			$log_type = ($approve) ? 'LOG_LIBRARY_APPROVED_ARTICLE' : 'LOG_LIBRARY_REJECTED_ARTICLE';
-			$this->log->add('admin', $this->user->data['user_id'], $this->user->data['user_ip'], $log_type, time(), [$kb_article_info['article_title'], $kb_category_info['category_name'], $kb_article_info['author']]);
-
-			// Delete notification - moderator
-			$notification_data = [
-				'author_id'           => $this->user->data['user_id'],
-				'title'               => $kb_article_info['article_title'],
-				'article_category_id' => $kb_article_info['article_category_id'],
-				'item_id'             => $art_id,
-			];
-			$this->notification_manager->delete_notifications('phpbbmodders.knowledgebase.notification.type.need_approval', $notification_data);
-
-			// Send notification - author
-			$message = ($approve) ? 'ARTICLE_APPROVED_SUCESS' : 'ARTICLE_DISAPPROVED_SUCESS';
-			$notification_type = ($approve) ? 'phpbbmodders.knowledgebase.notification.type.approve' : 'phpbbmodders.knowledgebase.notification.type.disapprove';
-			$notification_data = [
-				'author_id' => $kb_article_info['author_id'],
-				'title'     => $kb_article_info['article_title'],
-				'moderator' => $this->user->data['user_id'],
-				'item_id'   => $art_id,
-			];
-			$this->notification_manager->add_notifications($notification_type, $notification_data);
-
-			meta_refresh(2, $redirect);
-			trigger_error($message);
+			$this->kb->submit_article($kb_article_info['article_category_id'], $this->config['kb_forum_id'], $kb_article_info['article_title'], $kb_article_info['article_description'], $kb_article_info['author'], $kb_category_info['category_name'], $art_id);
 		}
 
-		$this->template->assign_vars([
-			'ARTICLE_AUTHOR'      => $kb_article_info['author'],
-			'ARTICLE_TITLE'       => $kb_article_info['article_title'],
-			'ARTICLE_DESCRIPTION' => $kb_article_info['article_description'],
-			'ARTICLE_CATEGORY'    => $kb_category_info['category_name'],
-			'S_ACTION'            => $this->helper->route('phpbbmodders_knowledgebase_approve', ['id' => $art_id]),
+		$this->log->add('admin', $this->user->data['user_id'], $this->user->data['user_ip'], 'LOG_LIBRARY_APPROVED_ARTICLE', time(), [$kb_article_info['article_title'], $kb_category_info['category_name'], $kb_article_info['author']]);
+
+		$this->delete_need_approval_notification($art_id, $kb_article_info);
+		$this->send_author_notification($art_id, $kb_article_info, 'phpbbmodders.knowledgebase.notification.type.approve');
+
+		meta_refresh(2, $redirect);
+		trigger_error('ARTICLE_APPROVED_SUCESS');
+	}
+
+	/**
+	 * @param int    $art_id
+	 * @param int    $status
+	 * @param array  $kb_article_info
+	 * @param array  $kb_category_info
+	 * @param string $redirect
+	 * @return void
+	 */
+	protected function do_deny(int $art_id, int $status, array $kb_article_info, array $kb_category_info, string $redirect): void
+	{
+		if (!in_array($status, [functions_kb::STATUS_NEW, functions_kb::STATUS_REVIEWED], true))
+		{
+			return;
+		}
+
+		$sql = 'DELETE FROM ' . $this->articles_table . ' WHERE article_id = ' . $art_id;
+		$this->db->sql_query($sql);
+
+		$this->log->add('admin', $this->user->data['user_id'], $this->user->data['user_ip'], 'LOG_LIBRARY_REJECTED_ARTICLE', time(), [$kb_article_info['article_title'], $kb_category_info['category_name'], $kb_article_info['author']]);
+
+		$this->delete_need_approval_notification($art_id, $kb_article_info);
+		$this->send_author_notification($art_id, $kb_article_info, 'phpbbmodders.knowledgebase.notification.type.disapprove');
+
+		meta_refresh(2, $redirect);
+		trigger_error('ARTICLE_DISAPPROVED_SUCESS');
+	}
+
+	/**
+	 * @param int    $art_id
+	 * @param int    $status
+	 * @param int    $from_status
+	 * @param int    $to_status
+	 * @param string $redirect
+	 * @return void
+	 */
+	protected function do_set_active(int $art_id, int $status, int $from_status, int $to_status, string $redirect): void
+	{
+		if ($status !== $from_status)
+		{
+			return;
+		}
+
+		$approved = $to_status === functions_kb::STATUS_ACTIVE ? 1 : 0;
+		$sql = 'UPDATE ' . $this->articles_table . ' SET status = ' . $to_status . ', approved = ' . $approved . ' WHERE article_id = ' . $art_id;
+		$this->db->sql_query($sql);
+		$this->cache->destroy('sql', $this->articles_table);
+
+		meta_refresh(2, $redirect);
+		trigger_error($to_status === functions_kb::STATUS_ACTIVE ? 'ARTICLE_REACTIVATED' : 'ARTICLE_DEACTIVATED');
+	}
+
+	/**
+	 * @param int    $art_id
+	 * @param int    $status
+	 * @param array  $kb_article_info
+	 * @param string $redirect
+	 * @return void
+	 */
+	protected function do_approve_revision(int $art_id, int $status, array $kb_article_info, string $redirect): void
+	{
+		if ($status !== functions_kb::STATUS_ACTIVE)
+		{
+			return;
+		}
+
+		$revision = $this->kb->get_article_revision($art_id);
+		if (!$revision)
+		{
+			return;
+		}
+
+		$sql_data = [
+			'article_title'       => $revision['article_title'],
+			'article_description' => $revision['article_description'],
+			'article_body'        => $revision['article_body'],
+			'bbcode_uid'          => $revision['bbcode_uid'],
+			'bbcode_bitfield'     => $revision['bbcode_bitfield'],
+			'edit_date'           => time(),
+		];
+
+		$sql = 'UPDATE ' . $this->articles_table . '
+			SET ' . $this->db->sql_build_array('UPDATE', $sql_data) . '
+			WHERE article_id = ' . $art_id;
+		$this->db->sql_query($sql);
+
+		$this->kb->delete_article_revision($art_id);
+
+		try
+		{
+			$kb_search = $this->search_factory->get_active();
+			$kb_search->index('edit', $art_id, $revision['article_body'], $revision['article_title'], $revision['article_description'], (int) $kb_article_info['author_id']);
+		}
+		catch (RuntimeException $e)
+		{
+			if (!str_starts_with($e->getMessage(), 'No service found'))
+			{
+				throw $e;
+			}
+		}
+
+		$this->cache->destroy('sql', $this->articles_table);
+
+		meta_refresh(2, $redirect);
+		trigger_error('ARTICLE_REVISION_APPROVED');
+	}
+
+	/**
+	 * @param int    $art_id
+	 * @param int    $status
+	 * @param string $redirect
+	 * @return void
+	 */
+	protected function do_reject_revision(int $art_id, int $status, string $redirect): void
+	{
+		if ($status !== functions_kb::STATUS_ACTIVE)
+		{
+			return;
+		}
+
+		$this->kb->delete_article_revision($art_id);
+
+		meta_refresh(2, $redirect);
+		trigger_error('ARTICLE_REVISION_REJECTED');
+	}
+
+	/**
+	 * @param int   $art_id
+	 * @param array $kb_article_info
+	 * @return void
+	 */
+	protected function delete_need_approval_notification(int $art_id, array $kb_article_info): void
+	{
+		$this->notification_manager->delete_notifications('phpbbmodders.knowledgebase.notification.type.need_approval', [
+			'author_id'           => $kb_article_info['author_id'],
+			'title'               => $kb_article_info['article_title'],
+			'article_category_id' => $kb_article_info['article_category_id'],
+			'item_id'             => $art_id,
 		]);
+	}
 
-		return $this->helper->render('@phpbbmodders_knowledgebase/kb_approve_body.html', ($this->language->lang('LIBRARY') . ' &raquo; ' . $this->language->lang('APPROVE')));
+	/**
+	 * @param int    $art_id
+	 * @param array  $kb_article_info
+	 * @param string $notification_type
+	 * @return void
+	 */
+	protected function send_author_notification(int $art_id, array $kb_article_info, string $notification_type): void
+	{
+		$this->notification_manager->add_notifications($notification_type, [
+			'author_id'   => $kb_article_info['author_id'],
+			'author_type' => $kb_article_info['author_type'],
+			'title'       => $kb_article_info['article_title'],
+			'moderator'   => $this->user->data['user_id'],
+			'item_id'     => $art_id,
+		]);
+	}
+
+	/**
+	 * @param int $selected_team_id
+	 * @return string
+	 */
+	protected function get_team_options(int $selected_team_id): string
+	{
+		$options = '';
+		foreach ($this->kb->get_kb_team_group_names() as $group_id => $group_name)
+		{
+			$options .= '<option value="' . $group_id . '"' . ($group_id === $selected_team_id ? ' selected="selected"' : '') . '>' . $group_name . '</option>';
+		}
+		return $options;
 	}
 }

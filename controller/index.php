@@ -111,13 +111,13 @@ class index
 			$sql_where = ($this->auth->acl_get('a_manage_kb') || $this->kb->acl_kb_get($cat_row['category_id'], 'kb_m_approve')) ? '' : 'AND approved = 1';
 			$art_count = (int) $cat_row['number_articles'];
 
-			$sql = 'SELECT a.article_id, a.article_title, a.article_date, a.author_id, a.author, a.approved, u.user_id, u.user_colour
-					FROM ' . $this->articles_table . ' a, ' . USERS_TABLE . ' u
+			$sql = 'SELECT a.article_id, a.article_title, a.article_date, a.author_id, a.author, a.author_type, a.approved, u.user_id, u.user_colour
+					FROM ' . $this->articles_table . ' a
+					LEFT JOIN ' . USERS_TABLE . ' u ON (a.author_id = u.user_id AND a.author_type = 0)
 					WHERE a.article_category_id = ' . (int) $cat_row['category_id'] . '
 					AND a.article_date =
 						(SELECT MAX(article_date) AS max FROM ' . $this->articles_table . '
-						WHERE article_category_id = ' . (int) $cat_row['category_id'] . ' ' . $sql_where . ')
-						AND a.author_id = u.user_id';
+						WHERE article_category_id = ' . (int) $cat_row['category_id'] . ' ' . $sql_where . ')';
 			$res = $this->db->sql_query($sql);
 			$art_row = $this->db->sql_fetchrow($res);
 			$this->db->sql_freeresult($res);

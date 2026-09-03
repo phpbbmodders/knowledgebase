@@ -18,6 +18,7 @@ use phpbb\config\db_text;
 use phpbb\controller\helper;
 use phpbb\db\driver\driver_interface;
 use phpbb\extension\manager;
+use phpbb\group\helper as group_helper;
 use phpbb\language\language;
 use phpbb\log\log;
 use phpbb\template\template;
@@ -25,6 +26,14 @@ use phpbb\user;
 
 class functions_kb
 {
+	public const STATUS_NEW = 0;
+	public const STATUS_REVIEWED = 1;
+	public const STATUS_ACTIVE = 2;
+	public const STATUS_INACTIVE = 3;
+
+	public const AUTHOR_TYPE_USER = 0;
+	public const AUTHOR_TYPE_GROUP = 1;
+
 	/** @var \phpbb\db\driver\driver_interface */
 	protected driver_interface $db;
 
@@ -86,6 +95,12 @@ class functions_kb
 	protected string $kb_groups_table;
 
 	/** @var string */
+	protected string $revisions_table;
+
+	/** @var group_helper */
+	protected group_helper $group_helper;
+
+	/** @var string */
 	protected string $upload_dir;
 
 	/**
@@ -111,13 +126,15 @@ class functions_kb
 	 * @param string           $options_table
 	 * @param string           $kb_users_table
 	 * @param string           $kb_groups_table
+	 * @param string           $revisions_table
+	 * @param group_helper     $group_helper
 	 */
 	public function __construct(
 		driver_interface $db, config $config, db_text $config_text, helper $helper, manager $ext_manager,
 		language $language, auth $auth, template $template, user $user, cache $cache, log $log,
 		string $phpbb_root_path, string $php_ext, string $articles_table, string $categories_table,
 		string $kb_logs_table, string $attachments_table, string $options_table, string $kb_users_table,
-		string $kb_groups_table
+		string $kb_groups_table, string $revisions_table, group_helper $group_helper
 	)
 	{
 		$this->db = $db;
@@ -140,6 +157,8 @@ class functions_kb
 		$this->options_table = $options_table;
 		$this->kb_users_table = $kb_users_table;
 		$this->kb_groups_table = $kb_groups_table;
+		$this->revisions_table = $revisions_table;
+		$this->group_helper = $group_helper;
 
 		$this->upload_dir = $this->ext_manager->get_extension_path('phpbbmodders/knowledgebase', true) . 'files/';
 		$this->log->set_log_table($this->kb_logs_table);
@@ -466,6 +485,161 @@ class functions_kb
 			$enabled_extensions = array_merge($enabled_extensions, array_values($extension));
 		}
 		return $enabled_extensions;
+	}
+
+	/**
+	 * Get the group_ids designated as KB teams via the ACP settings page.
+	 *
+	 * @return int[]
+	 */
+	public function get_kb_team_groups(): array
+	{
+		$groups = json_decode($this->config_text->get('kb_team_groups'), true);
+		return is_array($groups) ? array_map('intval', $groups) : [];
+	}
+
+	/**
+	 * Is the given (or current) user a member of any of the given groups?
+	 *
+	 * @param int[]    $group_ids
+	 * @param int|null $user_id
+	 * @return bool
+	 */
+	public function is_team_member(array $group_ids, ?int $user_id = null): bool
+	{
+		if (empty($group_ids))
+		{
+			return false;
+		}
+
+		$user_id ??= (int) $this->user->data['user_id'];
+
+		$sql = 'SELECT ug.user_id
+			FROM ' . USER_GROUP_TABLE . ' ug
+			WHERE ug.user_id = ' . (int) $user_id . '
+				AND ug.user_pending = 0
+				AND ' . $this->db->sql_in_set('ug.group_id', $group_ids);
+		$result = $this->db->sql_query_limit($sql, 1);
+		$row = $this->db->sql_fetchrow($result);
+		$this->db->sql_freeresult($result);
+
+		return (bool) $row;
+	}
+
+	/**
+	 * All current member user_ids of the given group.
+	 *
+	 * @param int $group_id
+	 * @return int[]
+	 */
+	public function get_group_member_ids(int $group_id): array
+	{
+		$user_ids = [];
+
+		$sql = 'SELECT user_id
+			FROM ' . USER_GROUP_TABLE . '
+			WHERE group_id = ' . $group_id . '
+				AND user_pending = 0';
+		$result = $this->db->sql_query($sql);
+		while ($row = $this->db->sql_fetchrow($result))
+		{
+			$user_ids[] = (int) $row['user_id'];
+		}
+		$this->db->sql_freeresult($result);
+
+		return $user_ids;
+	}
+
+	/**
+	 * Does the given article have a pending revision awaiting approval?
+	 *
+	 * @param int $article_id
+	 * @return bool
+	 */
+	public function article_has_pending_revision(int $article_id): bool
+	{
+		return (bool) $this->get_article_revision($article_id);
+	}
+
+	/**
+	 * @param int $article_id
+	 * @return array|null
+	 */
+	public function get_article_revision(int $article_id): ?array
+	{
+		$sql = 'SELECT *
+			FROM ' . $this->revisions_table . '
+			WHERE article_id = ' . $article_id;
+		$result = $this->db->sql_query($sql);
+		$row = $this->db->sql_fetchrow($result);
+		$this->db->sql_freeresult($result);
+
+		return $row ?: null;
+	}
+
+	/**
+	 * Store (or replace) the pending revision for an article. At most one
+	 * pending revision is kept per article.
+	 *
+	 * @param int    $article_id
+	 * @param array  $fields article_title, article_description, article_body,
+	 *                       bbcode_uid, bbcode_bitfield
+	 * @param int    $submitted_by
+	 * @return void
+	 */
+	public function save_article_revision(int $article_id, array $fields, int $submitted_by): void
+	{
+		$this->delete_article_revision($article_id);
+
+		$sql_ary = array_merge($fields, [
+			'article_id'     => $article_id,
+			'submitted_by'   => $submitted_by,
+			'submitted_date' => time(),
+		]);
+
+		$sql = 'INSERT INTO ' . $this->revisions_table . ' ' . $this->db->sql_build_array('INSERT', $sql_ary);
+		$this->db->sql_query($sql);
+	}
+
+	/**
+	 * @param int $article_id
+	 * @return void
+	 */
+	public function delete_article_revision(int $article_id): void
+	{
+		$sql = 'DELETE FROM ' . $this->revisions_table . ' WHERE article_id = ' . $article_id;
+		$this->db->sql_query($sql);
+	}
+
+	/**
+	 * KB team group_id => display name, for the assign-to-team dropdown.
+	 * Uses group_helper::get_name() (same as acp_controller.php) so
+	 * special/translated group names resolve exactly as they do
+	 * everywhere else in phpBB.
+	 *
+	 * @return array<int, string>
+	 */
+	public function get_kb_team_group_names(): array
+	{
+		$group_ids = $this->get_kb_team_groups();
+		if (empty($group_ids))
+		{
+			return [];
+		}
+
+		$names = [];
+		$sql = 'SELECT group_id, group_name
+			FROM ' . GROUPS_TABLE . '
+			WHERE ' . $this->db->sql_in_set('group_id', $group_ids);
+		$result = $this->db->sql_query($sql);
+		while ($row = $this->db->sql_fetchrow($result))
+		{
+			$names[(int) $row['group_id']] = $this->group_helper->get_name($row['group_name']);
+		}
+		$this->db->sql_freeresult($result);
+		asort($names);
+
+		return $names;
 	}
 
 	/**

@@ -242,13 +242,13 @@ class category
 			$art_count = (int) $this->db->sql_fetchfield('articles');
 			$this->db->sql_freeresult($res);
 
-			$sql = 'SELECT a.article_id, a.article_title, a.article_date, a.author_id, a.author, a.approved, u.user_id, u.user_colour
-					FROM ' . $this->articles_table . ' a, ' . USERS_TABLE . ' u
+			$sql = 'SELECT a.article_id, a.article_title, a.article_date, a.author_id, a.author, a.author_type, a.approved, u.user_id, u.user_colour
+					FROM ' . $this->articles_table . ' a
+					LEFT JOIN ' . USERS_TABLE . ' u ON (a.author_id = u.user_id AND a.author_type = 0)
 					WHERE a.article_category_id = ' . (int) $cat_row['category_id'] . '
 					AND a.article_date =
 						(SELECT MAX(article_date) AS max FROM ' . $this->articles_table . '
-							WHERE article_category_id = ' . (int) $cat_row['category_id'] . ' ' . $sql_where . ')
-								AND a.author_id = u.user_id';
+							WHERE article_category_id = ' . (int) $cat_row['category_id'] . ' ' . $sql_where . ')';
 			$res = $this->db->sql_query($sql);
 			$art_row = $this->db->sql_fetchrow($res);
 			$this->db->sql_freeresult($res);
@@ -273,10 +273,10 @@ class category
 		}
 
 		$sql = 'SELECT a.*, u.user_colour, u.username
-			FROM ' . $this->articles_table . ' a, ' . USERS_TABLE . ' u
+			FROM ' . $this->articles_table . ' a
+			LEFT JOIN ' . USERS_TABLE . ' u ON (u.user_id = a.author_id AND a.author_type = 0)
 			WHERE a.article_category_id = ' . (int) $cat_id . '
-			' . $sql_where . '
-			AND u.user_id = a.author_id'
+			' . $sql_where
 			. $order_by;
 
 		$result = $this->db->sql_query_limit($sql, $per_page, $start);
@@ -289,7 +289,7 @@ class category
 				'ORDER_ID'            => $art_row['display_order'],
 				'U_ARTICLE'           => $this->helper->route('phpbbmodders_knowledgebase_article', ['k' => $art_row['article_id']]),
 				'ARTICLE_TITLE'       => $art_row['article_title'],
-				'ARTICLE_AUTHOR'      => get_username_string('full', $art_row['author_id'], $art_row['username'], $art_row['user_colour']),
+				'ARTICLE_AUTHOR'      => ((int) $art_row['author_type'] === 1) ? $art_row['author'] : get_username_string('full', $art_row['author_id'], $art_row['username'], $art_row['user_colour']),
 				'ARTICLE_DESCRIPTION' => $art_row['article_description'],
 				'ARTICLE_DATE'        => $this->user->format_date($art_row['article_date']),
 				'ART_VIEWS'           => $art_row['views'],
@@ -298,6 +298,7 @@ class category
 				'S_CAN_DELETE'        => $this->kb->acl_kb_get($cat_id, 'kb_m_delete') || ($this->kb->acl_kb_get($cat_id, 'kb_u_delete') && $this->user->data['user_id'] == $author_id),
 				'S_CAN_EDIT'          => $this->kb->acl_kb_get($cat_id, 'kb_m_edit') || ($this->kb->acl_kb_get($cat_id, 'kb_u_edit') && $this->user->data['user_id'] == $author_id),
 				'S_APPROVED'          => (bool) $art_row['approved'],
+				'STATUS'              => (int) $art_row['status'],
 			]);
 		}
 		$this->db->sql_freeresult($result);

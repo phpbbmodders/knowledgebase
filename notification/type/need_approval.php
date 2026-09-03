@@ -12,6 +12,7 @@
 namespace phpbbmodders\knowledgebase\notification\type;
 
 use phpbb\controller\helper;
+use phpbb\group\helper as group_helper;
 use phpbb\user_loader;
 
 class need_approval extends \phpbb\notification\type\base
@@ -30,6 +31,8 @@ class need_approval extends \phpbb\notification\type\base
 	protected helper $helper;
 	/** @var \phpbb\user_loader */
 	protected user_loader $user_loader;
+	/** @var group_helper */
+	protected group_helper $group_helper;
 	/** @var string */
 	protected string $kb_options_table;
 	/** @var string */
@@ -77,6 +80,15 @@ class need_approval extends \phpbb\notification\type\base
 	public function set_user_loader(\phpbb\user_loader $user_loader): void
 	{
 		$this->user_loader = $user_loader;
+	}
+
+	/**
+	 * @param group_helper $group_helper
+	 * @return void
+	 */
+	public function set_group_helper(group_helper $group_helper): void
+	{
+		$this->group_helper = $group_helper;
 	}
 
 	/**
@@ -243,7 +255,35 @@ class need_approval extends \phpbb\notification\type\base
 	 */
 	public function users_to_query(): array
 	{
-		return [$this->get_data('author_id')];
+		return $this->is_group_author() ? [] : [$this->get_data('author_id')];
+	}
+
+	/**
+	 * @return bool
+	 */
+	protected function is_group_author(): bool
+	{
+		return ((int) $this->get_data('author_type')) === 1;
+	}
+
+	/**
+	 * @return string
+	 */
+	protected function get_author_display_name(): string
+	{
+		if (!$this->is_group_author())
+		{
+			return $this->user_loader->get_username($this->get_data('author_id'), 'no_profile');
+		}
+
+		$sql = 'SELECT group_name
+			FROM ' . GROUPS_TABLE . '
+			WHERE group_id = ' . (int) $this->get_data('author_id');
+		$result = $this->db->sql_query($sql);
+		$group_name = $this->db->sql_fetchfield('group_name');
+		$this->db->sql_freeresult($result);
+
+		return $group_name ? $this->group_helper->get_name($group_name) : '';
 	}
 
 	/**
@@ -253,7 +293,7 @@ class need_approval extends \phpbb\notification\type\base
 	 */
 	public function get_avatar(): string
 	{
-		return $this->user_loader->get_avatar($this->get_data('author_id'), false, true);
+		return $this->is_group_author() ? '' : $this->user_loader->get_avatar($this->get_data('author_id'), false, true);
 	}
 
 	/**
@@ -273,8 +313,7 @@ class need_approval extends \phpbb\notification\type\base
 	 */
 	public function get_title(): array|string
 	{
-		$username = $this->user_loader->get_username($this->get_data('author_id'), 'no_profile');
-		return $this->language->lang('NOTIFICATION_NEED_APPROVAL', $username);
+		return $this->language->lang('NOTIFICATION_NEED_APPROVAL', $this->get_author_display_name());
 	}
 
 	/**
@@ -306,7 +345,9 @@ class need_approval extends \phpbb\notification\type\base
 	 */
 	public function get_email_template_variables(): array
 	{
-		$username = $this->user_loader->get_username($this->get_data('author_id'), 'username');
+		$username = $this->is_group_author()
+			? $this->get_author_display_name()
+			: $this->user_loader->get_username($this->get_data('author_id'), 'username');
 		return [
 			//'USERNAME'			=> htmlspecialchars_decode($this->user->data['username']),
 			'ARTICLE_TITLE'  => htmlspecialchars_decode(censor_text($this->get_data('title'))),
@@ -353,6 +394,7 @@ class need_approval extends \phpbb\notification\type\base
 	public function create_insert_array($type_data, $pre_create_data = []): void
 	{
 		$this->set_data('author_id', $type_data['author_id']);
+		$this->set_data('author_type', $type_data['author_type'] ?? 0);
 		$this->set_data('title', $type_data['title']);
 		$this->set_data('item_id', $type_data['item_id']);
 		$this->set_data('article_category_id', $type_data['article_category_id']);
