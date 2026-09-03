@@ -9,7 +9,7 @@
  *
  */
 
-namespace sheer\knowledgebase\controller;
+namespace phpbbmodders\knowledgebase\controller;
 
 use phpbb\auth\auth;
 use phpbb\cache\driver\driver_interface as cache;
@@ -26,8 +26,8 @@ use phpbb\request\request_interface;
 use phpbb\template\template;
 use phpbb\user;
 use RuntimeException;
-use sheer\knowledgebase\inc\functions_kb;
-use sheer\knowledgebase\search\kb_search_backend_factory;
+use phpbbmodders\knowledgebase\inc\functions_kb;
+use phpbbmodders\knowledgebase\search\kb_search_backend_factory;
 use Symfony\Component\HttpFoundation\Response;
 
 class posting
@@ -74,10 +74,10 @@ class posting
 	/** @var \phpbb\notification\manager */
 	protected notification_manager $notification_manager;
 
-	/** @var \sheer\knowledgebase\inc\functions_kb */
+	/** @var \phpbbmodders\knowledgebase\inc\functions_kb */
 	protected functions_kb $kb;
 
-	/** @var \sheer\knowledgebase\search\kb_search_backend_factory */
+	/** @var \phpbbmodders\knowledgebase\search\kb_search_backend_factory */
 	protected kb_search_backend_factory $search_factory;
 
 	/** @var string */
@@ -159,7 +159,7 @@ class posting
 		$this->categories_table = $categories_table;
 		$this->attachments_table = $attachments_table;
 
-		$this->upload_dir = $this->ext_manager->get_extension_path('sheer/knowledgebase', true) . 'files/';
+		$this->upload_dir = $this->ext_manager->get_extension_path('phpbbmodders/knowledgebase', true) . 'files/';
 	}
 
 	public function post_article(): Response
@@ -243,7 +243,7 @@ class posting
 		$delete = $this->request->is_set_post('delete');
 		$edit = $mode == 'edit';
 
-		$action = $this->helper->route('sheer_knowledgebase_posting', ['id' => $cat_id]);
+		$action = $this->helper->route('phpbbmodders_knowledgebase_posting', ['id' => $cat_id]);
 
 		if ($mode == 'delete' || $delete)
 		{
@@ -269,7 +269,7 @@ class posting
 					$kb_search->index_remove($art_ids, $author_ids);
 				}
 				$msg = $this->language->lang('ARTICLE_DELETED');
-				$root = $this->helper->route('sheer_knowledgebase_category', ['id' => $cat_id]);
+				$root = $this->helper->route('phpbbmodders_knowledgebase_category', ['id' => $cat_id]);
 				$msg .= '<br><br>' . sprintf($this->language->lang('RETURN_CAT'), '<a href="' . $root . '">', '</a>');
 				$this->cache->destroy('sql', $this->categories_table);
 				$this->cache->destroy('sql', $this->articles_table);
@@ -290,7 +290,7 @@ class posting
 				trigger_error($this->language->lang('NO_ID_SPECIFIED'));
 			}
 
-			$action = $this->helper->route('sheer_knowledgebase_posting', ['mode' => 'edit', 'k' => $art_id, 'id' => $cat_id]);
+			$action = $this->helper->route('phpbbmodders_knowledgebase_posting', ['mode' => 'edit', 'k' => $art_id, 'id' => $cat_id]);
 
 			$uid = $bitfield = $options = '';
 
@@ -361,7 +361,7 @@ class posting
 					'approved'            => ($this->kb->acl_kb_get($cat_id, 'kb_u_add_noapprove')) ? 1 : 0,
 				];
 
-				$root = $this->helper->route('sheer_knowledgebase_category', ['id' => $cat_id]);
+				$root = $this->helper->route('phpbbmodders_knowledgebase_category', ['id' => $cat_id]);
 
 				if ($mode == 'edit')
 				{
@@ -370,7 +370,7 @@ class posting
 					$sql_data['views'] = $views;
 					$sql_data['article_date'] = $article_date;
 					$sql_data['edit_date'] = time();
-					$redirect = $this->helper->route('sheer_knowledgebase_article', ['k' => $art_id]);
+					$redirect = $this->helper->route('phpbbmodders_knowledgebase_article', ['k' => $art_id]);
 
 					if ($cat_id !== $to_id) // Move article to another category
 					{
@@ -440,7 +440,7 @@ class posting
 
 					if ($this->kb->acl_kb_get($cat_id, 'kb_u_add_noapprove'))
 					{
-						$redirect = $this->helper->route('sheer_knowledgebase_article', ['k' => $new]);
+						$redirect = $this->helper->route('phpbbmodders_knowledgebase_article', ['k' => $new]);
 
 						if (isset($kb_search))
 						{
@@ -459,7 +459,7 @@ class posting
 					else
 					{
 						$msg = $this->language->lang('ARTICLE_NEED_APPROVE');
-						$redirect = $this->helper->route('sheer_knowledgebase_category', ['id' => $cat_id]);
+						$redirect = $this->helper->route('phpbbmodders_knowledgebase_category', ['id' => $cat_id]);
 
 						// Add notification
 						$notification_data = [
@@ -468,7 +468,7 @@ class posting
 							'article_category_id' => $cat_id,
 							'item_id'             => $new,
 						];
-						$this->notification_manager->add_notifications('sheer.knowledgebase.notification.type.need_approval', $notification_data);
+						$this->notification_manager->add_notifications('phpbbmodders.knowledgebase.notification.type.need_approval', $notification_data);
 					}
 
 					$this->cache->destroy('sql', $this->categories_table);
@@ -495,7 +495,7 @@ class posting
 		}
 		if ($cancel)
 		{
-			redirect($this->helper->route('sheer_knowledgebase_category', ['id' => $cat_id]));
+			redirect($this->helper->route('phpbbmodders_knowledgebase_category', ['id' => $cat_id]));
 		}
 
 		if ($preview)
@@ -570,7 +570,7 @@ class posting
 
 				'CATS_BOX' => '<option value="0" disabled="disabled">' . $this->language->lang('CATEGORIES_LIST') . '</option>' . $this->kb->make_category_select($cat_id, [], false),
 
-				'U_KB'           => $this->helper->route('sheer_knowledgebase_index'),
+				'U_KB'           => $this->helper->route('phpbbmodders_knowledgebase_index'),
 				'S_POST_ACTION'  => $action,
 				'S_POST_ARTICLE' => true,
 			]
@@ -578,7 +578,7 @@ class posting
 
 		$this->template->assign_block_vars('navlinks', [
 				'FORUM_NAME'   => $this->language->lang('LIBRARY'),
-				'U_VIEW_FORUM' => $this->helper->route('sheer_knowledgebase_index'),
+				'U_VIEW_FORUM' => $this->helper->route('phpbbmodders_knowledgebase_index'),
 			]
 		);
 
@@ -586,14 +586,14 @@ class posting
 		{
 			$this->template->assign_block_vars('navlinks', [
 					'FORUM_NAME'   => $row['category_name'],
-					'U_VIEW_FORUM' => $this->helper->route('sheer_knowledgebase_category', ['id' => $row['category_id']]),
+					'U_VIEW_FORUM' => $this->helper->route('phpbbmodders_knowledgebase_category', ['id' => $row['category_id']]),
 				]
 			);
 		}
 
 		$title = $mode == 'edit' ? $this->language->lang('EDIT_ARTICLE') : $this->language->lang('ADD_ARTICLE');
 
-		return $this->helper->render('@sheer_knowledgebase/kb_post_body.html', ($this->language->lang('LIBRARY') . ' &raquo; ' . $title));
+		return $this->helper->render('@phpbbmodders_knowledgebase/kb_post_body.html', ($this->language->lang('LIBRARY') . ' &raquo; ' . $title));
 	}
 
 	/**

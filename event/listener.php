@@ -9,7 +9,7 @@
  *
  */
 
-namespace sheer\knowledgebase\event;
+namespace phpbbmodders\knowledgebase\event;
 
 /**
  * @ignore
@@ -98,7 +98,7 @@ class listener implements EventSubscriberInterface
 	{
 		$lang_set_ext = $event['lang_set_ext'];
 		$lang_set_ext[] = [
-			'ext_name' => 'sheer/knowledgebase',
+			'ext_name' => 'phpbbmodders/knowledgebase',
 			'lang_set' => 'knowledgebase_lng',
 		];
 		$event['lang_set_ext'] = $lang_set_ext;
@@ -112,8 +112,8 @@ class listener implements EventSubscriberInterface
 		$this->template->assign_vars([
 			'KB_FONT_ICON' => $this->config['kb_font_icon'],
 			//      'S_KNOWLEDGEBASE_LINK_ENABLED' => !empty($this->config['kbase_enable']) && !empty($this->config['kbase_header_link']) && $this->auth->acl_get('u_manage_kb'),
-			//      'U_LIBRARY' => $this->helper->route('sheer_knowledgebase_index')
-			'U_LIBRARY'    => ($this->auth->acl_get('u_kb_view') || $this->auth->acl_get('a_manage_kb')) ? $this->helper->route('sheer_knowledgebase_index') : '',
+			//      'U_LIBRARY' => $this->helper->route('phpbbmodders_knowledgebase_index')
+			'U_LIBRARY'    => ($this->auth->acl_get('u_kb_view') || $this->auth->acl_get('a_manage_kb')) ? $this->helper->route('phpbbmodders_knowledgebase_index') : '',
 		]);
 	}
 
@@ -127,7 +127,7 @@ class listener implements EventSubscriberInterface
 		if ($event['on_page'][1] === 'app' && strrpos($event['row']['session_page'], 'app.' . $this->php_ext . '/knowledgebase') === 0)
 		{
 			$event['location'] = $this->language->lang('LIBRARY');
-			$event['location_url'] = $this->helper->route('sheer_knowledgebase_index', ['name' => 'index']);
+			$event['location_url'] = $this->helper->route('phpbbmodders_knowledgebase_index', ['name' => 'index']);
 		}
 	}
 
@@ -175,7 +175,7 @@ class listener implements EventSubscriberInterface
 	 * must assign your permissions in your module_info.php file. For example,
 	 * to allow only users with the a_mange_kb permission
 	 * access to your ACP module, you would set this in your acp/main_info.php:
-	 *    'auth' => 'ext_sheer/knowledgebase && acl_a_board && acl_a_manage_kb'
+	 *    'auth' => 'ext_phpbbmodders/knowledgebase && acl_a_board && acl_a_manage_kb'
 	 *
 	 * @param \phpbb\event\data $event Event object
 	 */

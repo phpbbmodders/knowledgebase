@@ -9,7 +9,7 @@
  *
  */
 
-namespace sheer\knowledgebase\controller;
+namespace phpbbmodders\knowledgebase\controller;
 
 use phpbb\config\config;
 use phpbb\db\driver\driver_interface;

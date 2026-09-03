@@ -9,7 +9,7 @@
  *
  */
 
-namespace sheer\knowledgebase\acp;
+namespace phpbbmodders\knowledgebase\acp;
 
 class manage_module
 {
@@ -30,7 +30,7 @@ class manage_module
 
 		/** @var \phpbb\language\language $language */
 		$language = $phpbb_container->get('language');
-		$language->add_lang('acp_knowledgebase', 'sheer/knowledgebase');
+		$language->add_lang('acp_knowledgebase', 'phpbbmodders/knowledgebase');
 
 		/** @var \phpbb\request\request $request */
 		$request = $phpbb_container->get('request');
@@ -53,11 +53,11 @@ class manage_module
 		/** @var \phpbb\log\log $phpbb_log */
 		$phpbb_log = $phpbb_container->get('log');
 
-		/** @var \sheer\knowledgebase\inc\functions_kb $kb */
-		$kb = $phpbb_container->get('sheer.knowledgebase.inc');
+		/** @var \phpbbmodders\knowledgebase\inc\functions_kb $kb */
+		$kb = $phpbb_container->get('phpbbmodders.knowledgebase.inc');
 
 		// Get an instance of the admin controller
-		$admin_controller = $phpbb_container->get('sheer.knowledgebase.controller.acp');
+		$admin_controller = $phpbb_container->get('phpbbmodders.knowledgebase.controller.acp');
 
 		// Make the $u_action url available in the admin controller
 		$admin_controller->set_page_url($this->u_action);
@@ -112,7 +112,7 @@ class manage_module
 					if (!count($errors))
 					{
 						$cache->destroy('sql', $categories_table);
-						$message = ($action == 'add') ? sprintf($language->lang('CATEGORY_ADDED'), '<a href="' . append_sid("{$phpbb_admin_path}index.{$phpEx}", 'i=-sheer-knowledgebase-acp-permissions_module&mode=permissions&action=setting_group_local&category_id[]=' . $category_data['category_id']) . '">', '</a>') : $language->lang('CATEGORY_EDITED');
+						$message = ($action == 'add') ? sprintf($language->lang('CATEGORY_ADDED'), '<a href="' . append_sid("{$phpbb_admin_path}index.{$phpEx}", 'i=-phpbbmodders-knowledgebase-acp-permissions_module&mode=permissions&action=setting_group_local&category_id[]=' . $category_data['category_id']) . '">', '</a>') : $language->lang('CATEGORY_EDITED');
 						meta_refresh(2, $this->u_action . '&amp;parent_id=' . $parent_id);
 						trigger_error($message . adm_back_link($this->u_action . '&amp;parent_id=' . $parent_id));
 					}

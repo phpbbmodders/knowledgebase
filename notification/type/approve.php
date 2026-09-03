@@ -9,7 +9,7 @@
  *
  */
 
-namespace sheer\knowledgebase\notification\type;
+namespace phpbbmodders\knowledgebase\notification\type;
 
 use phpbb\controller\helper;
 use phpbb\user_loader;
@@ -93,7 +93,7 @@ class approve extends \phpbb\notification\type\base
 	 */
 	public function get_type(): string
 	{
-		return 'sheer.knowledgebase.notification.type.approve';
+		return 'phpbbmodders.knowledgebase.notification.type.approve';
 	}
 
 	/**
@@ -159,7 +159,7 @@ class approve extends \phpbb\notification\type\base
 	 */
 	public function get_url(): string
 	{
-		return $this->helper->route('sheer_knowledgebase_article', [
+		return $this->helper->route('phpbbmodders_knowledgebase_article', [
 			'k' => $this->get_data('item_id'),
 		]);
 	}
@@ -171,7 +171,7 @@ class approve extends \phpbb\notification\type\base
 	 */
 	public function get_email_template(): string
 	{
-		return '@sheer_knowledgebase/article_approve';
+		return '@phpbbmodders_knowledgebase/article_approve';
 	}
 
 	/**

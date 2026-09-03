@@ -8,14 +8,14 @@
  *
  */
 
-namespace sheer\knowledgebase\migrations;
+namespace phpbbmodders\knowledgebase\migrations;
 
 class version_2_0_2 extends \phpbb\db\migration\migration
 {
 	static public function depends_on()
 	{
 		return [
-			'\sheer\knowledgebase\migrations\version_2_0_1',
+			'\phpbbmodders\knowledgebase\migrations\version_2_0_1',
 		];
 	}
 

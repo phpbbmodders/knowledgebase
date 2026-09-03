@@ -9,7 +9,7 @@
  *
  */
 
-namespace sheer\knowledgebase\inc;
+namespace phpbbmodders\knowledgebase\inc;
 
 use phpbb\auth\auth;
 use phpbb\cache\driver\driver_interface as cache;
@@ -141,7 +141,7 @@ class functions_kb
 		$this->kb_users_table = $kb_users_table;
 		$this->kb_groups_table = $kb_groups_table;
 
-		$this->upload_dir = $this->ext_manager->get_extension_path('sheer/knowledgebase', true) . 'files/';
+		$this->upload_dir = $this->ext_manager->get_extension_path('phpbbmodders/knowledgebase', true) . 'files/';
 		$this->log->set_log_table($this->kb_logs_table);
 	}
 
@@ -225,7 +225,7 @@ class functions_kb
 				$res = $this->db->sql_query($sql);
 				$art_row = $this->db->sql_fetchrow($res);
 				$this->db->sql_freeresult($res);
-				$cat_list .= $padding . '<a href="' . $this->helper->route('sheer_knowledgebase_category', ['id' => $row['category_id']]) . '">' . $row['category_name'] . '</a> (' . $this->language->lang('ARTICLES') . ': ' . $art_row['articles'] . ')<br>';
+				$cat_list .= $padding . '<a href="' . $this->helper->route('phpbbmodders_knowledgebase_category', ['id' => $row['category_id']]) . '">' . $row['category_name'] . '</a> (' . $this->language->lang('ARTICLES') . ': ' . $art_row['articles'] . ')<br>';
 			}
 		}
 		$this->db->sql_freeresult($result);
@@ -400,7 +400,7 @@ class functions_kb
 
 			$class = $category_parent ? ' class="jumpbox-cat-link"' : ' class="jumpbox-forum-link"';
 			$category_name = ($category_parent) ? $padding . $row['category_name'] : $padding . '&raquo;&nbsp;&nbsp;' . $row['category_name'];
-			$cats_list .= '<li><a href="' . $this->helper->route('sheer_knowledgebase_category', ['id' => $row['category_id']]) . '" ' . $class . '>' . $category_name . '</a></li>';
+			$cats_list .= '<li><a href="' . $this->helper->route('phpbbmodders_knowledgebase_category', ['id' => $row['category_id']]) . '" ' . $class . '>' . $category_name . '</a></li>';
 		}
 		$this->db->sql_freeresult($result);
 		unset($padding_store);
@@ -713,17 +713,17 @@ class functions_kb
 			$comment = ($attachments[$index]['attach_comment']) ? '<dd>' . $attachments[$index]['attach_comment'] . '</dd>' : '';
 			if ($attachments[$index]['thumbnail'] == 1)
 			{
-				$replacement = '<dl class="thumbnail"><dt><a href="' . $this->helper->route('sheer_knowledgebase_kb_file', ['id' => $attachments[$index]['attach_id']]) . '"><img src="' . $this->helper->route('sheer_knowledgebase_kb_file', ['id' => $attachments[$index]['attach_id']]) . '&amp;t=1" class="postimage" alt="' . $attachments[$index]['real_filename'] . '" title="' . $attachments[$index]['real_filename'] . '"></a></dt>' . $comment . '</dl>';
+				$replacement = '<dl class="thumbnail"><dt><a href="' . $this->helper->route('phpbbmodders_knowledgebase_kb_file', ['id' => $attachments[$index]['attach_id']]) . '"><img src="' . $this->helper->route('phpbbmodders_knowledgebase_kb_file', ['id' => $attachments[$index]['attach_id']]) . '&amp;t=1" class="postimage" alt="' . $attachments[$index]['real_filename'] . '" title="' . $attachments[$index]['real_filename'] . '"></a></dt>' . $comment . '</dl>';
 			}
 			else
 			{
 				if ($this->check_is_img($attachments[$index]['extension'], $extensions))
 				{
-					$replacement = '<dl class="file"><dt class="attach-image"><img src="' . $this->helper->route('sheer_knowledgebase_kb_file', ['id' => $attachments[$index]['attach_id']]) . '" class="postimage" alt="' . $attachments[$index]['real_filename'] . '" onclick="viewableArea(this);"></dt><dd>' . $comment . '</dd></dl>';
+					$replacement = '<dl class="file"><dt class="attach-image"><img src="' . $this->helper->route('phpbbmodders_knowledgebase_kb_file', ['id' => $attachments[$index]['attach_id']]) . '" class="postimage" alt="' . $attachments[$index]['real_filename'] . '" onclick="viewableArea(this);"></dt><dd>' . $comment . '</dd></dl>';
 				}
 				else if ($attachments[$index]['extension'] == 'mp3' || $attachments[$index]['extension'] == 'mp4')
 				{
-					$replacement = '<p><audio src="' . $this->helper->route('sheer_knowledgebase_kb_file', ['id' => $attachments[$index]['attach_id']]) . '" controls preload="none"></audio>';
+					$replacement = '<p><audio src="' . $this->helper->route('phpbbmodders_knowledgebase_kb_file', ['id' => $attachments[$index]['attach_id']]) . '" controls preload="none"></audio>';
 					if ($attachments[$index]['attach_comment'])
 					{
 						$replacement .= '<br>' . $attachments[$index]['attach_comment'];
@@ -733,7 +733,7 @@ class functions_kb
 				else
 				{
 					$icon = ($extensions[$attachments[$index]['extension']]['upload_icon']) ? '<img src="' . generate_board_url() . '/images/upload_icons/' . $extensions[$attachments[$index]['extension']]['upload_icon'] . '" alt="">' : '';
-					$replacement = '<dl class="file"><dt>' . $icon . ' <a class="postlink" href="' . $this->helper->route('sheer_knowledgebase_kb_file', ['id' => $attachments[$index]['attach_id']]) . '">' . $attachments[$index]['real_filename'] . '</a></dt></dl>';
+					$replacement = '<dl class="file"><dt>' . $icon . ' <a class="postlink" href="' . $this->helper->route('phpbbmodders_knowledgebase_kb_file', ['id' => $attachments[$index]['attach_id']]) . '">' . $attachments[$index]['real_filename'] . '</a></dt></dl>';
 				}
 			}
 			$replace['from'][] = $matches[0][$num];
@@ -765,18 +765,18 @@ class functions_kb
 				$comment = ($value['attach_comment']) ? '<dd>' . $value['attach_comment'] . '</dd>' : '';
 				if ($value['thumbnail'])
 				{
-					$text .= '<dd><dl class="thumbnail"><dt><a href="' . $this->helper->route('sheer_knowledgebase_kb_file', ['id' => $value['attach_id']]) . '"><img alt= "" src="' . $this->helper->route('sheer_knowledgebase_kb_file', ['id' => $value['attach_id']]) . '&amp;t=1"></a></dt>' . $comment . '</dl></dd>';
+					$text .= '<dd><dl class="thumbnail"><dt><a href="' . $this->helper->route('phpbbmodders_knowledgebase_kb_file', ['id' => $value['attach_id']]) . '"><img alt= "" src="' . $this->helper->route('phpbbmodders_knowledgebase_kb_file', ['id' => $value['attach_id']]) . '&amp;t=1"></a></dt>' . $comment . '</dl></dd>';
 				}
 				else
 				{
 					if ($this->check_is_img($value['extension'], $extensions))
 					{
 						$text .= '<dd><dl class="file">';
-						$text .= '<dt class="attach-image"><img src="' . $this->helper->route('sheer_knowledgebase_kb_file', ['id' => $value['attach_id']]) . '" class="postimage" alt="' . $value['real_filename'] . '" onclick="viewableArea(this);"></dt>' . $comment;
+						$text .= '<dt class="attach-image"><img src="' . $this->helper->route('phpbbmodders_knowledgebase_kb_file', ['id' => $value['attach_id']]) . '" class="postimage" alt="' . $value['real_filename'] . '" onclick="viewableArea(this);"></dt>' . $comment;
 					}
 					else if ($value['extension'] == 'mp3')
 					{
-						$text .= '<p><audio src="' . $this->helper->route('sheer_knowledgebase_kb_file', ['id' => $value['attach_id']]) . '" controls preload="none"></audio>';
+						$text .= '<p><audio src="' . $this->helper->route('phpbbmodders_knowledgebase_kb_file', ['id' => $value['attach_id']]) . '" controls preload="none"></audio>';
 						if ($value['attach_comment'])
 						{
 							$text .= '<br>' . $value['attach_comment'];
@@ -786,7 +786,7 @@ class functions_kb
 					else
 					{
 						$icon = ($extensions[$value['extension']]['upload_icon']) ? '<img src="' . generate_board_url() . '/images/upload_icons/' . $extensions[$value['extension']]['upload_icon'] . '" alt="">' : '';
-						$text .= '<dd><dl class="file"><dt>' . $icon . ' <a class="postlink" href="' . $this->helper->route('sheer_knowledgebase_kb_file', ['id' => $value['attach_id']]) . '">' . $value['real_filename'] . '</a></dt>' . $comment;
+						$text .= '<dd><dl class="file"><dt>' . $icon . ' <a class="postlink" href="' . $this->helper->route('phpbbmodders_knowledgebase_kb_file', ['id' => $value['attach_id']]) . '">' . $value['real_filename'] . '</a></dt>' . $comment;
 					}
 					$text .= '</dl></dd>';
 				}

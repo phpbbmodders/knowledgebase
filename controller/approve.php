@@ -9,7 +9,7 @@
  *
  */
 
-namespace sheer\knowledgebase\controller;
+namespace phpbbmodders\knowledgebase\controller;
 
 use phpbb\auth\auth;
 use phpbb\cache\driver\driver_interface as cache;
@@ -23,8 +23,8 @@ use phpbb\request\request_interface;
 use phpbb\template\template;
 use phpbb\user;
 use RuntimeException;
-use sheer\knowledgebase\inc\functions_kb;
-use sheer\knowledgebase\search\kb_search_backend_factory;
+use phpbbmodders\knowledgebase\inc\functions_kb;
+use phpbbmodders\knowledgebase\search\kb_search_backend_factory;
 
 class approve
 {
@@ -61,10 +61,10 @@ class approve
 	/** @var \phpbb\notification\manager */
 	protected manager $notification_manager;
 
-	/** @var \sheer\knowledgebase\inc\functions_kb */
+	/** @var \phpbbmodders\knowledgebase\inc\functions_kb */
 	protected functions_kb $kb;
 
-	/** @var \sheer\knowledgebase\search\kb_search_backend_factory */
+	/** @var \phpbbmodders\knowledgebase\search\kb_search_backend_factory */
 	protected kb_search_backend_factory $search_factory;
 
 	/** @var string */
@@ -142,7 +142,7 @@ class approve
 		$kb_category_info = $this->kb->get_cat_info($kb_article_info['article_category_id']);
 		$category_name = $kb_category_info['category_name'];
 
-		$redirect = $this->helper->route('sheer_knowledgebase_category', ['id' => $kb_article_info['article_category_id']]);
+		$redirect = $this->helper->route('phpbbmodders_knowledgebase_category', ['id' => $kb_article_info['article_category_id']]);
 
 		if ($this->user->data['user_type'] != USER_FOUNDER &&
 			!$this->kb->acl_kb_get($kb_article_info['article_category_id'], 'kb_m_approve') &&
@@ -212,11 +212,11 @@ class approve
 				'article_category_id' => $kb_article_info['article_category_id'],
 				'item_id'             => $art_id,
 			];
-			$this->notification_manager->delete_notifications('sheer.knowledgebase.notification.type.need_approval', $notification_data);
+			$this->notification_manager->delete_notifications('phpbbmodders.knowledgebase.notification.type.need_approval', $notification_data);
 
 			// Send notification - author
 			$message = ($approve) ? 'ARTICLE_APPROVED_SUCESS' : 'ARTICLE_DISAPPROVED_SUCESS';
-			$notification_type = ($approve) ? 'sheer.knowledgebase.notification.type.approve' : 'sheer.knowledgebase.notification.type.disapprove';
+			$notification_type = ($approve) ? 'phpbbmodders.knowledgebase.notification.type.approve' : 'phpbbmodders.knowledgebase.notification.type.disapprove';
 			$notification_data = [
 				'author_id' => $kb_article_info['author_id'],
 				'title'     => $kb_article_info['article_title'],
@@ -234,9 +234,9 @@ class approve
 			'ARTICLE_TITLE'       => $kb_article_info['article_title'],
 			'ARTICLE_DESCRIPTION' => $kb_article_info['article_description'],
 			'ARTICLE_CATEGORY'    => $kb_category_info['category_name'],
-			'S_ACTION'            => $this->helper->route('sheer_knowledgebase_approve', ['id' => $art_id]),
+			'S_ACTION'            => $this->helper->route('phpbbmodders_knowledgebase_approve', ['id' => $art_id]),
 		]);
 
-		return $this->helper->render('@sheer_knowledgebase/kb_approve_body.html', ($this->language->lang('LIBRARY') . ' &raquo; ' . $this->language->lang('APPROVE')));
+		return $this->helper->render('@phpbbmodders_knowledgebase/kb_approve_body.html', ($this->language->lang('LIBRARY') . ' &raquo; ' . $this->language->lang('APPROVE')));
 	}
 }

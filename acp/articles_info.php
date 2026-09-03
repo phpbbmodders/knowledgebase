@@ -9,20 +9,20 @@
  *
  */
 
-namespace sheer\knowledgebase\acp;
+namespace phpbbmodders\knowledgebase\acp;
 
 class articles_info
 {
 	public function module(): array
 	{
 		return [
-			'filename' => '\sheer\knowledgebase\acp\articles_module',
+			'filename' => '\phpbbmodders\knowledgebase\acp\articles_module',
 			'version'  => '1.0.0',
 			'title'    => 'ACP_LIBRARY_ARTICLES',
 			'modes'    => [
 				'articles' => [
 					'title' => 'ACP_LIBRARY_ARTICLES',
-					'auth'  => 'ext_sheer/knowledgebase && acl_a_board && acl_a_manage_kb',
+					'auth'  => 'ext_phpbbmodders/knowledgebase && acl_a_board && acl_a_manage_kb',
 					'cat'   => ['ACP_KNOWLEDGE_BASE'],
 				],
 			],

@@ -79,11 +79,11 @@ Twig templates — these lean on recent (3.2+) core investments that
 
 1. `acp/attachments_info.php` (lines 30, 35, 40) — the `orphan`,
    `extra_files`, and `lost_files` ACP modes are gated on
-   `'auth' => 'ext_sheer/garage && acl_a_board'` — `sheer/garage` is a
+   `'auth' => 'ext_phpbbmodders/garage && acl_a_board'` — `phpbbmodders/garage` is a
    different, unrelated extension. This makes those three ACP pages
    permanently inaccessible for anyone without that unrelated
    extension installed (almost everyone). Should be
-   `ext_sheer/knowledgebase`.
+   `ext_phpbbmodders/knowledgebase`.
 2. `acl_kb_get()` in `inc/functions_kb.php` — hardcoded
    `category_id = 1` and reads the wrong SQL field
    (`auth_option_id` instead of `auth_setting`) in its per-user
@@ -121,14 +121,6 @@ a few lines apart with inconsistent comparison operators:
 (loose, line 386). Both values come from
 `request->variable(..., 0)` so both are always `int` today, making
 this harmless in practice — but fragile if that ever changes.
-
-## Reference material
-
-- 3.3.x core-architecture deep dive, CLI dev guide, and CLI user
-  reference: `/home/william/Desktop/phpbb33_docs/repos/docs/Claude/`
-  and `/home/william/Desktop/phpbb33_docs/repos/docs/`
-- Extension coding-guidelines/conventions docs (see
-  `reference_phpbb_extension_conventions_doc` memory)
 
 ## Reference material
 

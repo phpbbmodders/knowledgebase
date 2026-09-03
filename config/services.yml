@@ -3,8 +3,8 @@ imports:
     - { resource: 'services_search.yml' }
 
 services:
-    sheer.knowledgebase.controller.index:
-        class: sheer\knowledgebase\controller\index
+    phpbbmodders.knowledgebase.controller.index:
+        class: phpbbmodders\knowledgebase\controller\index
         arguments:
             - '@dbal.conn'
             - '@config'
@@ -13,12 +13,12 @@ services:
             - '@auth'
             - '@template'
             - '@user'
-            - '@sheer.knowledgebase.inc'
+            - '@phpbbmodders.knowledgebase.inc'
             - '%tables.articles_table%'
             - '%tables.categories_table%'
 
-    sheer.knowledgebase.controller.category:
-        class: sheer\knowledgebase\controller\category
+    phpbbmodders.knowledgebase.controller.category:
+        class: phpbbmodders\knowledgebase\controller\category
         arguments:
             - '@dbal.conn'
             - '@config'
@@ -29,12 +29,12 @@ services:
             - '@template'
             - '@user'
             - '@pagination'
-            - '@sheer.knowledgebase.inc'
+            - '@phpbbmodders.knowledgebase.inc'
             - '%tables.articles_table%'
             - '%tables.categories_table%'
 
-    sheer.knowledgebase.controller.article:
-        class: sheer\knowledgebase\controller\article
+    phpbbmodders.knowledgebase.controller.article:
+        class: phpbbmodders\knowledgebase\controller\article
         arguments:
             - '@dbal.conn'
             - '@config'
@@ -44,14 +44,14 @@ services:
             - '@request'
             - '@template'
             - '@user'
-            - '@sheer.knowledgebase.inc'
+            - '@phpbbmodders.knowledgebase.inc'
             - '%core.root_path%'
             - '%core.php_ext%'
             - '%tables.articles_table%'
             - '%tables.kb_attachments_table%'
 
-    sheer.knowledgebase.controller.posting:
-        class: sheer\knowledgebase\controller\posting
+    phpbbmodders.knowledgebase.controller.posting:
+        class: phpbbmodders\knowledgebase\controller\posting
         arguments:
             - '@dbal.conn'
             - '@config'
@@ -67,8 +67,8 @@ services:
             - '@files.factory'
             - '@plupload'
             - '@notification_manager'
-            - '@sheer.knowledgebase.inc'
-            - '@sheer.knowledgebase.search.backend_factory'
+            - '@phpbbmodders.knowledgebase.inc'
+            - '@phpbbmodders.knowledgebase.search.backend_factory'
             - '%core.root_path%'
             - '%core.php_ext%'
             - '%tables.logs_table%'
@@ -76,8 +76,8 @@ services:
             - '%tables.categories_table%'
             - '%tables.kb_attachments_table%'
 
-    sheer.knowledgebase.controller.approve:
-        class: sheer\knowledgebase\controller\approve
+    phpbbmodders.knowledgebase.controller.approve:
+        class: phpbbmodders\knowledgebase\controller\approve
         arguments:
             - '@dbal.conn'
             - '@config'
@@ -90,14 +90,14 @@ services:
             - '@cache.driver'
             - '@log'
             - '@notification_manager'
-            - '@sheer.knowledgebase.inc'
-            - '@sheer.knowledgebase.search.backend_factory'
+            - '@phpbbmodders.knowledgebase.inc'
+            - '@phpbbmodders.knowledgebase.search.backend_factory'
             - '%core.root_path%'
             - '%core.php_ext%'
             - '%tables.articles_table%'
 
-    sheer.knowledgebase.controller.search:
-        class: sheer\knowledgebase\controller\search
+    phpbbmodders.knowledgebase.controller.search:
+        class: phpbbmodders\knowledgebase\controller\search
         arguments:
             - '@dbal.conn'
             - '@config'
@@ -108,15 +108,15 @@ services:
             - '@template'
             - '@user'
             - '@pagination'
-            - '@sheer.knowledgebase.inc'
-            - '@sheer.knowledgebase.search.backend_factory'
+            - '@phpbbmodders.knowledgebase.inc'
+            - '@phpbbmodders.knowledgebase.search.backend_factory'
             - '%core.root_path%'
             - '%core.php_ext%'
             - '%tables.articles_table%'
             - '%tables.categories_table%'
 
-    sheer.knowledgebase.listener:
-        class: sheer\knowledgebase\event\listener
+    phpbbmodders.knowledgebase.listener:
+        class: phpbbmodders\knowledgebase\event\listener
         arguments:
             - '@config'
             - '@config_text'
@@ -128,8 +128,8 @@ services:
         tags:
             - { name: event.listener }
 
-    sheer.knowledgebase.inc:
-        class: sheer\knowledgebase\inc\functions_kb
+    phpbbmodders.knowledgebase.inc:
+        class: phpbbmodders\knowledgebase\inc\functions_kb
         arguments:
             - '@dbal.conn'
             - '@config'
@@ -152,8 +152,8 @@ services:
             - '%tables.kb_users_table%'
             - '%tables.kb_groups_table%'
 
-    sheer.knowledgebase.controller.kb_file:
-        class: sheer\knowledgebase\controller\kb_file
+    phpbbmodders.knowledgebase.controller.kb_file:
+        class: phpbbmodders\knowledgebase\controller\kb_file
         arguments:
             - '@dbal.conn'
             - '@language'
@@ -161,12 +161,12 @@ services:
             - '@ext.manager'
             - '@auth'
             - '@user'
-            - '@sheer.knowledgebase.inc'
+            - '@phpbbmodders.knowledgebase.inc'
             - '%tables.kb_attachments_table%'
             - '%tables.articles_table%'
 
-    sheer.knowledgebase.controller.acp:
-        class: sheer\knowledgebase\controller\acp_controller
+    phpbbmodders.knowledgebase.controller.acp:
+        class: phpbbmodders\knowledgebase\controller\acp_controller
         arguments:
             - '@dbal.conn'
             - '@config'
@@ -182,9 +182,9 @@ services:
             - '@group_helper'
             - '@pagination'
             - '@log'
-            - '@sheer.knowledgebase.inc'
-            - '@sheer.knowledgebase.search.backend_collection'
-            - '@sheer.knowledgebase.search.backend_factory'
+            - '@phpbbmodders.knowledgebase.inc'
+            - '@phpbbmodders.knowledgebase.search.backend_collection'
+            - '@phpbbmodders.knowledgebase.search.backend_factory'
             - '%core.root_path%'
             - '%core.php_ext%'
             - '%tables.articles_table%'
@@ -195,16 +195,16 @@ services:
             - '%tables.kb_users_table%'
             - '%tables.kb_groups_table%'
 
-    sheer.knowledgebase.controller.set_order:
-        class: sheer\knowledgebase\controller\set_order
+    phpbbmodders.knowledgebase.controller.set_order:
+        class: phpbbmodders\knowledgebase\controller\set_order
         arguments:
             - '@dbal.conn'
             - '@config'
             - '@request'
             - '%tables.articles_table%'
 
-    sheer.knowledgebase.notification.type.need_approval:
-        class: sheer\knowledgebase\notification\type\need_approval
+    phpbbmodders.knowledgebase.notification.type.need_approval:
+        class: phpbbmodders\knowledgebase\notification\type\need_approval
         shared: false # service MUST not be shared for this to work!
         parent: notification.type.base
         calls:
@@ -214,8 +214,8 @@ services:
         tags:
             - { name: notification.type }
 
-    sheer.knowledgebase.notification.type.approve:
-        class: sheer\knowledgebase\notification\type\approve
+    phpbbmodders.knowledgebase.notification.type.approve:
+        class: phpbbmodders\knowledgebase\notification\type\approve
         shared: false # service MUST not be shared for this to work!
         parent: notification.type.base
         calls:
@@ -225,8 +225,8 @@ services:
         tags:
             - { name: notification.type }
 
-    sheer.knowledgebase.notification.type.disapprove:
-        class: sheer\knowledgebase\notification\type\disapprove
+    phpbbmodders.knowledgebase.notification.type.disapprove:
+        class: phpbbmodders\knowledgebase\notification\type\disapprove
         shared: false # service MUST not be shared for this to work!
         parent: notification.type.base
         calls:

@@ -9,7 +9,7 @@
  *
  */
 
-namespace sheer\knowledgebase\migrations;
+namespace phpbbmodders\knowledgebase\migrations;
 
 class version_1_0_0 extends \phpbb\db\migration\migration
 {
@@ -251,58 +251,58 @@ class version_1_0_0 extends \phpbb\db\migration\migration
 			// ACP
 			['module.add', ['acp', 'ACP_CAT_DOT_MODS', 'KNOWLEDGE_BASE']],
 			['module.add', ['acp', 'KNOWLEDGE_BASE', [
-				'module_basename' => '\sheer\knowledgebase\acp\config_module',
+				'module_basename' => '\phpbbmodders\knowledgebase\acp\config_module',
 				'module_langname' => 'ACP_KNOWLEDGE_BASE_CONFIGURE',
 				'module_mode'     => 'settings',
-				'module_auth'     => 'ext_sheer/knowledgebase && acl_a_board && acl_a_manage_kb',
+				'module_auth'     => 'ext_phpbbmodders/knowledgebase && acl_a_board && acl_a_manage_kb',
 			]]],
 			['module.add', ['acp', 'KNOWLEDGE_BASE', [
-				'module_basename' => '\sheer\knowledgebase\acp\manage_module',
+				'module_basename' => '\phpbbmodders\knowledgebase\acp\manage_module',
 				'module_langname' => 'ACP_LIBRARY_MANAGE',
 				'module_mode'     => 'manage',
-				'module_auth'     => 'ext_sheer/knowledgebase && acl_a_board && acl_a_manage_kb',
+				'module_auth'     => 'ext_phpbbmodders/knowledgebase && acl_a_board && acl_a_manage_kb',
 			]]],
 
 			['module.add', ['acp', 'KNOWLEDGE_BASE', [
-				'module_basename' => '\sheer\knowledgebase\acp\articles_module',
+				'module_basename' => '\phpbbmodders\knowledgebase\acp\articles_module',
 				'module_langname' => 'ACP_LIBRARY_ARTICLES',
 				'module_mode'     => 'articles',
-				'module_auth'     => 'ext_sheer/knowledgebase && acl_a_board && acl_a_manage_kb',
+				'module_auth'     => 'ext_phpbbmodders/knowledgebase && acl_a_board && acl_a_manage_kb',
 			]]],
 
 			['module.add', ['acp', 'KNOWLEDGE_BASE', [
-				'module_basename' => '\sheer\knowledgebase\acp\permissions_module',
+				'module_basename' => '\phpbbmodders\knowledgebase\acp\permissions_module',
 				'module_langname' => 'ACP_LIBRARY_PERMISSIONS',
 				'module_mode'     => 'permissions',
-				'module_auth'     => 'ext_sheer/knowledgebase && acl_a_board && acl_a_manage_kb',
+				'module_auth'     => 'ext_phpbbmodders/knowledgebase && acl_a_board && acl_a_manage_kb',
 			]]],
 
 			['module.add', ['acp', 'KNOWLEDGE_BASE', [
-				'module_basename' => '\sheer\knowledgebase\acp\search_module',
+				'module_basename' => '\phpbbmodders\knowledgebase\acp\search_module',
 				'module_langname' => 'ACP_LIBRARY_SEARCH',
 				'module_mode'     => 'index',
-				'module_auth'     => 'ext_sheer/knowledgebase && acl_a_board && acl_a_manage_kb',
+				'module_auth'     => 'ext_phpbbmodders/knowledgebase && acl_a_board && acl_a_manage_kb',
 			]]],
 
 			['module.add', ['acp', 'KNOWLEDGE_BASE', [
-				'module_basename' => '\sheer\knowledgebase\acp\attachments_module',
+				'module_basename' => '\phpbbmodders\knowledgebase\acp\attachments_module',
 				'module_langname' => 'ACP_LIBRARY_ATTACHMENTS',
 				'module_mode'     => 'attachments',
-				'module_auth'     => 'ext_sheer/knowledgebase && acl_a_board && acl_a_manage_kb',
+				'module_auth'     => 'ext_phpbbmodders/knowledgebase && acl_a_board && acl_a_manage_kb',
 			]]],
 
 			['module.add', ['acp', 'KNOWLEDGE_BASE', [
-				'module_basename' => '\sheer\knowledgebase\acp\attachments_module',
+				'module_basename' => '\phpbbmodders\knowledgebase\acp\attachments_module',
 				'module_langname' => 'ACP_LIBRARY_ATTACHMENTS_ORPHAN',
 				'module_mode'     => 'orphan',
-				'module_auth'     => 'ext_sheer/knowledgebase && acl_a_board && acl_a_manage_kb',
+				'module_auth'     => 'ext_phpbbmodders/knowledgebase && acl_a_board && acl_a_manage_kb',
 			]]],
 
 			['module.add', ['acp', 'KNOWLEDGE_BASE', [
-				'module_basename' => '\sheer\knowledgebase\acp\logs_module',
+				'module_basename' => '\phpbbmodders\knowledgebase\acp\logs_module',
 				'module_langname' => 'ACP_LIBRARY_LOGS',
 				'module_mode'     => 'logs',
-				'module_auth'     => 'ext_sheer/knowledgebase && acl_a_board && acl_a_manage_kb',
+				'module_auth'     => 'ext_phpbbmodders/knowledgebase && acl_a_board && acl_a_manage_kb',
 			]]],
 		];
 	}

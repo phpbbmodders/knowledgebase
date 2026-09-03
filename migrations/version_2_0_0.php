@@ -9,14 +9,14 @@
  *
  */
 
-namespace sheer\knowledgebase\migrations;
+namespace phpbbmodders\knowledgebase\migrations;
 
 class version_2_0_0 extends \phpbb\db\migration\migration
 {
 	static public function depends_on()
 	{
 		return [
-			'\sheer\knowledgebase\migrations\version_1_0_7',
+			'\phpbbmodders\knowledgebase\migrations\version_1_0_7',
 		];
 	}
 
@@ -66,7 +66,7 @@ class version_2_0_0 extends \phpbb\db\migration\migration
 
 			// Update search method
 			['config.add', ['kb_num_articles', '0']],
-			['config.update', ['kb_search_type', 'sheer\\knowledgebase\\search\\backend\\' . $this->config['kb_search_type']]],
+			['config.update', ['kb_search_type', 'phpbbmodders\\knowledgebase\\search\\backend\\' . $this->config['kb_search_type']]],
 
 			// Update configs
 			['config.remove', ['knowledge_base_version']],

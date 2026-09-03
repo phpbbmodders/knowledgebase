@@ -9,25 +9,25 @@
  *
  */
 
-namespace sheer\knowledgebase\acp;
+namespace phpbbmodders\knowledgebase\acp;
 
 class permissions_info
 {
 	public function module(): array
 	{
 		return [
-			'filename' => '\sheer\knowledgebase\acp\permissions_module',
+			'filename' => '\phpbbmodders\knowledgebase\acp\permissions_module',
 			'version'  => '1.0.0',
 			'title'    => 'ACP_LIBRARY_PERMISSIONS',
 			'modes'    => [
 				'settings' => [
 					'title' => 'ACP_LIBRARY_PERMISSIONS',
-					'auth'  => 'ext_sheer/knowledgebase && acl_a_board && acl_a_manage_kb',
+					'auth'  => 'ext_phpbbmodders/knowledgebase && acl_a_board && acl_a_manage_kb',
 					'cat'   => ['ACP_KNOWLEDGE_BASE'],
 				],
 				'mask'     => [
 					'title' => 'ACP_LIBRARY_PERMISSIONS_MASK',
-					'auth'  => 'ext_sheer/knowledgebase && acl_a_board && acl_a_manage_kb',
+					'auth'  => 'ext_phpbbmodders/knowledgebase && acl_a_board && acl_a_manage_kb',
 					'cat'   => ['ACP_KNOWLEDGE_BASE'],
 				],
 			],

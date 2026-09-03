@@ -1,8 +1,8 @@
 services:
 
     # Search backends
-    sheer.knowledgebase.search.fulltext.mysql:
-        class: sheer\knowledgebase\search\backend\kb_fulltext_mysql
+    phpbbmodders.knowledgebase.search.fulltext.mysql:
+        class: phpbbmodders\knowledgebase\search\backend\kb_fulltext_mysql
         arguments:
             - '@config'
             - '@dbal.conn'
@@ -13,10 +13,10 @@ services:
             - '%core.root_path%'
             - '%core.php_ext%'
         tags:
-            - { name: sheer.knowledgebase.search.backend }
+            - { name: phpbbmodders.knowledgebase.search.backend }
 
-    sheer.knowledgebase.search.fulltext.native:
-        class: sheer\knowledgebase\search\backend\kb_fulltext_native
+    phpbbmodders.knowledgebase.search.fulltext.native:
+        class: phpbbmodders\knowledgebase\search\backend\kb_fulltext_native
         arguments:
             - '@config'
             - '@dbal.conn'
@@ -29,10 +29,10 @@ services:
             - '%core.root_path%'
             - '%core.php_ext%'
         tags:
-            - { name: sheer.knowledgebase.search.backend }
+            - { name: phpbbmodders.knowledgebase.search.backend }
 
-    sheer.knowledgebase.search.fulltext.postgres:
-        class: sheer\knowledgebase\search\backend\kb_fulltext_postgres
+    phpbbmodders.knowledgebase.search.fulltext.postgres:
+        class: phpbbmodders\knowledgebase\search\backend\kb_fulltext_postgres
         arguments:
             - '@config'
             - '@dbal.conn'
@@ -43,19 +43,19 @@ services:
             - '%core.root_path%'
             - '%core.php_ext%'
         tags:
-            - { name: sheer.knowledgebase.search.backend }
+            - { name: phpbbmodders.knowledgebase.search.backend }
 
     # Factory
-    sheer.knowledgebase.search.backend_factory:
-        class: sheer\knowledgebase\search\kb_search_backend_factory
+    phpbbmodders.knowledgebase.search.backend_factory:
+        class: phpbbmodders\knowledgebase\search\kb_search_backend_factory
         arguments:
             - '@config'
-            - '@sheer.knowledgebase.search.backend_collection'
+            - '@phpbbmodders.knowledgebase.search.backend_collection'
 
     # Collections
-    sheer.knowledgebase.search.backend_collection:
+    phpbbmodders.knowledgebase.search.backend_collection:
         class: phpbb\di\service_collection
         arguments:
             - '@service_container'
         tags:
-            - { name: service_collection, tag: sheer.knowledgebase.search.backend, class_name_aware: true }
+            - { name: service_collection, tag: phpbbmodders.knowledgebase.search.backend, class_name_aware: true }

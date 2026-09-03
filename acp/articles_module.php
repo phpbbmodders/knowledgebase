@@ -9,7 +9,7 @@
  *
  */
 
-namespace sheer\knowledgebase\acp;
+namespace phpbbmodders\knowledgebase\acp;
 
 class articles_module
 {
@@ -30,13 +30,13 @@ class articles_module
 
 		/** @var \phpbb\language\language $language */
 		$language = $phpbb_container->get('language');
-		$language->add_lang('acp_knowledgebase', 'sheer/knowledgebase');
+		$language->add_lang('acp_knowledgebase', 'phpbbmodders/knowledgebase');
 
 		/** @var \phpbb\request\request $request */
 		$request = $phpbb_container->get('request');
 
 		// Get an instance of the admin controller
-		$admin_controller = $phpbb_container->get('sheer.knowledgebase.controller.acp');
+		$admin_controller = $phpbb_container->get('phpbbmodders.knowledgebase.controller.acp');
 
 		// Make the $u_action url available in the admin controller
 		$admin_controller->set_page_url($this->u_action);

@@ -9,7 +9,7 @@
  *
  */
 
-namespace sheer\knowledgebase\controller;
+namespace phpbbmodders\knowledgebase\controller;
 
 use phpbb\auth\auth;
 use phpbb\config\config;
@@ -20,7 +20,7 @@ use phpbb\pagination;
 use phpbb\request\request_interface;
 use phpbb\template\template;
 use phpbb\user;
-use sheer\knowledgebase\inc\functions_kb;
+use phpbbmodders\knowledgebase\inc\functions_kb;
 
 class category
 {
@@ -51,7 +51,7 @@ class category
 	/** @var \phpbb\pagination */
 	protected pagination $pagination;
 
-	/** @var \sheer\knowledgebase\inc\functions_kb */
+	/** @var \phpbbmodders\knowledgebase\inc\functions_kb */
 	protected functions_kb $kb;
 
 	/** @var string */
@@ -112,7 +112,7 @@ class category
 
 		if (!$cat_id)
 		{
-			redirect($this->helper->route('sheer_knowledgebase_index'));
+			redirect($this->helper->route('phpbbmodders_knowledgebase_index'));
 		}
 
 		$sql = 'SELECT category_id, category_name
@@ -176,13 +176,13 @@ class category
 			foreach ($alphabet as $letter)
 			{
 				$b_letter = ($first_letter === $letter) ? '<span class="alphabet">' . $letter . '</span>' : $letter;
-				$url[] = '<a href="' . $this->helper->route('sheer_knowledgebase_category', ['id' => $cat_id, 'l' => $letter]) . '">' . $b_letter . '</a>';
+				$url[] = '<a href="' . $this->helper->route('phpbbmodders_knowledgebase_category', ['id' => $cat_id, 'l' => $letter]) . '">' . $b_letter . '</a>';
 			}
 			$sql_where .= ' AND a.article_title LIKE "' . $this->db->sql_escape($first_letter) . '%"';
 
 			$this->template->assign_vars([
 					'ALPHA_URLS'     => $this->language->lang('ALPHABET_NAV') . '&nbsp;&nbsp;' . implode(' - ', $url) . '&nbsp;&nbsp;&nbsp;&nbsp;',
-					'U_RESET_FILTER' => $this->helper->route('sheer_knowledgebase_category', ['id' => $cat_id]),
+					'U_RESET_FILTER' => $this->helper->route('phpbbmodders_knowledgebase_category', ['id' => $cat_id]),
 				]
 			);
 		}
@@ -198,7 +198,7 @@ class category
 		$article_count = $row['article_count'];
 		$this->db->sql_freeresult($result);
 
-		$pagination_url = $this->helper->route('sheer_knowledgebase_category', $pagination_ary);
+		$pagination_url = $this->helper->route('phpbbmodders_knowledgebase_category', $pagination_ary);
 		if ($article_count)
 		{
 			$this->pagination->generate_template_pagination($pagination_url, 'pagination', 'start', $article_count, $per_page, $start);
@@ -207,14 +207,14 @@ class category
 
 		$this->template->assign_block_vars('navlinks', [
 			'FORUM_NAME'   => $this->language->lang('LIBRARY'),
-			'U_VIEW_FORUM' => $this->helper->route('sheer_knowledgebase_index'),
+			'U_VIEW_FORUM' => $this->helper->route('phpbbmodders_knowledgebase_index'),
 		]);
 
 		foreach ($this->kb->get_category_branch($cat_id, 'parents') as $row)
 		{
 			$this->template->assign_block_vars('navlinks', [
 				'FORUM_NAME'   => $row['category_name'],
-				'U_VIEW_FORUM' => $this->helper->route('sheer_knowledgebase_category', ['id' => $row['category_id']]),
+				'U_VIEW_FORUM' => $this->helper->route('phpbbmodders_knowledgebase_category', ['id' => $row['category_id']]),
 			]);
 		}
 
@@ -256,11 +256,11 @@ class category
 				'CAT_ID'          => $cat_row['category_id'],
 				'CAT_NAME'        => $cat_row['category_name'],
 				'CAT_DESCRIPTION' => $cat_row['category_details'],
-				'U_CAT'           => $this->helper->route('sheer_knowledgebase_category', ['id' => $cat_row['category_id']]),
+				'U_CAT'           => $this->helper->route('phpbbmodders_knowledgebase_category', ['id' => $cat_row['category_id']]),
 				'ARTICLES'        => $art_count,
 				'SUBCATS'         => $this->kb->get_cat_list($exclude_cats),
 				'ARTICLE_TITLE'   => $art_row['article_title'] ?? '',
-				'U_ARTICLE'       => (isset($art_row['article_id'])) ? $this->helper->route('sheer_knowledgebase_article', ['k' => $art_row['article_id']]) : '',
+				'U_ARTICLE'       => (isset($art_row['article_id'])) ? $this->helper->route('phpbbmodders_knowledgebase_article', ['k' => $art_row['article_id']]) : '',
 				'ARTICLE_TIME'    => (isset($art_row['article_date'])) ? $this->user->format_date($art_row['article_date']) : '',
 				'ARTICLE_AUTHOR'  => (isset($art_row['author_id'])) ? get_username_string('full', $art_row['author_id'], $art_row['author'], $art_row['user_colour']) : '',
 				'NEED_APPROVE'    => !($art_row['approved'] ?? false),
@@ -287,14 +287,14 @@ class category
 			$this->template->assign_block_vars('art_row', [
 				'ID'                  => $art_id,
 				'ORDER_ID'            => $art_row['display_order'],
-				'U_ARTICLE'           => $this->helper->route('sheer_knowledgebase_article', ['k' => $art_row['article_id']]),
+				'U_ARTICLE'           => $this->helper->route('phpbbmodders_knowledgebase_article', ['k' => $art_row['article_id']]),
 				'ARTICLE_TITLE'       => $art_row['article_title'],
 				'ARTICLE_AUTHOR'      => get_username_string('full', $art_row['author_id'], $art_row['username'], $art_row['user_colour']),
 				'ARTICLE_DESCRIPTION' => $art_row['article_description'],
 				'ARTICLE_DATE'        => $this->user->format_date($art_row['article_date']),
 				'ART_VIEWS'           => $art_row['views'],
-				'U_DELETE'            => $this->helper->route('sheer_knowledgebase_posting', ['id' => $cat_id, 'mode' => 'delete', 'k' => $art_id]),
-				'U_EDIT_ART'          => $this->helper->route('sheer_knowledgebase_posting', ['id' => $cat_id, 'mode' => 'edit', 'k' => $art_id]),
+				'U_DELETE'            => $this->helper->route('phpbbmodders_knowledgebase_posting', ['id' => $cat_id, 'mode' => 'delete', 'k' => $art_id]),
+				'U_EDIT_ART'          => $this->helper->route('phpbbmodders_knowledgebase_posting', ['id' => $cat_id, 'mode' => 'edit', 'k' => $art_id]),
 				'S_CAN_DELETE'        => $this->kb->acl_kb_get($cat_id, 'kb_m_delete') || ($this->kb->acl_kb_get($cat_id, 'kb_u_delete') && $this->user->data['user_id'] == $author_id),
 				'S_CAN_EDIT'          => $this->kb->acl_kb_get($cat_id, 'kb_m_edit') || ($this->kb->acl_kb_get($cat_id, 'kb_u_edit') && $this->user->data['user_id'] == $author_id),
 				'S_APPROVED'          => (bool) $art_row['approved'],
@@ -308,13 +308,13 @@ class category
 				'CATEGORY_ID'         => $cat_id,
 				'TOTAL_ITEMS'         => $this->language->lang('TOTAL_ITEMS', (int) $article_count),
 				'PAGE_NUMBER'         => $this->pagination->on_page($article_count, $per_page, $start),
-				'U_ADD_ARTICLE'       => $this->helper->route('sheer_knowledgebase_posting', ['id' => $cat_id]),
-				'U_KB'                => $this->helper->route('sheer_knowledgebase_index'),
-				'U_KB_SEARCH'         => $this->helper->route('sheer_knowledgebase_search'),
+				'U_ADD_ARTICLE'       => $this->helper->route('phpbbmodders_knowledgebase_posting', ['id' => $cat_id]),
+				'U_KB'                => $this->helper->route('phpbbmodders_knowledgebase_index'),
+				'U_KB_SEARCH'         => $this->helper->route('phpbbmodders_knowledgebase_search'),
 				'S_CAN_ADD'           => $this->kb->acl_kb_get($cat_id, 'kb_u_add'),
-				'S_ACTION'            => $this->helper->route('sheer_knowledgebase_category', ['id' => $cat_id]),
+				'S_ACTION'            => $this->helper->route('phpbbmodders_knowledgebase_category', ['id' => $cat_id]),
 				'S_IS_SEARCH'         => (bool) $this->config['kb_search'],
-				'S_KB_SEARCH_ACTION'  => $this->helper->route('sheer_knowledgebase_search'),
+				'S_KB_SEARCH_ACTION'  => $this->helper->route('phpbbmodders_knowledgebase_search'),
 				'S_KNOWLEDGEBASE'     => true,
 				'S_CAN_MOVE'          => $s_can_move,
 				'CURRENT_PAGE_NUMBER' => $current_page_number,
@@ -327,6 +327,6 @@ class category
 
 		$this->kb->gen_kb_auth_level($cat_id);
 
-		return $this->helper->render('@sheer_knowledgebase/kb_cat_body.html', ($this->language->lang('LIBRARY') . ' &raquo; ' . $this->language->lang('CATEGORY')));
+		return $this->helper->render('@phpbbmodders_knowledgebase/kb_cat_body.html', ($this->language->lang('LIBRARY') . ' &raquo; ' . $this->language->lang('CATEGORY')));
 	}
 }

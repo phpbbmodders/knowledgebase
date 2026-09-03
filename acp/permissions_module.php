@@ -9,7 +9,7 @@
  *
  */
 
-namespace sheer\knowledgebase\acp;
+namespace phpbbmodders\knowledgebase\acp;
 
 class permissions_module
 {
@@ -30,7 +30,7 @@ class permissions_module
 
 		/** @var \phpbb\language\language $language */
 		$language = $phpbb_container->get('language');
-		$language->add_lang('acp_knowledgebase', 'sheer/knowledgebase');
+		$language->add_lang('acp_knowledgebase', 'phpbbmodders/knowledgebase');
 		$language->add_lang('acp/permissions');
 
 		/** @var \phpbb\request\request $request */
@@ -51,11 +51,11 @@ class permissions_module
 		/** @var \phpbb\log\log $phpbb_log */
 		$phpbb_log = $phpbb_container->get('log');
 
-		/** @var \sheer\knowledgebase\inc\functions_kb $phpbb_ext_kb */
-		$phpbb_ext_kb = $phpbb_container->get('sheer.knowledgebase.inc');
+		/** @var \phpbbmodders\knowledgebase\inc\functions_kb $phpbb_ext_kb */
+		$phpbb_ext_kb = $phpbb_container->get('phpbbmodders.knowledgebase.inc');
 
 		// Get an instance of the admin controller
-		$admin_controller = $phpbb_container->get('sheer.knowledgebase.controller.acp');
+		$admin_controller = $phpbb_container->get('phpbbmodders.knowledgebase.controller.acp');
 
 		// Make the $u_action url available in the admin controller
 		$admin_controller->set_page_url($this->u_action);

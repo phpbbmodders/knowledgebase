@@ -9,7 +9,7 @@
  *
  */
 
-namespace sheer\knowledgebase\controller;
+namespace phpbbmodders\knowledgebase\controller;
 
 use phpbb\auth\auth;
 use phpbb\config\config;
@@ -19,7 +19,7 @@ use phpbb\language\language;
 use phpbb\request\request_interface;
 use phpbb\template\template;
 use phpbb\user;
-use sheer\knowledgebase\inc\functions_kb;
+use phpbbmodders\knowledgebase\inc\functions_kb;
 
 class article
 {
@@ -47,7 +47,7 @@ class article
 	/** @var \phpbb\user */
 	protected user $user;
 
-	/** @var \sheer\knowledgebase\inc\functions_kb */
+	/** @var \phpbbmodders\knowledgebase\inc\functions_kb */
 	protected functions_kb $kb;
 
 	/** @var string */
@@ -136,7 +136,7 @@ class article
 
 		if (!$row['approved'] && !($this->auth->acl_get('a_manage_kb') || $this->kb->acl_kb_get($cat_id, 'kb_m_approve')))
 		{
-			redirect($this->helper->route('sheer_knowledgebase_category', ['id' => $cat_id]));
+			redirect($this->helper->route('phpbbmodders_knowledgebase_category', ['id' => $cat_id]));
 		}
 
 		$catrow = $this->kb->get_cat_info($row['article_category_id']);
@@ -146,9 +146,9 @@ class article
 		}
 
 		$this->template->assign_vars([
-			'ARTICLE_CATEGORY' => '<a href="' . $this->helper->route('sheer_knowledgebase_category', ['id' => $catrow['category_id']]) . '">' . $catrow['category_name'] . '</a>',
+			'ARTICLE_CATEGORY' => '<a href="' . $this->helper->route('phpbbmodders_knowledgebase_category', ['id' => $catrow['category_id']]) . '">' . $catrow['category_name'] . '</a>',
 			'CATS_DROPBOX'     => $this->kb->make_category_dropbox(),
-			'S_ACTION'         => $this->helper->route('sheer_knowledgebase_category', ['id' => $cat_id]),
+			'S_ACTION'         => $this->helper->route('phpbbmodders_knowledgebase_category', ['id' => $cat_id]),
 		]);
 
 		$comment_topic_id = $row['topic_id'];
@@ -214,10 +214,10 @@ class article
 			'ARTICLE_TEXT'        => $text,
 			'VIEWS'               => $views,
 			'RANK'                => $rank['title'],
-			'U_EDIT_ART'          => $this->helper->route('sheer_knowledgebase_posting', ['mode' => 'edit', 'id' => $cat_id, 'k' => $art_id]),
-			'U_DELETE_ART'        => $this->helper->route('sheer_knowledgebase_posting', ['mode' => 'delete', 'id' => $cat_id, 'k' => $art_id]),
-			'U_APPROVE_ART'       => $this->helper->route('sheer_knowledgebase_approve', ['id' => $art_id]),
-			'U_PRINT'             => $this->helper->route('sheer_knowledgebase_article', ['mode' => 'print', 'k' => $art_id]),
+			'U_EDIT_ART'          => $this->helper->route('phpbbmodders_knowledgebase_posting', ['mode' => 'edit', 'id' => $cat_id, 'k' => $art_id]),
+			'U_DELETE_ART'        => $this->helper->route('phpbbmodders_knowledgebase_posting', ['mode' => 'delete', 'id' => $cat_id, 'k' => $art_id]),
+			'U_APPROVE_ART'       => $this->helper->route('phpbbmodders_knowledgebase_approve', ['id' => $art_id]),
+			'U_PRINT'             => $this->helper->route('phpbbmodders_knowledgebase_article', ['mode' => 'print', 'k' => $art_id]),
 			'U_ARTICLE'           => '[url=' . generate_board_url() . '/knowledgebase/article?k=' . $art_id . ']' . $row['article_title'] . '[/url]',
 			'U_DIRECT_LINK'       => generate_board_url() . '/knowledgebase/article?k=' . $art_id,
 			'COMMENTS'            => ($comment_topic_id) ? $this->language->lang('COMMENTS') . $this->language->lang('COLON') . ' ' . $count : '',
@@ -244,19 +244,19 @@ class article
 
 		$this->template->assign_block_vars('navlinks', [
 			'FORUM_NAME'   => $this->language->lang('LIBRARY'),
-			'U_VIEW_FORUM' => $this->helper->route('sheer_knowledgebase_index'),
+			'U_VIEW_FORUM' => $this->helper->route('phpbbmodders_knowledgebase_index'),
 		]);
 
 		foreach ($this->kb->get_category_branch($cat_id, 'parents') as $row)
 		{
 			$this->template->assign_block_vars('navlinks', [
 				'FORUM_NAME'   => $row['category_name'],
-				'U_VIEW_FORUM' => $this->helper->route('sheer_knowledgebase_category', ['id' => $row['category_id']]),
+				'U_VIEW_FORUM' => $this->helper->route('phpbbmodders_knowledgebase_category', ['id' => $row['category_id']]),
 			]);
 		}
 
 		$html_template = (($mode != 'print')) ? 'kb_article_body.html' : 'kb_article_body_print.html';
 
-		return $this->helper->render('@sheer_knowledgebase/' . $html_template, $this->language->lang('LIBRARY'));
+		return $this->helper->render('@phpbbmodders_knowledgebase/' . $html_template, $this->language->lang('LIBRARY'));
 	}
 }

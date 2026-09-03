@@ -11,11 +11,11 @@
  *
  */
 
-namespace sheer\knowledgebase\search;
+namespace phpbbmodders\knowledgebase\search;
 
 use phpbb\config\config;
 use phpbb\di\service_collection;
-use sheer\knowledgebase\search\backend\kb_search_backend_interface;
+use phpbbmodders\knowledgebase\search\backend\kb_search_backend_interface;
 
 class kb_search_backend_factory
 {

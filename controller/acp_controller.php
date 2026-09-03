@@ -9,7 +9,7 @@
  *
  */
 
-namespace sheer\knowledgebase\controller;
+namespace phpbbmodders\knowledgebase\controller;
 
 use Exception;
 use phpbb\auth\auth;
@@ -28,8 +28,8 @@ use phpbb\request\request_interface;
 use phpbb\template\template;
 use phpbb\user;
 use RuntimeException;
-use sheer\knowledgebase\inc\functions_kb;
-use sheer\knowledgebase\search\kb_search_backend_factory;
+use phpbbmodders\knowledgebase\inc\functions_kb;
+use phpbbmodders\knowledgebase\search\kb_search_backend_factory;
 
 class acp_controller
 {
@@ -188,7 +188,7 @@ class acp_controller
 		$this->kb_users_table = $kb_users_table;
 		$this->kb_groups_table = $kb_groups_table;
 
-		$this->upload_dir = $this->ext_manager->get_extension_path('sheer/knowledgebase', true) . 'files/';
+		$this->upload_dir = $this->ext_manager->get_extension_path('phpbbmodders/knowledgebase', true) . 'files/';
 	}
 
 
@@ -199,7 +199,7 @@ class acp_controller
 	 */
 	public function settings(): void
 	{
-		$form_key = 'sheer/knowledgebase';
+		$form_key = 'phpbbmodders/knowledgebase';
 		add_form_key($form_key);
 		if ($this->request->is_set_post('submit'))
 		{
@@ -487,16 +487,16 @@ class acp_controller
 		for ($i = 0, $end = count($attachments_list); $i < $end; $i++)
 		{
 			$row = $attachments_list[$i];
-			$img_src = ($this->kb->check_is_img($row['extension'])) ? '<span class="kb_preview"><img alt="" src="' . $this->helper->route('sheer_knowledgebase_kb_file', ['id' => $row['attach_id']]) . '"></span>' : '';
+			$img_src = ($this->kb->check_is_img($row['extension'])) ? '<span class="kb_preview"><img alt="" src="' . $this->helper->route('phpbbmodders_knowledgebase_kb_file', ['id' => $row['attach_id']]) . '"></span>' : '';
 			$this->template->assign_block_vars('attachments', [
 					'REAL_FILENAME'     => utf8_basename($row['real_filename']),
 					'FILETIME'          => $this->user->format_date($row['filetime']),
 					'ATTACHMENT_POSTER' => get_username_string('full', $row['poster_id'], $row['username'], $row['user_colour']),
-					'U_FILE'            => $this->helper->route('sheer_knowledgebase_kb_file', ['id' => $row['attach_id']]),
+					'U_FILE'            => $this->helper->route('phpbbmodders_knowledgebase_kb_file', ['id' => $row['attach_id']]),
 					'ATTACH_ID'         => $row['attach_id'],
 					'S_IS_ORPHAN'       => $row['is_orphan'],
 					'IMG_SRC'           => $img_src,
-					'U_ARTICLE'         => $this->helper->route('sheer_knowledgebase_article', ['k' => $row['article_id']]),
+					'U_ARTICLE'         => $this->helper->route('phpbbmodders_knowledgebase_article', ['k' => $row['article_id']]),
 					'ARTICLE_TITLE'     => $row['article_title'],
 					'FILESIZE'          => get_formatted_filesize($row['filesize']),
 				]
@@ -653,7 +653,7 @@ class acp_controller
 
 		while ($row = $this->db->sql_fetchrow($result))
 		{
-			$img_src = ($this->kb->check_is_img($row['extension'])) ? '<span class="kb_preview"><img alt="" src="' . $this->helper->route('sheer_knowledgebase_kb_file', ['id' => $row['attach_id']]) . '"></span>' : '';
+			$img_src = ($this->kb->check_is_img($row['extension'])) ? '<span class="kb_preview"><img alt="" src="' . $this->helper->route('phpbbmodders_knowledgebase_kb_file', ['id' => $row['attach_id']]) . '"></span>' : '';
 
 			$this->template->assign_block_vars('orphan', [
 					'FILESIZE'          => get_formatted_filesize($row['filesize']),
@@ -663,7 +663,7 @@ class acp_controller
 					'ATTACH_ID'         => $row['attach_id'],
 					'IMG_SRC'           => $img_src,
 					'POST_IDS'          => (!empty($post_ids[$row['attach_id']])) ? $post_ids[$row['attach_id']] : '',
-					'U_FILE'            => $this->helper->route('sheer_knowledgebase_kb_file', ['id' => $row['attach_id']]),
+					'U_FILE'            => $this->helper->route('phpbbmodders_knowledgebase_kb_file', ['id' => $row['attach_id']]),
 				]
 			);
 		}
@@ -941,9 +941,9 @@ class acp_controller
 					'ARTICLE_APPROVED' => ($row['approved']) ? '<i class="icon fa-thumbs-o-up fa-fw acp-icon-settings"></i>' : '<i class="icon fa fa-exclamation-triangle fa-fw acp-icon-resync" aria-hidden="true" title="' . $this->language->lang('NEED_APPROVE') . '"></i>',
 					'CATEGORY_ID'      => $row['article_category_id'],
 					'CATEGORY'         => ($category_data['category_name']) ?: $this->language->lang('CAT_NO_EXISTS'),
-					'U_CATEGORY'       => $this->helper->route('sheer_knowledgebase_index', ['i' => '-sheer-knowledgebase-acp-manage_module', 'mode' => 'manage', 'parent_id' => $row['article_category_id']]),
-					'U_ARTICLE'        => $this->helper->route('sheer_knowledgebase_article', ['k' => $row['article_id']]),
-					'U_ARTICLE_EDIT'   => $this->helper->route('sheer_knowledgebase_posting', ['mode' => 'edit', 'id' => $row['article_category_id'], 'k' => $row['article_id']]),
+					'U_CATEGORY'       => $this->helper->route('phpbbmodders_knowledgebase_index', ['i' => '-phpbbmodders-knowledgebase-acp-manage_module', 'mode' => 'manage', 'parent_id' => $row['article_category_id']]),
+					'U_ARTICLE'        => $this->helper->route('phpbbmodders_knowledgebase_article', ['k' => $row['article_id']]),
+					'U_ARTICLE_EDIT'   => $this->helper->route('phpbbmodders_knowledgebase_posting', ['mode' => 'edit', 'id' => $row['article_category_id'], 'k' => $row['article_id']]),
 					'AUTHOR'           => $row['author'],
 					'TIME'             => $this->user->format_date($row['article_date']),
 					'EDIT_TIME'        => ($row['edit_date']) ? $this->user->format_date($row['edit_date']) : 0,

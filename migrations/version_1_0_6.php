@@ -9,13 +9,13 @@
  *
  */
 
-namespace sheer\knowledgebase\migrations;
+namespace phpbbmodders\knowledgebase\migrations;
 
 class version_1_0_6 extends \phpbb\db\migration\migration
 {
 	static public function depends_on()
 	{
-		return ['\sheer\knowledgebase\migrations\version_1_0_5'];
+		return ['\phpbbmodders\knowledgebase\migrations\version_1_0_5'];
 	}
 
 	public function effectively_installed()

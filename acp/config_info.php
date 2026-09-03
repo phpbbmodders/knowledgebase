@@ -9,20 +9,20 @@
  *
  */
 
-namespace sheer\knowledgebase\acp;
+namespace phpbbmodders\knowledgebase\acp;
 
 class config_info
 {
 	public function module(): array
 	{
 		return [
-			'filename' => '\sheer\knowledgebase\acp\config_module',
+			'filename' => '\phpbbmodders\knowledgebase\acp\config_module',
 			'version'  => '1.0.0',
 			'title'    => 'ACP_KNOWLEDGE_BASE_CONFIGURE',
 			'modes'    => [
 				'settings' => [
 					'title' => 'ACP_KNOWLEDGE_BASE_CONFIGURE',
-					'auth'  => 'ext_sheer/knowledgebase && acl_a_board && acl_a_manage_kb',
+					'auth'  => 'ext_phpbbmodders/knowledgebase && acl_a_board && acl_a_manage_kb',
 					'cat'   => ['ACP_KNOWLEDGE_BASE'],
 				],
 			],

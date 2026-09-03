@@ -11,7 +11,7 @@
  *
  */
 
-namespace sheer\knowledgebase\search\backend;
+namespace phpbbmodders\knowledgebase\search\backend;
 
 use phpbb\cache\service;
 use phpbb\config\config;

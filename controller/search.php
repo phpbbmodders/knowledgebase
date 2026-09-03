@@ -9,7 +9,7 @@
  *
  */
 
-namespace sheer\knowledgebase\controller;
+namespace phpbbmodders\knowledgebase\controller;
 
 use phpbb\auth\auth;
 use phpbb\config\config;
@@ -21,8 +21,8 @@ use phpbb\request\request_interface;
 use phpbb\template\template;
 use phpbb\user;
 use RuntimeException;
-use sheer\knowledgebase\inc\functions_kb;
-use sheer\knowledgebase\search\kb_search_backend_factory;
+use phpbbmodders\knowledgebase\inc\functions_kb;
+use phpbbmodders\knowledgebase\search\kb_search_backend_factory;
 
 class search
 {
@@ -53,10 +53,10 @@ class search
 	/** @var \phpbb\pagination */
 	protected pagination $pagination;
 
-	/** @var \sheer\knowledgebase\inc\functions_kb */
+	/** @var \phpbbmodders\knowledgebase\inc\functions_kb */
 	protected functions_kb $kb;
 
-	/** @var \sheer\knowledgebase\search\kb_search_backend_factory */
+	/** @var \phpbbmodders\knowledgebase\search\kb_search_backend_factory */
 	protected kb_search_backend_factory $search_factory;
 
 	/** @var string */
@@ -359,9 +359,9 @@ class search
 					'MESSAGE'   => $row['article_body'],
 					'DATE'      => $this->user->format_date($row['article_date']),
 					'TITLE'     => $row['article_title'],
-					'U_VIEW'    => $this->helper->route('sheer_knowledgebase_article', ['k' => $article_id]),
+					'U_VIEW'    => $this->helper->route('phpbbmodders_knowledgebase_article', ['k' => $article_id]),
 					'CATEGORY'  => $category['category_name'],
-					'U_CAT'     => $this->helper->route('sheer_knowledgebase_category', ['id' => $category_id]),
+					'U_CAT'     => $this->helper->route('phpbbmodders_knowledgebase_category', ['id' => $category_id]),
 					'USER_FULL' => get_username_string('full', $row['user_id'], $row['username'], $row['user_colour']),
 					'ID'        => $article_id,
 				]);
@@ -387,18 +387,18 @@ class search
 			'S_SELECT_SORT_KEY'  => $s_sort_key,
 			'S_SELECT_SORT_DIR'  => $s_sort_dir,
 			'S_SEARCH_ACTION'    => $search_url,
-			'U_KB_SEARCH'        => $this->helper->route('sheer_knowledgebase_search'),
+			'U_KB_SEARCH'        => $this->helper->route('phpbbmodders_knowledgebase_search'),
 			'CATS_BOX'           => $this->kb->make_category_select(0, [], false),
 		]);
 
 		$this->template->assign_block_vars('navlinks', [
 			'FORUM_NAME'   => $this->language->lang('LIBRARY'),
-			'U_VIEW_FORUM' => $this->helper->route('sheer_knowledgebase_index'),
+			'U_VIEW_FORUM' => $this->helper->route('phpbbmodders_knowledgebase_index'),
 		]);
 
 		$this->template->assign_block_vars('navlinks', [
 			'FORUM_NAME'   => $this->language->lang('SEARCH'),
-			'U_VIEW_FORUM' => $this->helper->route('sheer_knowledgebase_search'),
+			'U_VIEW_FORUM' => $this->helper->route('phpbbmodders_knowledgebase_search'),
 		]);
 
 		if (($keywords && $keywords != $this->language->lang('SEARCH_MINI')) || $author)
@@ -410,6 +410,6 @@ class search
 			$html_template = 'kb_search_body.html';
 		}
 
-		return $this->helper->render('@sheer_knowledgebase/' . $html_template, $this->language->lang('LIBRARY'));
+		return $this->helper->render('@phpbbmodders_knowledgebase/' . $html_template, $this->language->lang('LIBRARY'));
 	}
 }

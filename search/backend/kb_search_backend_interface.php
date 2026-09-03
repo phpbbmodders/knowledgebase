@@ -10,7 +10,7 @@
  *
  */
 
-namespace sheer\knowledgebase\search\backend;
+namespace phpbbmodders\knowledgebase\search\backend;
 
 interface kb_search_backend_interface
 {

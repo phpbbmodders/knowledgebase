@@ -9,13 +9,13 @@
  *
  */
 
-namespace sheer\knowledgebase\migrations;
+namespace phpbbmodders\knowledgebase\migrations;
 
 class version_1_0_4 extends \phpbb\db\migration\migration
 {
 	static public function depends_on()
 	{
-		return ['\sheer\knowledgebase\migrations\version_1_0_3'];
+		return ['\phpbbmodders\knowledgebase\migrations\version_1_0_3'];
 	}
 
 	public function effectively_installed()
@@ -45,10 +45,10 @@ class version_1_0_4 extends \phpbb\db\migration\migration
 			['config.update', ['knowledge_base_version', '1.0.4']],
 			// ACP
 			['module.add', ['acp', 'KNOWLEDGE_BASE', [
-				'module_basename' => '\sheer\knowledgebase\acp\permissions_module',
+				'module_basename' => '\phpbbmodders\knowledgebase\acp\permissions_module',
 				'module_langname' => 'ACP_LIBRARY_PERMISSIONS_MASK',
 				'module_mode'     => 'mask',
-				'module_auth'     => 'ext_sheer/knowledgebase && acl_a_board && acl_a_manage_kb',
+				'module_auth'     => 'ext_phpbbmodders/knowledgebase && acl_a_board && acl_a_manage_kb',
 			]]],
 		];
 	}

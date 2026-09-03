@@ -9,7 +9,7 @@
  *
  */
 
-namespace sheer\knowledgebase\controller;
+namespace phpbbmodders\knowledgebase\controller;
 
 use phpbb\auth\auth;
 use phpbb\db\driver\driver_interface;
@@ -17,7 +17,7 @@ use phpbb\extension\manager;
 use phpbb\language\language;
 use phpbb\request\request_interface;
 use phpbb\user;
-use sheer\knowledgebase\inc\functions_kb;
+use phpbbmodders\knowledgebase\inc\functions_kb;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 
@@ -41,7 +41,7 @@ class kb_file
 	/** @var \phpbb\user */
 	protected user $user;
 
-	/** @var \sheer\knowledgebase\inc\functions_kb */
+	/** @var \phpbbmodders\knowledgebase\inc\functions_kb */
 	protected functions_kb $kb;
 
 	/** @var string */
@@ -170,7 +170,7 @@ class kb_file
 		$time = new \Datetime();
 		$response->setExpires($time->modify('+1 month'));
 
-		$upload_file = $this->ext_manager->get_extension_path('sheer/knowledgebase', true) . 'files/' . $attachment['physical_filename'];
+		$upload_file = $this->ext_manager->get_extension_path('phpbbmodders/knowledgebase', true) . 'files/' . $attachment['physical_filename'];
 		$response->setContent(file_get_contents($upload_file));
 
 		return $response;
