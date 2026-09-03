@@ -1,0 +1,43 @@
+{
+	"name": "sheer/knowledgebase",
+	"type": "phpbb-extension",
+	"description": "Knowledge Base",
+	"homepage": "https://spssoftware.cz",
+	"version": "2.0.1-RC6",
+	"keywords": [
+		"phpbb",
+		"extension",
+		"knowledge base"
+	],
+	"time": "2024-12-26",
+	"license": "GPL-2.0-only",
+	"authors": [
+		{
+			"name": "Sheer",
+			"homepage": "https://phpbbguru.net",
+			"role": "Developer"
+		},
+		{
+			"name": "Zdenek Kamenik",
+			"homepage": "https://spssoftware.cz",
+			"role": "Modifier, optimizer"
+		}
+	],
+	"require": {
+		"php": ">=8.0",
+		"phpbb/phpbb": ">=3.3.11",
+		"composer/installers": "~2.0"
+	},
+	"extra": {
+		"display-name": "Knowledge Base",
+		"soft-require": {
+			"phpbb/phpbb": "3.3.11,<4.0.0@dev"
+		},
+		"version-check": {
+			"host": "updater.spssoftware.cz",
+			"directory": "/phpbb/knowledgebase",
+			"filename": "version.json",
+			"ssl": true
+		}
+	}
+}
