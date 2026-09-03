@@ -156,7 +156,9 @@ class category
 			// categories they actually moderate are exempted from the
 			// approval filter, everything else still requires it.
 			$moderatable = $this->kb->get_moderatable_categories();
-			$sql_where = empty($moderatable) ? 'AND a.approved = 1' : 'AND (a.approved = 1 OR ' . $this->db->sql_in_set('a.article_category_id', $moderatable) . ')';
+			$sql_where = empty($moderatable) ? 'AND a.approved = 1' : 'AND (a.approved = 1
+				OR ' . $this->db->sql_in_set('a.article_category_id', $moderatable) . '
+				OR a.article_id IN (SELECT article_id FROM ' . $this->kb->get_article_categories_table() . ' WHERE ' . $this->db->sql_in_set('category_id', $moderatable) . '))';
 		}
 		else
 		{
@@ -195,6 +197,11 @@ class category
 			{
 				$selected = ($sort_dir == $key) ? ' selected="selected"' : '';
 				$s_sort_dir .= '<option value="' . $key . '"' . $selected . '>' . $value . '</option>';
+			}
+
+			if (!isset($sort_by_sql[$sort_key]))
+			{
+				$sort_key = 't';
 			}
 
 			$direction = (($sort_dir == 'd') ? 'DESC' : 'ASC');

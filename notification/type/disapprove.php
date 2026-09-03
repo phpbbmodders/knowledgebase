@@ -369,9 +369,15 @@ class disapprove extends \phpbb\notification\type\base
 
 		if (count($groups))
 		{
-			$sql = 'SELECT  user_id
-				FROM ' . USERS_TABLE . '
-				WHERE group_id IN(' . implode(',', $groups) . ')';
+			// USERS_TABLE.group_id is only a user's default group - a
+			// moderator whose kb_m_approve group membership is secondary
+			// would never match here. USER_GROUP_TABLE covers every group a
+			// user actually belongs to, same as this extension's own
+			// permission checks already do elsewhere.
+			$sql = 'SELECT user_id
+				FROM ' . USER_GROUP_TABLE . '
+				WHERE user_pending = 0
+					AND ' . $this->db->sql_in_set('group_id', $groups);
 			$result = $this->db->sql_query($sql);
 
 			while ($row = $this->db->sql_fetchrow($result))

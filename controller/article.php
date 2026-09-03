@@ -150,7 +150,7 @@ class article
 			? $this->kb->is_team_member([(int) $row['author_id']])
 			: $this->user->data['user_id'] == $row['author_id'];
 
-		if (!$row['approved'] && !$can_moderate && !$can_review)
+		if (!$row['approved'] && !$can_moderate && !$can_review && !$is_own_article)
 		{
 			redirect($this->helper->route('phpbbmodders_knowledgebase_category', ['id' => $cat_id]));
 		}
@@ -329,7 +329,10 @@ class article
 	 */
 	protected function render_notice(string $message_lang_key): \Symfony\Component\HttpFoundation\Response
 	{
-		$this->template->assign_var('NOTICE_MESSAGE', $this->language->lang($message_lang_key));
+		$this->template->assign_vars([
+			'NOTICE_MESSAGE'  => $this->language->lang($message_lang_key),
+			'S_KNOWLEDGEBASE' => true,
+		]);
 		$this->kb->assign_nav_tabs_vars('', 0, $this->language->lang('KB_TAB_NOTICE'));
 
 		return $this->helper->render('@phpbbmodders_knowledgebase/kb_notice_body.html', $this->language->lang('LIBRARY') . ' &raquo; ' . $this->language->lang('KB_TAB_NOTICE'));

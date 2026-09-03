@@ -64,13 +64,26 @@ class version_1_0_3 extends \phpbb\db\migration\migration
 
 	public function add_key()
 	{
-		// MySQL-specific combined DROP/ADD INDEX syntax with a storage-engine
-		// index-type hint - only valid (and only run) on a MySQL-family
-		// driver. Non-MySQL installs keep the index as it already is.
-		if (strpos($this->db->get_sql_layer(), 'mysql') === 0)
+		$table = $this->table_prefix . 'kb_src_wrdmtch';
+		$sql_layer = $this->db->get_sql_layer();
+
+		if (strpos($sql_layer, 'mysql') === 0)
 		{
-			$sql = 'ALTER TABLE ' . $this->table_prefix . 'kb_src_wrdmtch DROP INDEX un_mtch, ADD UNIQUE un_mtch (article_id, word_id, title_match, descr_match) USING BTREE';
+			// MySQL-specific combined DROP/ADD INDEX syntax with a
+			// storage-engine index-type hint.
+			$sql = 'ALTER TABLE ' . $table . ' DROP INDEX un_mtch, ADD UNIQUE un_mtch (article_id, word_id, title_match, descr_match) USING BTREE';
 			$this->db->sql_query($sql);
 		}
+		else if (strpos($sql_layer, 'postgres') === 0 || strpos($sql_layer, 'sqlite') === 0)
+		{
+			// Same end result (a unique index across all four columns),
+			// expressed as separate DDL statements since neither DBMS
+			// supports MySQL's combined ALTER TABLE ... DROP/ADD INDEX form.
+			$this->db->sql_query('DROP INDEX IF EXISTS un_mtch');
+			$this->db->sql_query('CREATE UNIQUE INDEX un_mtch ON ' . $table . ' (article_id, word_id, title_match, descr_match)');
+		}
+		// Other DBMS (MSSQL, Oracle): left as-is rather than guessing at
+		// syntax that can't be verified here - the table keeps whatever
+		// index it already had.
 	}
 }

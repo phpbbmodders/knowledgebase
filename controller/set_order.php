@@ -68,24 +68,24 @@ class set_order
 	 * has kb_m_edit in that category for - it can't be used to touch
 	 * articles in other categories.
 	 *
-	 * @return void
+	 * @return \Symfony\Component\HttpFoundation\Response
 	 */
-	public function main(): void
+	public function main(): \Symfony\Component\HttpFoundation\Response
 	{
 		if ($this->user->data['user_id'] == ANONYMOUS || !$this->request->is_set_post('list_order'))
 		{
-			return;
+			return new \Symfony\Component\HttpFoundation\Response('', 400);
 		}
 
 		if (!check_form_key('kb_reorder'))
 		{
-			return;
+			return new \Symfony\Component\HttpFoundation\Response('', 403);
 		}
 
 		$cat_id = $this->request->variable('cat_id', 0, false, request_interface::POST);
 		if (!$cat_id || !$this->kb->acl_kb_get($cat_id, 'kb_m_edit'))
 		{
-			return;
+			return new \Symfony\Component\HttpFoundation\Response('', 403);
 		}
 
 		$list_order = $this->request->variable('list_order', '', false, request_interface::POST);
@@ -94,7 +94,7 @@ class set_order
 		$ids = array_filter(array_map('intval', explode(',', $list_order)));
 		if (empty($ids))
 		{
-			return;
+			return new \Symfony\Component\HttpFoundation\Response('', 400);
 		}
 
 		// Only ids that actually belong to the claimed category are
@@ -121,5 +121,7 @@ class set_order
 			}
 			$i++;
 		}
+
+		return new \Symfony\Component\HttpFoundation\Response('', 200);
 	}
 }

@@ -18,6 +18,17 @@
 			{% endif %}
 		</p>
 
+		{% if S_HAS_REVISION %}
+			<div class="panel kb-notice">
+				<div class="inner">
+					<h3>{{ lang('KB_REVISION_PREVIEW') }}</h3>
+					<p><strong>{{ lang('ARTICLE_TITLE') }}{{ lang('COLON') }}</strong> {{ REVISION_TITLE }}</p>
+					<p><strong>{{ lang('ARTICLE_DESCRIPTION') }}{{ lang('COLON') }}</strong> {{ REVISION_DESCRIPTION }}</p>
+					<div class="content">{{ REVISION_TEXT }}</div>
+				</div>
+			</div>
+		{% endif %}
+
 		<form action="{{ S_ACTION }}" method="post">
 			{{ S_FORM_TOKEN }}
 			<fieldset class="submit-buttons" style="border: none;">

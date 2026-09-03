@@ -63,6 +63,7 @@
 
 {% if S_FIELD_FILTER %}
 	<form method="get" action="{{ S_ACTION }}" class="action-bar bar-top">
+		<input type="hidden" name="id" value="{{ CATEGORY_ID }}">
 		<label>{{ lang('KB_FILTER_BY_FIELD') }}{{ lang('COLON') }}
 			<select name="field_value_id" onchange="this.form.submit();">
 				<option value="0">{{ lang('KB_FILTER_ANY') }}</option>

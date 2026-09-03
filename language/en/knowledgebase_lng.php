@@ -88,6 +88,7 @@ $lang = array_merge($lang, [
 	'KB_REDIRECT_URL'                      => 'Redirect Link',
 	'KB_REDIRECT_URL_EXPLAIN'              => 'The full URL this entry should redirect visitors to.',
 	'KB_REJECT_REVISION'                   => 'Reject revision',
+	'KB_REVISION_PREVIEW'                  => 'Pending revision (not yet live)',
 	'KB_STATUS'                            => 'Status',
 	'KB_STATUS_ACTIVE'                     => 'Active',
 	'KB_STATUS_INACTIVE'                   => 'Inactive',

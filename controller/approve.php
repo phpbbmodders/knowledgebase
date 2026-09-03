@@ -150,7 +150,12 @@ class approve
 		$start = $this->request->variable('start', 0);
 		$per_page = $this->config['kb_articles_per_page'] ?: 10;
 
-		$sql_where = $this->auth->acl_get('a_manage_kb') ? '' : ('AND ' . $this->db->sql_in_set('article_category_id', $moderatable));
+		// A moderator sees an article here if they moderate its primary
+		// category OR any category it's cross-listed into (Phase 2) -
+		// matching how direct moderation access already works via
+		// acl_kb_get_any() across every one of the article's categories.
+		$sql_where = $this->auth->acl_get('a_manage_kb') ? '' : ('AND (' . $this->db->sql_in_set('article_category_id', $moderatable) . '
+			OR article_id IN (SELECT article_id FROM ' . $this->kb->get_article_categories_table() . ' WHERE ' . $this->db->sql_in_set('category_id', $moderatable) . '))');
 		$sql_where .= ' AND (status <> ' . functions_kb::STATUS_ACTIVE . '
 			OR article_id IN (SELECT article_id FROM ' . $this->kb->get_revisions_table() . '))';
 
@@ -287,6 +292,9 @@ class approve
 			}
 		}
 
+		$has_revision = $status === functions_kb::STATUS_ACTIVE && $this->kb->article_has_pending_revision($art_id);
+		$revision = $has_revision ? $this->kb->get_article_revision($art_id) : null;
+
 		$this->template->assign_vars([
 			'ARTICLE_AUTHOR'        => $kb_article_info['author'],
 			'ARTICLE_TITLE'         => $kb_article_info['article_title'],
@@ -296,7 +304,12 @@ class approve
 			'S_STATUS_REVIEWED'     => $status === functions_kb::STATUS_REVIEWED,
 			'S_STATUS_ACTIVE'       => $status === functions_kb::STATUS_ACTIVE,
 			'S_STATUS_INACTIVE'     => $status === functions_kb::STATUS_INACTIVE,
-			'S_HAS_REVISION'        => $status === functions_kb::STATUS_ACTIVE && $this->kb->article_has_pending_revision($art_id),
+			'S_HAS_REVISION'        => $has_revision,
+			// The moderator must see what they're actually approving,
+			// not just the currently-live title/description above.
+			'REVISION_TITLE'        => $revision ? $revision['article_title'] : '',
+			'REVISION_DESCRIPTION'  => $revision ? $revision['article_description'] : '',
+			'REVISION_TEXT'         => $revision ? generate_text_for_display($revision['article_body'], $revision['bbcode_uid'], false, 3, true) : '',
 			'S_IS_MODERATOR'        => $is_moderator,
 			'S_IS_ASSIGNED'         => (bool) $kb_article_info['assigned_team_id'],
 			'S_CAN_REVIEW'          => $status === functions_kb::STATUS_NEW && (bool) $kb_article_info['assigned_team_id'] &&
