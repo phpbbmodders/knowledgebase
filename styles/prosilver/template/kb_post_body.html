@@ -1,5 +1,6 @@
 {% INCLUDE 'overall_header.html' %}
 <h2 class="posting-title"><a href="{{ U_VIEW_FORUM }}">{{ CATEGORY_NAME }}</a></h2>
+{% INCLUDE '@phpbbmodders_knowledgebase/kb_nav_tabs.html' %}
 
 <form id="postform" method="post" action="{{ S_POST_ACTION }}" {{ S_FORM_ENCTYPE }}>
 	{% if S_DISPLAY_PREVIEW %}{% INCLUDE 'posting_preview.html' %}{% endif %}

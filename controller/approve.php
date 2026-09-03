@@ -19,6 +19,7 @@ use phpbb\db\driver\driver_interface;
 use phpbb\language\language;
 use phpbb\log\log;
 use phpbb\notification\manager;
+use phpbb\pagination;
 use phpbb\request\request_interface;
 use phpbb\template\template;
 use phpbb\user;
@@ -61,6 +62,9 @@ class approve
 	/** @var manager */
 	protected manager $notification_manager;
 
+	/** @var pagination */
+	protected pagination $pagination;
+
 	/** @var functions_kb */
 	protected functions_kb $kb;
 
@@ -90,6 +94,7 @@ class approve
 	 * @param cache                     $cache
 	 * @param log                       $log
 	 * @param manager                   $notification_manager
+	 * @param pagination                $pagination
 	 * @param functions_kb              $kb
 	 * @param kb_search_backend_factory $search_factory
 	 * @param string                    $phpbb_root_path
@@ -99,7 +104,7 @@ class approve
 	public function __construct(
 		driver_interface $db, config $config, helper $helper, language $language, auth $auth,
 		request_interface $request, template $template, user $user, cache $cache, log $log,
-		manager $notification_manager, functions_kb $kb, kb_search_backend_factory $search_factory,
+		manager $notification_manager, pagination $pagination, functions_kb $kb, kb_search_backend_factory $search_factory,
 		string $phpbb_root_path, string $php_ext, string $articles_table
 	)
 	{
@@ -114,11 +119,96 @@ class approve
 		$this->cache = $cache;
 		$this->log = $log;
 		$this->notification_manager = $notification_manager;
+		$this->pagination = $pagination;
 		$this->kb = $kb;
 		$this->search_factory = $search_factory;
 		$this->phpbb_root_path = $phpbb_root_path;
 		$this->php_ext = $php_ext;
 		$this->articles_table = $articles_table;
+	}
+
+	/**
+	 * "Administration" moderation queue: every article across every
+	 * category the current user moderates that needs attention (not
+	 * Active with no pending revision), with an inline per-row action
+	 * select that submits to the existing approve_article() endpoint -
+	 * this method only ever renders the listing, it never duplicates
+	 * the do_assign()/do_review()/etc. action handling above.
+	 *
+	 * @return \Symfony\Component\HttpFoundation\Response
+	 */
+	public function queue(): \Symfony\Component\HttpFoundation\Response
+	{
+		$moderatable = $this->kb->get_moderatable_categories();
+		if (!$this->auth->acl_get('a_manage_kb') && empty($moderatable))
+		{
+			trigger_error($this->language->lang('NOT_AUTHORISED'));
+		}
+
+		$start = $this->request->variable('start', 0);
+		$per_page = $this->config['kb_articles_per_page'] ?: 10;
+
+		$sql_where = $this->auth->acl_get('a_manage_kb') ? '' : ('AND ' . $this->db->sql_in_set('article_category_id', $moderatable));
+		$sql_where .= ' AND (status <> ' . functions_kb::STATUS_ACTIVE . '
+			OR article_id IN (SELECT article_id FROM ' . $this->kb->get_revisions_table() . '))';
+
+		$sql = 'SELECT COUNT(article_id) AS article_count
+			FROM ' . $this->articles_table . '
+			WHERE 1=1 ' . $sql_where;
+		$result = $this->db->sql_query($sql);
+		$article_count = (int) $this->db->sql_fetchfield('article_count');
+		$this->db->sql_freeresult($result);
+
+		$pagination_url = $this->helper->route('phpbbmodders_knowledgebase_queue');
+		if ($article_count)
+		{
+			$this->pagination->generate_template_pagination($pagination_url, 'pagination', 'start', $article_count, $per_page, $start);
+		}
+
+		$sql = 'SELECT *
+			FROM ' . $this->articles_table . '
+			WHERE 1=1 ' . $sql_where . '
+			ORDER BY article_date DESC';
+		$result = $this->db->sql_query_limit($sql, $per_page, $start);
+		while ($art_row = $this->db->sql_fetchrow($result))
+		{
+			$art_id = (int) $art_row['article_id'];
+			$status = (int) $art_row['status'];
+			$category_info = $this->kb->get_cat_info((int) $art_row['article_category_id']);
+			$has_revision = $status === functions_kb::STATUS_ACTIVE && $this->kb->article_has_pending_revision($art_id);
+
+			$this->template->assign_block_vars('art_row', [
+				'ID'                     => $art_id,
+				'ARTICLE_TITLE'          => $art_row['article_title'],
+				'U_ARTICLE'              => $this->helper->route('phpbbmodders_knowledgebase_article', ['k' => $art_id]),
+				'CATEGORY'               => $category_info['category_name'] ?? '',
+				'ARTICLE_AUTHOR'         => $art_row['author'],
+				'ARTICLE_DATE'           => $this->user->format_date($art_row['article_date']),
+				'S_ACTION'               => $this->helper->route('phpbbmodders_knowledgebase_approve', ['id' => $art_id]),
+				'S_STATUS_NEW'           => $status === functions_kb::STATUS_NEW,
+				'S_STATUS_REVIEWED'      => $status === functions_kb::STATUS_REVIEWED,
+				'S_STATUS_ACTIVE'        => $status === functions_kb::STATUS_ACTIVE,
+				'S_STATUS_INACTIVE'      => $status === functions_kb::STATUS_INACTIVE,
+				'S_HAS_REVISION'         => $has_revision,
+				'S_IS_ASSIGNED'          => (bool) $art_row['assigned_team_id'],
+			]);
+		}
+		$this->db->sql_freeresult($result);
+
+		$this->template->assign_vars([
+			'TOTAL_ITEMS'         => $this->language->lang('TOTAL_ITEMS', $article_count),
+			'CURRENT_PAGE_NUMBER' => $this->pagination->get_on_page($per_page, $start),
+			'S_KNOWLEDGEBASE'     => true,
+		]);
+
+		$this->template->assign_block_vars('navlinks', [
+			'FORUM_NAME'   => $this->language->lang('LIBRARY'),
+			'U_VIEW_FORUM' => $this->helper->route('phpbbmodders_knowledgebase_index'),
+		]);
+
+		$this->kb->assign_nav_tabs_vars('admin');
+
+		return $this->helper->render('@phpbbmodders_knowledgebase/kb_queue_body.html', $this->language->lang('LIBRARY') . ' &raquo; ' . $this->language->lang('KB_TAB_ADMINISTRATION'));
 	}
 
 	/**
@@ -205,6 +295,8 @@ class approve
 			'S_TEAM_OPTIONS'        => $this->get_team_options((int) $kb_article_info['assigned_team_id']),
 			'S_ACTION'              => $this->helper->route('phpbbmodders_knowledgebase_approve', ['id' => $art_id]),
 		]);
+
+		$this->kb->assign_nav_tabs_vars('admin', (int) $kb_article_info['article_category_id']);
 
 		return $this->helper->render('@phpbbmodders_knowledgebase/kb_approve_body.html', ($this->language->lang('LIBRARY') . ' &raquo; ' . $this->language->lang('APPROVE')));
 	}

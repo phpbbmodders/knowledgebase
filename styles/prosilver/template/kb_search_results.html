@@ -1,6 +1,7 @@
 {% INCLUDE 'overall_header.html' %}
 <h2>{% if SEARCH_TITLE %}{{ SEARCH_TITLE }}{% else %}{{ SEARCH_MATCHES }}{% endif %}{% if SEARCH_WORDS %}{{ lang('COLON') }}
 		<a href="{{ U_SEARCH_WORDS }}">{{ SEARCH_WORDS_AND_AUTHOR }}</a>{% endif %}</h2>
+{% INCLUDE '@phpbbmodders_knowledgebase/kb_nav_tabs.html' %}
 {% if SEARCH_WORDS %} <p>{{ lang('SEARCHED_QUERY') }}{{ lang('COLON') }} <strong>{{ SEARCH_WORDS }}</strong>
 	</p>{% endif %}
 <p>

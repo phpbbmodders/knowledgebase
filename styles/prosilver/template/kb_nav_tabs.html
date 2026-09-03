@@ -1,0 +1,12 @@
+<div class="kb-tabs">
+	<a href="{{ U_KB_TAB_INDEX }}" class="kb-tab{% if S_KB_TAB_INDEX %} kb-tab-active{% endif %}">{{ lang('KB_TAB_INDEX') }}</a>
+	<a href="{{ U_KB_TAB_MY_ARTICLES }}" class="kb-tab{% if S_KB_TAB_MY_ARTICLES %} kb-tab-active{% endif %}">{{ lang('KB_TAB_MY_ARTICLES') }}</a>
+	<a href="{{ U_KB_TAB_SUBMIT }}" class="kb-tab{% if S_KB_TAB_SUBMIT %} kb-tab-active{% endif %}">{{ lang('ADD_ARTICLE') }}</a>
+	<a href="{{ U_KB_TAB_REDIRECT }}" class="kb-tab{% if S_KB_TAB_REDIRECT %} kb-tab-active{% endif %}">{{ lang('KB_SUBMIT_REDIRECT') }}</a>
+	{% if S_KB_CAN_ADMIN_TAB %}
+		<a href="{{ U_KB_TAB_ADMIN }}" class="kb-tab{% if S_KB_TAB_ADMIN %} kb-tab-active{% endif %}">{{ lang('KB_TAB_ADMINISTRATION') }}</a>
+	{% endif %}
+	{% if S_KB_EXTRA_TAB %}
+		<span class="kb-tab kb-tab-active">{{ KB_EXTRA_TAB_LABEL }}</span>
+	{% endif %}
+</div>

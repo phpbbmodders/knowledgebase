@@ -748,6 +748,8 @@ class posting
 
 		$title = $mode == 'edit' ? $this->language->lang('EDIT_ARTICLE') : ($is_redirect ? $this->language->lang('KB_SUBMIT_REDIRECT') : $this->language->lang('ADD_ARTICLE'));
 
+		$this->kb->assign_nav_tabs_vars($is_redirect ? 'redirect' : 'submit', $cat_id);
+
 		return $this->helper->render('@phpbbmodders_knowledgebase/kb_post_body.html', ($this->language->lang('LIBRARY') . ' &raquo; ' . $title));
 	}
 

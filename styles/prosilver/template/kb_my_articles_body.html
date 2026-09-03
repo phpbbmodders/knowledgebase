@@ -1,0 +1,64 @@
+{% INCLUDE 'overall_header.html' %}
+<h2><a href="{{ U_LIBRARY }}" class="nav">{{ lang('LIBRARY') }}</a></h2>
+{% INCLUDE '@phpbbmodders_knowledgebase/kb_nav_tabs.html' %}
+
+<div class="panel">
+	<div class="inner">
+		<p>{{ lang('KB_MANAGE_ARTICLES_EXPLAIN') }}</p>
+		<dl>
+			<dt><span class="kb-status-badge kb-status-new">{{ lang('KB_STATUS_NEW') }}</span></dt>
+			<dd>{{ lang('KB_STATUS_NEW') }}</dd>
+			<dt><span class="kb-status-badge kb-status-reviewed">{{ lang('KB_STATUS_REVIEWED') }}</span></dt>
+			<dd>{{ lang('KB_STATUS_REVIEWED') }}</dd>
+			<dt><span class="kb-status-badge kb-status-active">{{ lang('KB_STATUS_ACTIVE') }}</span></dt>
+			<dd>{{ lang('KB_STATUS_ACTIVE') }}</dd>
+			<dt><span class="kb-status-badge kb-status-inactive">{{ lang('KB_STATUS_INACTIVE') }}</span></dt>
+			<dd>{{ lang('KB_STATUS_INACTIVE') }}</dd>
+			<dt><span class="kb-status-badge kb-status-revision">{{ lang('KB_STATUS_REVISION') }}</span></dt>
+			<dd>{{ lang('KB_STATUS_REVISION') }}</dd>
+		</dl>
+	</div>
+</div>
+
+<table class="kb-index-table">
+	<thead>
+	<tr>
+		<th>{{ lang('ARTICLE') }}</th>
+		<th class="kb-index-views">{{ lang('KB_PENDING_REVISION') }}</th>
+		<th class="kb-index-author">{{ lang('ARTICLE_DATE') }}</th>
+		<th class="kb-index-author">{{ lang('KB_STATUS') }}</th>
+	</tr>
+	</thead>
+	<tbody>
+	{% for art_row in loops.art_row %}
+		<tr>
+			<td><a href="{{ art_row.U_ARTICLE }}">{{ art_row.ARTICLE_TITLE }}</a></td>
+			<td class="kb-index-views">{% if art_row.S_HAS_REVISION %}{{ lang('KB_STATUS_REVISION') }}{% endif %}</td>
+			<td class="kb-index-author">{{ art_row.ARTICLE_DATE }}{% if art_row.EDIT_DATE %}<br>{{ art_row.EDIT_DATE }}{% endif %}</td>
+			<td class="kb-index-author">
+				{% if art_row.S_STATUS_NEW %}<span class="kb-status-badge kb-status-new">{{ lang('KB_STATUS_NEW') }}</span>
+				{% elseif art_row.S_STATUS_REVIEWED %}<span class="kb-status-badge kb-status-reviewed">{{ lang('KB_STATUS_REVIEWED') }}</span>
+				{% elseif art_row.S_STATUS_ACTIVE %}<span class="kb-status-badge kb-status-active">{{ lang('KB_STATUS_ACTIVE') }}</span>
+				{% elseif art_row.S_STATUS_INACTIVE %}<span class="kb-status-badge kb-status-inactive">{{ lang('KB_STATUS_INACTIVE') }}</span>
+				{% endif %}
+			</td>
+		</tr>
+	{% endfor %}
+	{% if not loops.art_row|length %}
+		<tr>
+			<td colspan="4">{{ lang('NO_ARTICLES') }}</td>
+		</tr>
+	{% endif %}
+	</tbody>
+</table>
+
+<div class="action-bar bar-bottom">
+	<div class="pagination">
+		{{ TOTAL_ITEMS }}
+		{% if loops.pagination|length %}
+			{% INCLUDE 'pagination.html' %}
+		{% endif %}
+	</div>
+	<div id="page" style="display: none;">{{ CURRENT_PAGE_NUMBER }}</div>
+</div>
+{% INCLUDE 'overall_footer.html' %}

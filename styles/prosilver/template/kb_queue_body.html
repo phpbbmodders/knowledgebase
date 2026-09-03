@@ -1,0 +1,63 @@
+{% INCLUDE 'overall_header.html' %}
+<h2><a href="{{ U_LIBRARY }}" class="nav">{{ lang('LIBRARY') }}</a></h2>
+{% INCLUDE '@phpbbmodders_knowledgebase/kb_nav_tabs.html' %}
+
+<table class="kb-index-table">
+	<thead>
+	<tr>
+		<th>{{ lang('ARTICLE') }}</th>
+		<th class="kb-index-author">{{ lang('ARTICLE_AUTHOR') }}{{ lang('COLON') }}{{ lang('ARTICLE_DATE') }}</th>
+		<th class="kb-index-author">{{ lang('KB_STATUS') }}</th>
+	</tr>
+	</thead>
+	<tbody>
+	{% for art_row in loops.art_row %}
+		<tr>
+			<td><a href="{{ art_row.U_ARTICLE }}">{{ art_row.ARTICLE_TITLE }}</a>{% if art_row.CATEGORY %}<br><small>{{ art_row.CATEGORY }}</small>{% endif %}</td>
+			<td class="kb-index-author">{{ art_row.ARTICLE_AUTHOR }}<br>{{ art_row.ARTICLE_DATE }}</td>
+			<td class="kb-index-author">
+				<form method="post" action="{{ art_row.S_ACTION }}">
+					<select name="action">
+						{% if art_row.S_STATUS_NEW %}
+							<option value="assign">{{ lang('KB_ASSIGN') }}</option>
+							{% if art_row.S_IS_ASSIGNED %}<option value="review">{{ lang('KB_MARK_REVIEWED') }}</option>{% endif %}
+							<option value="deny">{{ lang('DISAPPROVE') }}</option>
+						{% endif %}
+						{% if art_row.S_STATUS_REVIEWED %}
+							<option value="approve">{{ lang('APPROVE') }}</option>
+							<option value="deny">{{ lang('DISAPPROVE') }}</option>
+						{% endif %}
+						{% if art_row.S_STATUS_ACTIVE %}
+							<option value="deactivate">{{ lang('KB_DEACTIVATE') }}</option>
+							{% if art_row.S_HAS_REVISION %}
+								<option value="approve_revision">{{ lang('KB_APPROVE_REVISION') }}</option>
+								<option value="reject_revision">{{ lang('KB_REJECT_REVISION') }}</option>
+							{% endif %}
+						{% endif %}
+						{% if art_row.S_STATUS_INACTIVE %}
+							<option value="reactivate">{{ lang('KB_REACTIVATE') }}</option>
+						{% endif %}
+					</select>
+					<button class="button2" type="submit">{{ lang('GO') }}</button>
+				</form>
+			</td>
+		</tr>
+	{% endfor %}
+	{% if not loops.art_row|length %}
+		<tr>
+			<td colspan="3">{{ lang('NO_ARTICLES') }}</td>
+		</tr>
+	{% endif %}
+	</tbody>
+</table>
+
+<div class="action-bar bar-bottom">
+	<div class="pagination">
+		{{ TOTAL_ITEMS }}
+		{% if loops.pagination|length %}
+			{% INCLUDE 'pagination.html' %}
+		{% endif %}
+	</div>
+	<div id="page" style="display: none;">{{ CURRENT_PAGE_NUMBER }}</div>
+</div>
+{% INCLUDE 'overall_footer.html' %}

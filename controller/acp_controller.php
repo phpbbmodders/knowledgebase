@@ -309,6 +309,7 @@ class acp_controller
 			'EXTGROUP_FILESIZE'        => $max_filesize,
 			'ADVANCED_FORM_ON'         => $this->config['kb_anounce'] ? 'checked="checked"' : '',
 			'ADVANCED_FORM'            => $this->config['kb_anounce'] ? '' : 'none',
+			'FLAT_INDEX_ON'            => $this->config['kb_flat_index'] ? 'checked="checked"' : '',
 			'PER_PAGE'                 => $this->config['kb_articles_per_page'] ?? 10,
 			'S_YES_ATTACH'             => (bool) $this->config['kb_allow_attachments'],
 			'S_YES_THUMBNAIL'          => (bool) $this->config['kb_allow_thumbnail'],
@@ -351,6 +352,7 @@ class acp_controller
 		$this->config->set('kb_font_icon', $kb_font_icon);
 
 		$this->config->set('kb_anounce', $this->request->variable('anounce', 0));
+		$this->config->set('kb_flat_index', $this->request->variable('flat_index', 0));
 		$this->config->set('kb_forum_id', $this->request->variable('forum_id', 0));
 		$this->config_text->set('kb_forum_prefix', utf8_normalize_nfc($this->request->variable('forum_prefix', '', true)));
 		$this->config_text->set('kb_topic_prefix', utf8_normalize_nfc($this->request->variable('topic_prefix', '', true)));

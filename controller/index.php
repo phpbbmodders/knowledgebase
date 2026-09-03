@@ -16,6 +16,8 @@ use phpbb\config\config;
 use phpbb\controller\helper;
 use phpbb\db\driver\driver_interface;
 use phpbb\language\language;
+use phpbb\pagination;
+use phpbb\request\request_interface;
 use phpbb\template\template;
 use phpbb\user;
 use phpbbmodders\knowledgebase\inc\functions_kb;
@@ -37,11 +39,17 @@ class index
 	/** @var auth */
 	protected auth $auth;
 
+	/** @var request_interface */
+	protected request_interface $request;
+
 	/** @var template */
 	protected template $template;
 
 	/** @var user */
 	protected user $user;
+
+	/** @var pagination */
+	protected pagination $pagination;
 
 	/** @var functions_kb */
 	protected functions_kb $kb;
@@ -55,20 +63,23 @@ class index
 	/**
 	 * Constructor
 	 *
-	 * @param driver_interface $db
-	 * @param config           $config
-	 * @param helper           $helper
-	 * @param language         $language
-	 * @param auth             $auth
-	 * @param template         $template
-	 * @param user             $user
-	 * @param functions_kb     $kb
-	 * @param string           $articles_table
-	 * @param string           $categories_table
+	 * @param driver_interface   $db
+	 * @param config             $config
+	 * @param helper             $helper
+	 * @param language           $language
+	 * @param auth               $auth
+	 * @param request_interface  $request
+	 * @param template           $template
+	 * @param user               $user
+	 * @param pagination         $pagination
+	 * @param functions_kb       $kb
+	 * @param string             $articles_table
+	 * @param string             $categories_table
 	 */
 	public function __construct(
-		driver_interface $db, config $config, helper $helper, language $language, auth $auth, template $template,
-		user $user, functions_kb $kb, string $articles_table, string $categories_table
+		driver_interface $db, config $config, helper $helper, language $language, auth $auth,
+		request_interface $request, template $template, user $user, pagination $pagination, functions_kb $kb,
+		string $articles_table, string $categories_table
 	)
 	{
 		$this->db = $db;
@@ -76,8 +87,10 @@ class index
 		$this->helper = $helper;
 		$this->language = $language;
 		$this->auth = $auth;
+		$this->request = $request;
 		$this->template = $template;
 		$this->user = $user;
+		$this->pagination = $pagination;
 		$this->kb = $kb;
 		$this->articles_table = $articles_table;
 		$this->categories_table = $categories_table;
@@ -92,6 +105,11 @@ class index
 		if (!$this->auth->acl_get('u_kb_view') && !$this->auth->acl_get('a_manage_kb'))
 		{
 			trigger_error($this->language->lang('NOT_AUTHORISED'));
+		}
+
+		if ($this->config['kb_flat_index'])
+		{
+			redirect($this->helper->route('phpbbmodders_knowledgebase_category', ['id' => 0]));
 		}
 
 		$sql = 'SELECT category_id, category_name, category_details, parent_id, number_articles
@@ -154,6 +172,89 @@ class index
 			'U_VIEW_FORUM' => $this->helper->route('phpbbmodders_knowledgebase_index'),
 		]);
 
+		$this->kb->assign_nav_tabs_vars('index');
+
 		return $this->helper->render('@phpbbmodders_knowledgebase/kb_index_body.html', $this->language->lang('LIBRARY'));
+	}
+
+	/**
+	 * "Manage Your Articles": a table of the current user's own
+	 * submissions (including articles authored under a KB team group
+	 * they belong to), across every category, with their status and
+	 * pending-revision indicator.
+	 *
+	 * @return \Symfony\Component\HttpFoundation\Response
+	 */
+	public function my_articles(): \Symfony\Component\HttpFoundation\Response
+	{
+		if (!$this->auth->acl_get('u_kb_view') && !$this->auth->acl_get('a_manage_kb'))
+		{
+			trigger_error($this->language->lang('NOT_AUTHORISED'));
+		}
+
+		$start = $this->request->variable('start', 0);
+		$per_page = $this->config['kb_articles_per_page'] ?: 10;
+
+		$user_id = (int) $this->user->data['user_id'];
+		$team_group_ids = $this->kb->get_kb_team_groups();
+
+		$sql_where = '(a.author_type = 0 AND a.author_id = ' . $user_id . ')';
+		if (!empty($team_group_ids))
+		{
+			$sql_where .= ' OR (a.author_type = 1 AND ' . $this->db->sql_in_set('a.author_id', $team_group_ids) . ')';
+		}
+
+		$sql = 'SELECT COUNT(a.article_id) AS article_count
+			FROM ' . $this->articles_table . ' a
+			WHERE ' . $sql_where;
+		$result = $this->db->sql_query($sql);
+		$article_count = (int) $this->db->sql_fetchfield('article_count');
+		$this->db->sql_freeresult($result);
+
+		$pagination_url = $this->helper->route('phpbbmodders_knowledgebase_my_articles');
+		if ($article_count)
+		{
+			$this->pagination->generate_template_pagination($pagination_url, 'pagination', 'start', $article_count, $per_page, $start);
+		}
+
+		$sql = 'SELECT a.*
+			FROM ' . $this->articles_table . ' a
+			WHERE ' . $sql_where . '
+			ORDER BY a.article_date DESC';
+		$result = $this->db->sql_query_limit($sql, $per_page, $start);
+		while ($art_row = $this->db->sql_fetchrow($result))
+		{
+			$art_id = (int) $art_row['article_id'];
+			$status = (int) $art_row['status'];
+
+			$this->template->assign_block_vars('art_row', [
+				'ID'              => $art_id,
+				'ARTICLE_TITLE'   => $art_row['article_title'],
+				'U_ARTICLE'       => $this->helper->route('phpbbmodders_knowledgebase_article', ['k' => $art_id]),
+				'ARTICLE_DATE'    => $this->user->format_date($art_row['article_date']),
+				'EDIT_DATE'       => $art_row['edit_date'] ? $this->user->format_date($art_row['edit_date']) : '',
+				'S_STATUS_NEW'      => $status === functions_kb::STATUS_NEW,
+				'S_STATUS_REVIEWED' => $status === functions_kb::STATUS_REVIEWED,
+				'S_STATUS_ACTIVE'   => $status === functions_kb::STATUS_ACTIVE,
+				'S_STATUS_INACTIVE' => $status === functions_kb::STATUS_INACTIVE,
+				'S_HAS_REVISION'    => $status === functions_kb::STATUS_ACTIVE && $this->kb->article_has_pending_revision($art_id),
+			]);
+		}
+		$this->db->sql_freeresult($result);
+
+		$this->template->assign_vars([
+			'TOTAL_ITEMS'         => $this->language->lang('TOTAL_ITEMS', $article_count),
+			'CURRENT_PAGE_NUMBER' => $this->pagination->get_on_page($per_page, $start),
+			'S_KNOWLEDGEBASE'     => true,
+		]);
+
+		$this->template->assign_block_vars('navlinks', [
+			'FORUM_NAME'   => $this->language->lang('LIBRARY'),
+			'U_VIEW_FORUM' => $this->helper->route('phpbbmodders_knowledgebase_index'),
+		]);
+
+		$this->kb->assign_nav_tabs_vars('my_articles');
+
+		return $this->helper->render('@phpbbmodders_knowledgebase/kb_my_articles_body.html', $this->language->lang('LIBRARY') . ' &raquo; ' . $this->language->lang('KB_TAB_MY_ARTICLES'));
 	}
 }

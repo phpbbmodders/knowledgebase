@@ -4,28 +4,34 @@
 		content: "{{ lang('COPYED') }}";
 	}
 </style>
+<h2><a href="{{ U_LIBRARY }}" class="nav">{{ lang('LIBRARY') }}</a></h2>
+{% INCLUDE '@phpbbmodders_knowledgebase/kb_nav_tabs.html' %}
 <div class="post has-profile bg2">
 	<div class="inner">
-		<dl class="postprofile">
-			<dt><br><strong>{{ lang('ARTICLE_AUTHOR') }}{{ lang('COLON') }}</strong> {{ ARTICLE_AUTHOR }}</dt>
-			<dd class="profile-rank">{{ RANK }}</dd>
-			<dd><br><strong>{{ lang('ARTICLE_DATE') }}{{ lang('COLON') }}</strong> {{ ARTICLE_DATE }}</dd>
-			<dd><strong>{{ lang('CATEGORY') }}{{ lang('COLON') }}</strong>
+		<div class="kb-meta">
+			<strong>{{ lang('KB_WRITTEN_BY') }}{{ lang('COLON') }}</strong> {{ ARTICLE_AUTHOR }}<br>
+			<strong>{{ lang('KB_WRITTEN_ON') }}{{ lang('COLON') }}</strong> {{ ARTICLE_DATE }}<br>
+			{% if EDIT_DATE %}<strong>{{ lang('KB_LAST_MODIFIED') }}{{ lang('COLON') }}</strong> {{ EDIT_DATE }}<br>{% endif %}
+			<strong>{{ lang('VIEWS') }}{{ lang('COLON') }}</strong> {{ VIEWS }}<br>
+			{% if FIELD_DISPLAY %}{{ FIELD_DISPLAY }}{% endif %}
+		</div>
+		<div class="postbody">
+			{% if S_STATUS_NEW %}<span class="kb-status-badge kb-status-new">{{ lang('KB_STATUS_NEW') }}</span>
+			{% elseif S_STATUS_REVIEWED %}<span class="kb-status-badge kb-status-reviewed">{{ lang('KB_STATUS_REVIEWED') }}</span>
+			{% elseif S_STATUS_ACTIVE %}<span class="kb-status-badge kb-status-active">{{ lang('KB_STATUS_ACTIVE') }}</span>{% if S_HAS_REVISION %} <span class="kb-status-badge kb-status-revision">{{ lang('KB_STATUS_REVISION') }}</span>{% endif %}
+			{% elseif S_STATUS_INACTIVE %}<span class="kb-status-badge kb-status-inactive">{{ lang('KB_STATUS_INACTIVE') }}</span>
+			{% endif %}
+			<h3 class="first">{{ ARTICLE_TITLE }}</h3>
+			<p class="author">
+				<strong>{{ lang('ARTICLE_DESCRIPTION') }}{{ lang('COLON') }}</strong> {{ ARTICLE_DESCRIPTION }}</p>
+			<p class="author">
+				<strong>{{ lang('CATEGORY') }}{{ lang('COLON') }}</strong>
 				{% if loops.article_category|length %}
 					{% for article_category in loops.article_category %}<a href="{{ article_category.U_CATEGORY }}">{{ article_category.CATEGORY_NAME }}</a>{% if not loop.last %}, {% endif %}{% endfor %}
 				{% else %}
 					{{ ARTICLE_CATEGORY }}
 				{% endif %}
-			</dd>
-			<dd><br><strong>{{ lang('VIEWS') }}{{ lang('COLON') }}</strong> {{ VIEWS }}</dd>
-			{% if FIELD_DISPLAY %}<dd>{{ FIELD_DISPLAY }}</dd>{% endif %}
-			<dd><strong>{{ COMMENTS }}</strong></dd>
-			<dd><br></dd>
-		</dl>
-		<div class="postbody">
-			<h3 class="first">{{ ARTICLE_TITLE }}</h3>
-			<p class="author">
-				<strong>{{ lang('ARTICLE_DESCRIPTION') }}{{ lang('COLON') }}</strong> {{ ARTICLE_DESCRIPTION }}</p>
+			</p>
 			<div class="codebox kb_codebox">
 				<p>{{ lang('LINK_TO_ARTICLE') }}{{ lang('COLON') }} <a class="buttoncopy"
 						data-copytarget="#bbcode">{{ lang('COPY_TO_BUFFER') }}</a></p>

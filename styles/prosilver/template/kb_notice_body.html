@@ -1,0 +1,10 @@
+{% INCLUDE 'overall_header.html' %}
+<h2><a href="{{ U_LIBRARY }}" class="nav">{{ lang('LIBRARY') }}</a></h2>
+{% INCLUDE '@phpbbmodders_knowledgebase/kb_nav_tabs.html' %}
+<div class="panel kb-notice">
+	<div class="inner">
+		<h3>{{ lang('KB_TAB_NOTICE') }}{{ lang('COLON') }}</h3>
+		<p>{{ NOTICE_MESSAGE }}</p>
+	</div>
+</div>
+{% INCLUDE 'overall_footer.html' %}

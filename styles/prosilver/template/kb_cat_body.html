@@ -1,7 +1,23 @@
 {% INCLUDE 'overall_header.html' %}
 <h2><a href="{{ U_LIBRARY }}" class="nav">{{ lang('LIBRARY') }}</a></h2>
-<h2>{{ CATEGORY }}</h2>
-{% if loops.cat_row|length %}{% INCLUDE '@phpbbmodders_knowledgebase/kb_cat_list.html' %}{% endif %}
+{% INCLUDE '@phpbbmodders_knowledgebase/kb_nav_tabs.html' %}
+{% if S_FLAT_ALL %}
+	<div class="panel">
+		<div class="inner">
+			<strong>{{ lang('KB_NARROW_CATEGORY') }}</strong><br>
+			<form method="get" action="{{ S_ACTION }}">
+				<select name="id" onchange="this.form.submit();">
+					<option value="0">{{ lang('KB_ALL_CATEGORIES') }}</option>
+					{{ CATS_DROPBOX }}
+				</select>
+				<button class="button2" type="submit">{{ lang('GO') }}</button>
+			</form>
+		</div>
+	</div>
+{% else %}
+	<h2>{{ CATEGORY }}</h2>
+	{% if loops.cat_row|length %}{% INCLUDE '@phpbbmodders_knowledgebase/kb_cat_list.html' %}{% endif %}
+{% endif %}
 <div class="action-bar bar-top">
 	{% if S_CAN_ADD or S_CAN_ADD_REDIRECT %}
 		<div class="buttons">
@@ -67,74 +83,59 @@
 		</div>
 	</div>
 {% endif %}
-<div class="forumbg" id="forumbg">
-	<div class="inner">
-		<ul class="topiclist">
-			<li class="header">
-				<dl class="row-item">
-					<dt>
-						<div class="list-inner">{{ lang('ARTICLES') }}</div>
-					</dt>
-					<dd class="views">{{ lang('VIEWS') }}</dd>
-					<dd class="lastpost">{{ lang('LAST_POST') }}</dd>
-					<dd class="action"></dd>
-				</dl>
-			</li>
-		</ul>
-		<ul class="topiclist topics"{% if S_CAN_MOVE %} id="sortable"{% endif %}>
-			{% for art_row in loops.art_row %}
-				<li class="row{% if art_row.S_ROW_COUNT is even %} bg1{% else %} bg2{% endif %}" id="{{ art_row.ID }}">
-					<dl class="row-item">
-						<dt>
-							<div>
-								<a class="topictitle" href="{{ art_row.U_ARTICLE }}">{{ art_row.ARTICLE_TITLE }}</a>
-								{% if art_row.S_CROSS_LISTED %}<i class="icon fa-tag fa-fw" aria-hidden="true"
-										title="{{ lang('KB_CROSS_LISTED') }}"></i>{% endif %}
-								{% if art_row.S_IS_REDIRECT %}<i class="icon fa-external-link fa-fw" aria-hidden="true"
-										title="{{ lang('KB_IS_REDIRECT') }}"></i>{% endif %}
-								{% if art_row.ARTICLE_DESCRIPTION %}<br>{{ art_row.ARTICLE_DESCRIPTION }}{% endif %}
-							</div>
-						</dt>
-						<dd class="views">{{ art_row.ART_VIEWS }}</dd>
-						<dd class="lastpost">
-							<span>{{ art_row.ARTICLE_AUTHOR }}<br>{{ art_row.ARTICLE_DATE }}</span></dd>
-						<dd class="action">
-							<ul class="post-buttons">
-								{% if S_CAN_MOVE %}
-									<li id="move"><a href="#" title="{{ lang('MOVE_DRAGNDROP') }}"
-										class="button button-icon-only"><i class="icon fa-arrows fa-fw green"
-											aria-hidden="true"></i></a></li>{% endif %}
-								{% if art_row.S_CAN_DELETE %}
-									<li><a href="{{ art_row.U_DELETE }}" title="{{ lang('DELETE') }}"
-										class="button button-icon-only"><i class="icon fa-times fa-fw red"
-											aria-hidden="true"></i></a></li>{% endif %}
-								{% if art_row.S_CAN_EDIT %}
-									<li><a href="{{ art_row.U_EDIT_ART }}" title="{{ lang('EDIT') }}"
-										class="button button-icon-only"><i class="icon fa-pencil fa-fw blue"
-											aria-hidden="true"></i></a></li>{% endif %}
-								{% if art_row.STATUS != 2 %}
-									<li><a href="{{ art_row.U_ARTICLE }}"
-										title="{% if art_row.STATUS == 3 %}{{ lang('KB_STATUS_INACTIVE') }}{% else %}{{ lang('NEED_APPROVE') }}{% endif %}"
-										class="button button-icon-only"><i
-											class="icon fa-{% if art_row.STATUS == 3 %}eye-slash{% else %}check{% endif %} fa-fw orange"
-											aria-hidden="true"></i></a></li>{% endif %}
-							</ul>
-						</dd>
-					</dl>
-				</li>
-			{% endfor %}
-			{% if not loops.art_row|length %}
-				<li class="row bg2">
-					<dl class="row-item">
-						<dt style="text-align: center;">
-							<div class="error" style="padding-top: 10px;">{{ lang('NO_ARTICLES') }}</div>
-						</dt>
-					</dl>
-				</li>
-			{% endif %}
-		</ul>
-	</div>
-</div>
+<table class="kb-index-table"{% if S_CAN_MOVE %} id="sortable"{% endif %}>
+	<thead>
+	<tr>
+		<th>{{ lang('ARTICLES') }}</th>
+		<th class="kb-index-views">{{ lang('VIEWS') }}</th>
+		<th class="kb-index-author">{{ lang('ARTICLE_AUTHOR') }}{{ lang('COLON') }}{{ lang('ARTICLE_DATE') }}</th>
+		<th class="kb-index-author"></th>
+	</tr>
+	</thead>
+	<tbody>
+	{% for art_row in loops.art_row %}
+		<tr id="{{ art_row.ID }}">
+			<td>
+				<a href="{{ art_row.U_ARTICLE }}">{{ art_row.ARTICLE_TITLE }}</a>
+				{% if art_row.S_CROSS_LISTED %}<i class="icon fa-tag fa-fw" aria-hidden="true"
+						title="{{ lang('KB_CROSS_LISTED') }}"></i>{% endif %}
+				{% if art_row.S_IS_REDIRECT %}<i class="icon fa-external-link fa-fw" aria-hidden="true"
+						title="{{ lang('KB_IS_REDIRECT') }}"></i>{% endif %}
+				{% if art_row.ARTICLE_DESCRIPTION %}<br>{{ art_row.ARTICLE_DESCRIPTION }}{% endif %}
+			</td>
+			<td class="kb-index-views">{{ art_row.ART_VIEWS }}</td>
+			<td class="kb-index-author">{{ art_row.ARTICLE_AUTHOR }}<br>{{ art_row.ARTICLE_DATE }}</td>
+			<td class="kb-index-author">
+				<ul class="post-buttons">
+					{% if S_CAN_MOVE %}
+						<li id="move"><a href="#" title="{{ lang('MOVE_DRAGNDROP') }}"
+							class="button button-icon-only"><i class="icon fa-arrows fa-fw green"
+								aria-hidden="true"></i></a></li>{% endif %}
+					{% if art_row.S_CAN_DELETE %}
+						<li><a href="{{ art_row.U_DELETE }}" title="{{ lang('DELETE') }}"
+							class="button button-icon-only"><i class="icon fa-times fa-fw red"
+								aria-hidden="true"></i></a></li>{% endif %}
+					{% if art_row.S_CAN_EDIT %}
+						<li><a href="{{ art_row.U_EDIT_ART }}" title="{{ lang('EDIT') }}"
+							class="button button-icon-only"><i class="icon fa-pencil fa-fw blue"
+								aria-hidden="true"></i></a></li>{% endif %}
+					{% if art_row.STATUS != 2 %}
+						<li><a href="{{ art_row.U_ARTICLE }}"
+							title="{% if art_row.STATUS == 3 %}{{ lang('KB_STATUS_INACTIVE') }}{% else %}{{ lang('NEED_APPROVE') }}{% endif %}"
+							class="button button-icon-only"><i
+								class="icon fa-{% if art_row.STATUS == 3 %}eye-slash{% else %}check{% endif %} fa-fw orange"
+								aria-hidden="true"></i></a></li>{% endif %}
+				</ul>
+			</td>
+		</tr>
+	{% endfor %}
+	{% if not loops.art_row|length %}
+		<tr>
+			<td colspan="4" style="text-align: center;">{{ lang('NO_ARTICLES') }}</td>
+		</tr>
+	{% endif %}
+	</tbody>
+</table>
 <div class="action-bar bar-bottom">
 	{% if S_CAN_ADD or S_CAN_ADD_REDIRECT %}
 		<div class="buttons">

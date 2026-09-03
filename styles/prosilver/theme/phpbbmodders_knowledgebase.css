@@ -129,3 +129,91 @@ dd.action {
 .orange {
 	color: #ff6600 !important;
 }
+
+.kb-tabs {
+	display: flex;
+	flex-wrap: wrap;
+	margin-bottom: 4px;
+}
+
+.kb-tab {
+	background: #8f9dab;
+	color: #ffffff;
+	padding: 6px 12px;
+	margin-right: 2px;
+	margin-bottom: 2px;
+	border-radius: 3px 3px 0 0;
+	text-decoration: none;
+	font-size: 0.95em;
+}
+
+.kb-tab:hover {
+	background: #7c8790;
+	text-decoration: none;
+}
+
+.kb-tab-active {
+	background: #536482;
+	font-weight: bold;
+}
+
+.kb-index-table {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+.kb-index-table th {
+	background: #536482;
+	color: #ffffff;
+	text-align: left;
+	padding: 6px 8px;
+}
+
+.kb-index-table td {
+	padding: 8px;
+	border-bottom: 1px solid #cccccc;
+	vertical-align: top;
+}
+
+.kb-index-table tr:nth-child(even) td {
+	background: #f2f5f7;
+}
+
+.kb-index-table .kb-index-views,
+.kb-index-table .kb-index-author {
+	white-space: nowrap;
+	width: 1%;
+}
+
+.kb-status-badge {
+	display: inline-block;
+	padding: 1px 6px;
+	border-radius: 3px;
+	font-size: 0.9em;
+	color: #ffffff;
+}
+
+.kb-status-new,
+.kb-status-inactive {
+	background: #d1651a;
+}
+
+.kb-status-reviewed,
+.kb-status-revision {
+	background: #105289;
+}
+
+.kb-status-active {
+	background: #00801d;
+}
+
+.kb-meta {
+	float: right;
+	text-align: left;
+}
+
+.kb-notice {
+	border: 1px solid #cccccc;
+	border-radius: 3px;
+	padding: 10px;
+}

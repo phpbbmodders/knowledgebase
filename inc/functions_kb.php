@@ -433,11 +433,95 @@ class functions_kb
 	}
 
 	/**
+	 * Every category the current user can moderate (holds kb_m_approve
+	 * in, or every category if they hold a_manage_kb). Used both for the
+	 * flat article index's "show unapproved articles too" gate and for
+	 * the Administration moderation queue.
+	 *
+	 * @return int[]
+	 */
+	public function get_moderatable_categories(): array
+	{
+		$sql = 'SELECT category_id FROM ' . $this->categories_table;
+		$result = $this->db->sql_query($sql);
+
+		$manage_all = $this->auth->acl_get('a_manage_kb');
+		$category_ids = [];
+		while ($row = $this->db->sql_fetchrow($result))
+		{
+			$category_id = (int) $row['category_id'];
+			if ($manage_all || $this->acl_kb_get($category_id, 'kb_m_approve'))
+			{
+				$category_ids[] = $category_id;
+			}
+		}
+		$this->db->sql_freeresult($result);
+
+		return $category_ids;
+	}
+
+	/**
+	 * Assigns the shared five-tab (View Article Index / Manage Your
+	 * Articles / Submit an Article / Submit a Redirect / Administration)
+	 * navigation strip variables used by kb_nav_tabs.html on every
+	 * front-end KB page. $cat_id, when known, is carried into the
+	 * Submit tabs so they land in the same category the user is
+	 * currently browsing rather than requiring a second category pick.
+	 * $extra_tab_label adds a sixth, always-active tab after
+	 * Administration - used only by the article page's dynamic
+	 * "Reading Article #id" / "Notice" tab.
+	 *
+	 * @param string      $active          'index', 'my_articles', 'submit', 'redirect', 'admin', or '' for none of the five
+	 * @param int         $cat_id
+	 * @param string|null $extra_tab_label
+	 * @return void
+	 */
+	public function assign_nav_tabs_vars(string $active, int $cat_id = 0, ?string $extra_tab_label = null): void
+	{
+		// No category context (e.g. the KB index, Manage Your Articles,
+		// or Administration pages): posting.php has nothing to submit
+		// into without a category, so the Submit tabs fall back to the
+		// index page instead of a broken/denied posting link. When a
+		// category IS known, carry it along so the tabs land straight
+		// into that category rather than requiring a second pick.
+		$submit_url = $cat_id
+			? $this->helper->route('phpbbmodders_knowledgebase_posting', ['id' => $cat_id])
+			: $this->helper->route('phpbbmodders_knowledgebase_index');
+		$redirect_url = $cat_id
+			? $this->helper->route('phpbbmodders_knowledgebase_posting', ['id' => $cat_id, 'mode' => 'redirect'])
+			: $this->helper->route('phpbbmodders_knowledgebase_index');
+
+		$this->template->assign_vars([
+			'U_KB_TAB_INDEX'       => $this->helper->route('phpbbmodders_knowledgebase_index'),
+			'U_KB_TAB_MY_ARTICLES' => $this->helper->route('phpbbmodders_knowledgebase_my_articles'),
+			'U_KB_TAB_SUBMIT'      => $submit_url,
+			'U_KB_TAB_REDIRECT'    => $redirect_url,
+			'U_KB_TAB_ADMIN'       => $this->helper->route('phpbbmodders_knowledgebase_queue'),
+			'S_KB_CAN_ADMIN_TAB'   => $this->auth->acl_get('a_manage_kb') || !empty($this->get_moderatable_categories()),
+			'S_KB_TAB_INDEX'       => $active === 'index',
+			'S_KB_TAB_MY_ARTICLES' => $active === 'my_articles',
+			'S_KB_TAB_SUBMIT'      => $active === 'submit',
+			'S_KB_TAB_REDIRECT'    => $active === 'redirect',
+			'S_KB_TAB_ADMIN'       => $active === 'admin',
+			'S_KB_EXTRA_TAB'       => $extra_tab_label !== null,
+			'KB_EXTRA_TAB_LABEL'   => $extra_tab_label ?? '',
+		]);
+	}
+
+	/**
 	 * @return string
 	 */
 	public function get_article_categories_table(): string
 	{
 		return $this->article_categories_table;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function get_revisions_table(): string
+	{
+		return $this->revisions_table;
 	}
 
 	/**

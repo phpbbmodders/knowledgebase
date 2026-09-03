@@ -6,6 +6,10 @@ phpbbmodders_knowledgebase_category:
     path: /knowledgebase/category
     defaults: { _controller: phpbbmodders.knowledgebase.controller.category:cat }
 
+phpbbmodders_knowledgebase_my_articles:
+    path: /knowledgebase/my_articles
+    defaults: { _controller: phpbbmodders.knowledgebase.controller.index:my_articles }
+
 phpbbmodders_knowledgebase_article:
     path: /knowledgebase/article
     defaults: { _controller: phpbbmodders.knowledgebase.controller.article:show }
@@ -21,6 +25,10 @@ phpbbmodders_knowledgebase_search:
 phpbbmodders_knowledgebase_approve:
     path: /knowledgebase/approve
     defaults: { _controller: phpbbmodders.knowledgebase.controller.approve:approve_article }
+
+phpbbmodders_knowledgebase_queue:
+    path: /knowledgebase/queue
+    defaults: { _controller: phpbbmodders.knowledgebase.controller.approve:queue }
 
 phpbbmodders_knowledgebase_kb_file:
     path: /knowledgebase/kb_file

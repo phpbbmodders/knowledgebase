@@ -110,21 +110,31 @@ class category
 		$cat_id = $this->request->variable('id', 0);
 		$start = $this->request->variable('start', 0);
 
+		// Flat index mode: id=0 renders every article across every
+		// category instead of redirecting to the hierarchical index.
+		$flat_all = false;
 		if (!$cat_id)
 		{
-			redirect($this->helper->route('phpbbmodders_knowledgebase_index'));
+			if (!$this->config['kb_flat_index'])
+			{
+				redirect($this->helper->route('phpbbmodders_knowledgebase_index'));
+			}
+			$flat_all = true;
 		}
 
-		$sql = 'SELECT category_id, category_name
-			FROM ' . $this->categories_table . '
-			WHERE category_id = ' . (int) $cat_id;
-		$result = $this->db->sql_query($sql);
-		$row = $this->db->sql_fetchrow($result);
-		$this->db->sql_freeresult($result);
-
-		if (empty($row))
+		if (!$flat_all)
 		{
-			trigger_error('CAT_NO_EXISTS');
+			$sql = 'SELECT category_id, category_name
+				FROM ' . $this->categories_table . '
+				WHERE category_id = ' . (int) $cat_id;
+			$result = $this->db->sql_query($sql);
+			$row = $this->db->sql_fetchrow($result);
+			$this->db->sql_freeresult($result);
+
+			if (empty($row))
+			{
+				trigger_error('CAT_NO_EXISTS');
+			}
 		}
 
 		$per_page = $this->config['kb_articles_per_page'];
@@ -133,9 +143,10 @@ class category
 		$order_by = ' ORDER BY a.display_order ASC';
 		$s_sort_key = $s_sort_dir = '';
 		$alphabet = [];
-		$s_can_move = !$sort_type && $this->kb->acl_kb_get($cat_id, 'kb_m_edit');
+		$s_can_move = !$flat_all && !$sort_type && $this->kb->acl_kb_get($cat_id, 'kb_m_edit');
 
-		$sql_where = ($this->kb->acl_kb_get($cat_id, 'kb_m_approve')) ? '' : 'AND a.approved = 1';
+		$can_see_unapproved = $flat_all ? !empty($this->kb->get_moderatable_categories()) : $this->kb->acl_kb_get($cat_id, 'kb_m_approve');
+		$sql_where = $can_see_unapproved ? '' : 'AND a.approved = 1';
 		$pagination_ary = ['id' => $cat_id];
 
 		// Custom field filter: narrow the listing to articles carrying one
@@ -196,11 +207,12 @@ class category
 			);
 		}
 
-		$category_name = $row['category_name'];
+		$category_name = $flat_all ? $this->language->lang('KB_ALL_CATEGORIES') : $row['category_name'];
 
 		$sql = 'SELECT COUNT(a.article_id) as article_count
 			FROM ' . $this->articles_table . ' a
-			WHERE a.article_category_id = ' . (int) $cat_id . '
+			WHERE 1=1
+			' . ($flat_all ? '' : 'AND a.article_category_id = ' . (int) $cat_id) . '
 			' . $sql_where;
 		$result = $this->db->sql_query($sql);
 		$row = $this->db->sql_fetchrow($result);
@@ -219,61 +231,64 @@ class category
 			'U_VIEW_FORUM' => $this->helper->route('phpbbmodders_knowledgebase_index'),
 		]);
 
-		foreach ($this->kb->get_category_branch($cat_id, 'parents') as $row)
+		if (!$flat_all)
 		{
-			$this->template->assign_block_vars('navlinks', [
-				'FORUM_NAME'   => $row['category_name'],
-				'U_VIEW_FORUM' => $this->helper->route('phpbbmodders_knowledgebase_category', ['id' => $row['category_id']]),
-			]);
-		}
-
-		$sql = 'SELECT *
-			FROM ' . $this->categories_table . '
-			WHERE parent_id = ' . (int) $cat_id . '
-			ORDER BY left_id ASC';
-		$result = $this->db->sql_query($sql);
-
-		while ($cat_row = $this->db->sql_fetchrow($result))
-		{
-			$exclude_cats = [];
-			foreach ($this->kb->get_category_branch($cat_row['category_id'], 'children') as $row)
+			foreach ($this->kb->get_category_branch($cat_id, 'parents') as $row)
 			{
-				$exclude_cats[] = $row['category_id'];
+				$this->template->assign_block_vars('navlinks', [
+					'FORUM_NAME'   => $row['category_name'],
+					'U_VIEW_FORUM' => $this->helper->route('phpbbmodders_knowledgebase_category', ['id' => $row['category_id']]),
+				]);
 			}
-			array_shift($exclude_cats);
 
-			$where = ($this->kb->acl_kb_get($cat_row['category_id'], 'kb_m_approve')) ? '' : 'AND approved = 1';
-			$sql = 'SELECT COUNT(article_id) AS articles
-				FROM ' . $this->articles_table . '
-				WHERE article_category_id = ' . (int) $cat_row['category_id'] . '
-					' . $where;
-			$res = $this->db->sql_query($sql);
-			$art_count = (int) $this->db->sql_fetchfield('articles');
-			$this->db->sql_freeresult($res);
+			$sql = 'SELECT *
+				FROM ' . $this->categories_table . '
+				WHERE parent_id = ' . (int) $cat_id . '
+				ORDER BY left_id ASC';
+			$result = $this->db->sql_query($sql);
 
-			$sql = 'SELECT a.article_id, a.article_title, a.article_date, a.author_id, a.author, a.author_type, a.approved, u.user_id, u.user_colour
-					FROM ' . $this->articles_table . ' a
-					LEFT JOIN ' . USERS_TABLE . ' u ON (a.author_id = u.user_id AND a.author_type = 0)
-					WHERE a.article_category_id = ' . (int) $cat_row['category_id'] . '
-					AND a.article_date =
-						(SELECT MAX(article_date) AS max FROM ' . $this->articles_table . '
-							WHERE article_category_id = ' . (int) $cat_row['category_id'] . ' ' . $sql_where . ')';
-			$res = $this->db->sql_query($sql);
-			$art_row = $this->db->sql_fetchrow($res);
-			$this->db->sql_freeresult($res);
-			$this->template->assign_block_vars('cat_row', [
-				'CAT_ID'          => $cat_row['category_id'],
-				'CAT_NAME'        => $cat_row['category_name'],
-				'CAT_DESCRIPTION' => $cat_row['category_details'],
-				'U_CAT'           => $this->helper->route('phpbbmodders_knowledgebase_category', ['id' => $cat_row['category_id']]),
-				'ARTICLES'        => $art_count,
-				'SUBCATS'         => $this->kb->get_cat_list($exclude_cats),
-				'ARTICLE_TITLE'   => $art_row['article_title'] ?? '',
-				'U_ARTICLE'       => (isset($art_row['article_id'])) ? $this->helper->route('phpbbmodders_knowledgebase_article', ['k' => $art_row['article_id']]) : '',
-				'ARTICLE_TIME'    => (isset($art_row['article_date'])) ? $this->user->format_date($art_row['article_date']) : '',
-				'ARTICLE_AUTHOR'  => (isset($art_row['author_id'])) ? get_username_string('full', $art_row['author_id'], $art_row['author'], $art_row['user_colour']) : '',
-				'NEED_APPROVE'    => !($art_row['approved'] ?? false),
-			]);
+			while ($cat_row = $this->db->sql_fetchrow($result))
+			{
+				$exclude_cats = [];
+				foreach ($this->kb->get_category_branch($cat_row['category_id'], 'children') as $row)
+				{
+					$exclude_cats[] = $row['category_id'];
+				}
+				array_shift($exclude_cats);
+
+				$where = ($this->kb->acl_kb_get($cat_row['category_id'], 'kb_m_approve')) ? '' : 'AND approved = 1';
+				$sql = 'SELECT COUNT(article_id) AS articles
+					FROM ' . $this->articles_table . '
+					WHERE article_category_id = ' . (int) $cat_row['category_id'] . '
+						' . $where;
+				$res = $this->db->sql_query($sql);
+				$art_count = (int) $this->db->sql_fetchfield('articles');
+				$this->db->sql_freeresult($res);
+
+				$sql = 'SELECT a.article_id, a.article_title, a.article_date, a.author_id, a.author, a.author_type, a.approved, u.user_id, u.user_colour
+						FROM ' . $this->articles_table . ' a
+						LEFT JOIN ' . USERS_TABLE . ' u ON (a.author_id = u.user_id AND a.author_type = 0)
+						WHERE a.article_category_id = ' . (int) $cat_row['category_id'] . '
+						AND a.article_date =
+							(SELECT MAX(article_date) AS max FROM ' . $this->articles_table . '
+								WHERE article_category_id = ' . (int) $cat_row['category_id'] . ' ' . $sql_where . ')';
+				$res = $this->db->sql_query($sql);
+				$art_row = $this->db->sql_fetchrow($res);
+				$this->db->sql_freeresult($res);
+				$this->template->assign_block_vars('cat_row', [
+					'CAT_ID'          => $cat_row['category_id'],
+					'CAT_NAME'        => $cat_row['category_name'],
+					'CAT_DESCRIPTION' => $cat_row['category_details'],
+					'U_CAT'           => $this->helper->route('phpbbmodders_knowledgebase_category', ['id' => $cat_row['category_id']]),
+					'ARTICLES'        => $art_count,
+					'SUBCATS'         => $this->kb->get_cat_list($exclude_cats),
+					'ARTICLE_TITLE'   => $art_row['article_title'] ?? '',
+					'U_ARTICLE'       => (isset($art_row['article_id'])) ? $this->helper->route('phpbbmodders_knowledgebase_article', ['k' => $art_row['article_id']]) : '',
+					'ARTICLE_TIME'    => (isset($art_row['article_date'])) ? $this->user->format_date($art_row['article_date']) : '',
+					'ARTICLE_AUTHOR'  => (isset($art_row['author_id'])) ? get_username_string('full', $art_row['author_id'], $art_row['author'], $art_row['user_colour']) : '',
+					'NEED_APPROVE'    => !($art_row['approved'] ?? false),
+				]);
+			}
 		}
 
 		if (!isset($per_page))
@@ -284,8 +299,10 @@ class category
 		$sql = 'SELECT a.*, u.user_colour, u.username
 			FROM ' . $this->articles_table . ' a
 			LEFT JOIN ' . USERS_TABLE . ' u ON (u.user_id = a.author_id AND a.author_type = 0)
-			WHERE (a.article_category_id = ' . (int) $cat_id . '
-				OR a.article_id IN (SELECT article_id FROM ' . $this->kb->get_article_categories_table() . ' WHERE category_id = ' . (int) $cat_id . '))
+			WHERE 1=1
+			' . ($flat_all ? '' : '
+			AND (a.article_category_id = ' . (int) $cat_id . '
+				OR a.article_id IN (SELECT article_id FROM ' . $this->kb->get_article_categories_table() . ' WHERE category_id = ' . (int) $cat_id . '))') . '
 			' . $sql_where
 			. $order_by;
 
@@ -314,7 +331,7 @@ class category
 				'S_CAN_EDIT'          => $this->kb->acl_kb_get_any($article_categories, 'kb_m_edit') || ($is_own_article && $this->kb->acl_kb_get_any($article_categories, 'kb_u_edit')),
 				'S_APPROVED'          => (bool) $art_row['approved'],
 				'STATUS'              => (int) $art_row['status'],
-				'S_CROSS_LISTED'      => (int) $art_row['article_category_id'] !== (int) $cat_id,
+				'S_CROSS_LISTED'      => !$flat_all && (int) $art_row['article_category_id'] !== (int) $cat_id,
 				'S_IS_REDIRECT'       => (bool) $art_row['is_redirect'],
 			]);
 		}
@@ -352,8 +369,9 @@ class category
 				'U_ADD_REDIRECT'      => $this->helper->route('phpbbmodders_knowledgebase_posting', ['id' => $cat_id, 'mode' => 'redirect']),
 				'U_KB'                => $this->helper->route('phpbbmodders_knowledgebase_index'),
 				'U_KB_SEARCH'         => $this->helper->route('phpbbmodders_knowledgebase_search'),
-				'S_CAN_ADD'           => $this->kb->acl_kb_get($cat_id, 'kb_u_add'),
-				'S_CAN_ADD_REDIRECT'  => $this->auth->acl_get('a_manage_kb') || $this->kb->acl_kb_get($cat_id, 'kb_m_approve'),
+				'S_CAN_ADD'           => !$flat_all && $this->kb->acl_kb_get($cat_id, 'kb_u_add'),
+				'S_CAN_ADD_REDIRECT'  => !$flat_all && ($this->auth->acl_get('a_manage_kb') || $this->kb->acl_kb_get($cat_id, 'kb_m_approve')),
+				'S_FLAT_ALL'          => $flat_all,
 				'S_ACTION'            => $this->helper->route('phpbbmodders_knowledgebase_category', ['id' => $cat_id]),
 				'S_IS_SEARCH'         => (bool) $this->config['kb_search'],
 				'S_KB_SEARCH_ACTION'  => $this->helper->route('phpbbmodders_knowledgebase_search'),
@@ -367,7 +385,12 @@ class category
 			]
 		);
 
-		$this->kb->gen_kb_auth_level($cat_id);
+		if (!$flat_all)
+		{
+			$this->kb->gen_kb_auth_level($cat_id);
+		}
+
+		$this->kb->assign_nav_tabs_vars('index', $cat_id);
 
 		return $this->helper->render('@phpbbmodders_knowledgebase/kb_cat_body.html', ($this->language->lang('LIBRARY') . ' &raquo; ' . $this->language->lang('CATEGORY')));
 	}

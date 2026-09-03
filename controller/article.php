@@ -135,15 +135,16 @@ class article
 
 		if (empty($row))
 		{
-			trigger_error('ARTICLE_NO_EXISTS');
+			return $this->render_notice('ARTICLE_NO_EXISTS');
 		}
 
 		$fid = $this->config['kb_forum_id'];
 		$cat_id = $row['article_category_id'];
 		$article_categories = $this->kb->get_article_categories($art_id);
+		$status = (int) $row['status'];
 
 		$can_moderate = $this->auth->acl_get('a_manage_kb') || $this->kb->acl_kb_get_any($article_categories, 'kb_m_approve');
-		$can_review = (int) $row['status'] === functions_kb::STATUS_NEW && !empty($row['assigned_team_id']) &&
+		$can_review = $status === functions_kb::STATUS_NEW && !empty($row['assigned_team_id']) &&
 			$this->kb->is_team_member([(int) $row['assigned_team_id']]);
 		$is_own_article = ((int) $row['author_type'] === 1)
 			? $this->kb->is_team_member([(int) $row['author_id']])
@@ -258,6 +259,7 @@ class article
 			'ARTICLE_AUTHOR'      => ((int) $row['author_type'] === 1) ? $row['author'] : get_username_string('full', $row['author_id'], $row['username'], $row['user_colour']),
 			'ARTICLE_DESCRIPTION' => $row['article_description'],
 			'ARTICLE_DATE'        => $this->user->format_date($row['article_date']),
+			'EDIT_DATE'           => $row['edit_date'] ? $this->user->format_date($row['edit_date']) : '',
 			'ART_VIEWS'           => $row['views'],
 			'ARTICLE_TITLE'       => $row['article_title'],
 			'ARTICLE_TEXT'        => $text,
@@ -279,6 +281,11 @@ class article
 			'S_APPROVED'          => $row['approved'],
 			'S_KNOWLEDGEBASE'     => true,
 			'LIBRARY'             => $this->language->lang('LIBRARY'),
+			'S_STATUS_NEW'        => $status === functions_kb::STATUS_NEW,
+			'S_STATUS_REVIEWED'   => $status === functions_kb::STATUS_REVIEWED,
+			'S_STATUS_ACTIVE'     => $status === functions_kb::STATUS_ACTIVE,
+			'S_STATUS_INACTIVE'   => $status === functions_kb::STATUS_INACTIVE,
+			'S_HAS_REVISION'      => $status === functions_kb::STATUS_ACTIVE && $this->kb->article_has_pending_revision($art_id),
 		]);
 
 		if ($mode != 'print' && $row['approved'])
@@ -306,6 +313,25 @@ class article
 
 		$html_template = (($mode != 'print')) ? 'kb_article_body.html' : 'kb_article_body_print.html';
 
+		$this->kb->assign_nav_tabs_vars('', $cat_id, $this->language->lang('KB_TAB_READING_ARTICLE', $art_id));
+
 		return $this->helper->render('@phpbbmodders_knowledgebase/' . $html_template, $this->language->lang('LIBRARY'));
+	}
+
+	/**
+	 * Renders a templated "Notice" page (tab strip intact, sixth tab
+	 * reading "Notice") for the article-not-found case, matching
+	 * phpbb.com's own KB - scoped narrowly to this one case; every
+	 * other error path in the extension keeps using trigger_error().
+	 *
+	 * @param string $message_lang_key
+	 * @return \Symfony\Component\HttpFoundation\Response
+	 */
+	protected function render_notice(string $message_lang_key): \Symfony\Component\HttpFoundation\Response
+	{
+		$this->template->assign_var('NOTICE_MESSAGE', $this->language->lang($message_lang_key));
+		$this->kb->assign_nav_tabs_vars('', 0, $this->language->lang('KB_TAB_NOTICE'));
+
+		return $this->helper->render('@phpbbmodders_knowledgebase/kb_notice_body.html', $this->language->lang('LIBRARY') . ' &raquo; ' . $this->language->lang('KB_TAB_NOTICE'));
 	}
 }
