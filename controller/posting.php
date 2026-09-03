@@ -383,7 +383,7 @@ class posting
 						WHERE article_id = ' . $art_id;
 					$this->db->sql_query($sql);
 
-					if ($cat_id != $to_id) // Move article to another category
+					if ($cat_id !== $to_id) // Move article to another category
 					{
 						$sql = 'UPDATE ' . $this->categories_table . '
 							SET number_articles = number_articles - 1
