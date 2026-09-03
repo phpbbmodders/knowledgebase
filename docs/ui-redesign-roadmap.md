@@ -165,6 +165,16 @@ edited).
   article rather than being staged with the revision. Full
   attachment-revisioning is out of scope for Phase 1.
 
-Still open: the ACP checkbox UI specifics for picking team usergroups
-(expected to follow the existing file-extension-groups checkbox
-pattern in `acp_controller.php::settings()`).
+### Team-groups ACP UI
+
+A flat checkbox list of phpBB's groups (`GROUPS_TABLE`) on the
+extension's existing Settings page — one checkbox per group, checked
+if it's designated a KB team. Deliberately simpler than the
+dual-listbox JS widget the file-extensions setting uses (that control
+is overkill for a small, infrequently-changed list). Selected group
+IDs are stored as a JSON array in `config_text` under a new
+`kb_team_groups` key, matching how `kb_extensions` is already stored
+and read (`json_encode`/`json_decode`).
+
+Phase 1 design is now complete. Next: implementation (migration +
+backend + ACP UI + notifications).
