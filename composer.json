@@ -38,12 +38,6 @@
 		"display-name": "Knowledge Base",
 		"soft-require": {
 			"phpbb/phpbb": "3.3.11,<4.0.0@dev"
-		},
-		"version-check": {
-			"host": "updater.spssoftware.cz",
-			"directory": "/phpbb/knowledgebase",
-			"filename": "version.json",
-			"ssl": true
 		}
 	}
 }
