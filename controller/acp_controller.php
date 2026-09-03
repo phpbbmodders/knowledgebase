@@ -976,7 +976,7 @@ class acp_controller
 			$category_data = $this->kb->get_cat_info($row['article_category_id']);
 			$this->template->assign_block_vars('articles', [
 					'ID'               => $row['article_id'],
-					'ARTICLE_TITLE'    => $row['article_title'],
+					'ARTICLE_TITLE'    => $row['article_title'] . ($row['is_redirect'] ? ' ' . $this->language->lang('KB_REDIRECT_LABEL') : ''),
 					'ARTICLE_APPROVED' => $this->get_status_icon((int) $row['status']),
 					'CATEGORY_ID'      => $row['article_category_id'],
 					'CATEGORY'         => ($category_data['category_name']) ?: $this->language->lang('CAT_NO_EXISTS'),

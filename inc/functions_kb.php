@@ -696,6 +696,32 @@ class functions_kb
 	}
 
 	/**
+	 * Minimal validation for a Redirect entry's target URL. Rejects
+	 * empty/unparseable values and, when a scheme is present, anything
+	 * other than http/https - this value is later echoed back as a
+	 * redirect target, so javascript:/data:/vbscript: etc. must not be
+	 * accepted. A scheme-less (board-relative) value is allowed.
+	 *
+	 * @param string $url
+	 * @return bool
+	 */
+	public function is_valid_redirect_url(string $url): bool
+	{
+		if ($url === '')
+		{
+			return false;
+		}
+
+		$parts = parse_url($url);
+		if ($parts === false)
+		{
+			return false;
+		}
+
+		return !isset($parts['scheme']) || in_array(strtolower($parts['scheme']), ['http', 'https'], true);
+	}
+
+	/**
 	 * @return string
 	 */
 	public function make_category_dropbox(): string

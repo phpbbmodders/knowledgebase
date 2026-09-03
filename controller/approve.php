@@ -387,6 +387,7 @@ class approve
 			'article_body'        => $revision['article_body'],
 			'bbcode_uid'          => $revision['bbcode_uid'],
 			'bbcode_bitfield'     => $revision['bbcode_bitfield'],
+			'redirect_url'        => $revision['redirect_url'] ?? '',
 			'edit_date'           => time(),
 		];
 

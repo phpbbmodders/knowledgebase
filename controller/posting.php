@@ -188,14 +188,24 @@ class posting
 		$art_id = (int) $this->request->variable('k', 0);
 		$mode = $this->request->variable('mode', '');
 
-		if (!$this->kb->acl_kb_get($cat_id, 'kb_u_add'))
+		// Redirect entries are moderator-only, same gate as team assignment
+		// in Phase 1 - no new permission invented for this.
+		$is_redirect = $mode === 'redirect';
+		if ($is_redirect)
+		{
+			if (!$this->auth->acl_get('a_manage_kb') && !$this->kb->acl_kb_get($cat_id, 'kb_m_approve'))
+			{
+				trigger_error('NOT_AUTHORISED');
+			}
+		}
+		else if (!$this->kb->acl_kb_get($cat_id, 'kb_u_add'))
 		{
 			trigger_error('RULES_KB_ADD_CANNOT');
 		}
 
 		$row = '';
 		$delete_allowed = $edit_allowed = $article_author_id = false;
-		if ($mode)
+		if ($mode === 'edit' || $mode === 'delete')
 		{
 			$sql = 'SELECT DISTINCT a.*, c.category_name, c.category_id
 				FROM ' . $this->articles_table . ' a, ' . $this->categories_table . ' c
@@ -314,6 +324,8 @@ class posting
 			$article_date = (int) $row['article_date'];
 			$order = (int) $row['display_order'];
 			$article_status = (int) ($row['status'] ?? functions_kb::STATUS_NEW);
+			$is_redirect = $is_redirect || !empty($row['is_redirect']);
+			$redirect_url = (string) ($row['redirect_url'] ?? '');
 
 			$article_text = $this->decode_message($article_text, $row['bbcode_uid']);
 
@@ -323,7 +335,10 @@ class posting
 			}
 		}
 
-		$this->kb_parse_attachments($art_id, $attachment_data, $preview, $edit, $submit);
+		if (!$is_redirect)
+		{
+			$this->kb_parse_attachments($art_id, $attachment_data, $preview, $edit, $submit);
+		}
 
 		$bbcode_status = true;
 		$smilies_status = true;
@@ -335,6 +350,7 @@ class posting
 		$article_title = (isset($article_title)) ? $this->request->variable('subject', $article_title, true) : $this->request->variable('subject', '', true);
 		$article_text = (isset($article_text)) ? $this->request->variable('message', $article_text, true) : $this->request->variable('message', '', true);
 		$article_description = (isset($article_description)) ? $this->request->variable('descr', $article_description, true) : $this->request->variable('descr', '', true);
+		$redirect_url = (isset($redirect_url)) ? $this->request->variable('redirect_url', $redirect_url, true) : $this->request->variable('redirect_url', '', true);
 
 		$articles_count = 0;
 		$category_name = '';
@@ -388,11 +404,19 @@ class posting
 
 		if ($submit)
 		{
-			if ($article_title && $article_text)
+			$has_content = $is_redirect ? $this->kb->is_valid_redirect_url($redirect_url) : (bool) $article_text;
+			if ($article_title && $has_content)
 			{
-				// to enable bbcode, urls and smilies parsing, be enabled it when using
-				// generate_text_for_storage function
-				generate_text_for_storage($article_text, $bbcode_uid, $bbcode_bitfield, $options, true, true, true);
+				if (!$is_redirect)
+				{
+					// to enable bbcode, urls and smilies parsing, be enabled it when using
+					// generate_text_for_storage function
+					generate_text_for_storage($article_text, $bbcode_uid, $bbcode_bitfield, $options, true, true, true);
+				}
+				else
+				{
+					$bbcode_uid = $bbcode_bitfield = '';
+				}
 
 				// Post-as-team: only offered to users who can already moderate this category's approvals.
 				$post_as_group = 0;
@@ -416,6 +440,8 @@ class posting
 					'author_type'         => $author_type,
 					'bbcode_uid'          => substr(md5(rand()), 0, 8),
 					'article_body'        => $article_text,
+					'is_redirect'         => $is_redirect ? 1 : 0,
+					'redirect_url'        => $is_redirect ? $redirect_url : '',
 					'views'               => 0,
 					'author'              => $author_name,
 					'approved'            => $can_add_noapprove ? 1 : 0,
@@ -458,6 +484,7 @@ class posting
 							'article_body'        => $article_text,
 							'bbcode_uid'          => $bbcode_uid,
 							'bbcode_bitfield'     => $bbcode_bitfield,
+							'redirect_url'        => $redirect_url,
 						], (int) $this->user->data['user_id']);
 
 						if ($moving_category)
@@ -590,7 +617,14 @@ class posting
 					$error[] = $this->language->lang('NO_TITLE');
 				}
 
-				if (!$article_text)
+				if ($is_redirect)
+				{
+					if (!$has_content)
+					{
+						$error[] = $this->language->lang('KB_REDIRECT_INVALID_URL');
+					}
+				}
+				else if (!$article_text)
 				{
 					$error[] = $this->language->lang('NO_TEXT');
 				}
@@ -608,7 +642,14 @@ class posting
 				$error[] = $this->language->lang('NO_TITLE');
 			}
 
-			if (!$article_text)
+			if ($is_redirect)
+			{
+				if (!$this->kb->is_valid_redirect_url($redirect_url))
+				{
+					$error[] = $this->language->lang('KB_REDIRECT_INVALID_URL');
+				}
+			}
+			else if (!$article_text)
 			{
 				$error[] = $this->language->lang('NO_TEXT');
 			}
@@ -616,14 +657,17 @@ class posting
 			$uid = $bitfield = $options = '';
 			$preview_text = $article_text;
 
-			generate_text_for_storage($preview_text, $uid, $bitfield, $options, true, true, true);
-
-			$preview_text = generate_text_for_display($preview_text, $uid, $bitfield, $options);
-
-			// Parse attachments
-			if (count($attachment_data))
+			if (!$is_redirect)
 			{
-				$this->kb->parse_att($preview_text, $attachment_data);
+				generate_text_for_storage($preview_text, $uid, $bitfield, $options, true, true, true);
+
+				$preview_text = generate_text_for_display($preview_text, $uid, $bitfield, $options);
+
+				// Parse attachments
+				if (count($attachment_data))
+				{
+					$this->kb->parse_att($preview_text, $attachment_data);
+				}
 			}
 
 			$this->template->assign_vars([
@@ -634,12 +678,14 @@ class posting
 		}
 
 		$this->template->assign_vars([
-				'L_POST_A'          => ($mode == 'edit') ? $this->language->lang('EDIT_ARTICLE') : $this->language->lang('ADD_ARTICLE'),
+				'L_POST_A'          => ($mode == 'edit') ? $this->language->lang('EDIT_ARTICLE') : ($is_redirect ? $this->language->lang('KB_SUBMIT_REDIRECT') : $this->language->lang('ADD_ARTICLE')),
 				'CATEGORY_NAME'     => $category_name,
 				'DESCR'             => $article_description,
 				'TOPIC_TITLE'       => $article_title,
 				'SUBJECT'           => $article_title,
 				'MESSAGE'           => $article_text,
+				'S_IS_REDIRECT'     => $is_redirect,
+				'REDIRECT_URL'      => $redirect_url,
 				'ERROR'             => (count($error)) ? implode('<br>', $error) : '',
 				'S_DISPLAY_PREVIEW' => !count($error) && $preview,
 				'POST_DATE'         => $this->user->format_date(time()),
@@ -700,7 +746,7 @@ class posting
 			);
 		}
 
-		$title = $mode == 'edit' ? $this->language->lang('EDIT_ARTICLE') : $this->language->lang('ADD_ARTICLE');
+		$title = $mode == 'edit' ? $this->language->lang('EDIT_ARTICLE') : ($is_redirect ? $this->language->lang('KB_SUBMIT_REDIRECT') : $this->language->lang('ADD_ARTICLE'));
 
 		return $this->helper->render('@phpbbmodders_knowledgebase/kb_post_body.html', ($this->language->lang('LIBRARY') . ' &raquo; ' . $title));
 	}

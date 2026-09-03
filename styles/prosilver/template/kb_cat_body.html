@@ -3,12 +3,20 @@
 <h2>{{ CATEGORY }}</h2>
 {% if loops.cat_row|length %}{% INCLUDE '@phpbbmodders_knowledgebase/kb_cat_list.html' %}{% endif %}
 <div class="action-bar bar-top">
-	{% if S_CAN_ADD %}
+	{% if S_CAN_ADD or S_CAN_ADD_REDIRECT %}
 		<div class="buttons">
-			<a href="{{ U_ADD_ARTICLE }}" class="button"
-				title="{{ lang('ADD_ARTICLE') }}"><span>{{ lang('ADD_ARTICLE') }}</span>
-				<i class="icon fa-file-text-o fa-fw" aria-hidden="true"></i>
-			</a>
+			{% if S_CAN_ADD %}
+				<a href="{{ U_ADD_ARTICLE }}" class="button"
+					title="{{ lang('ADD_ARTICLE') }}"><span>{{ lang('ADD_ARTICLE') }}</span>
+					<i class="icon fa-file-text-o fa-fw" aria-hidden="true"></i>
+				</a>
+			{% endif %}
+			{% if S_CAN_ADD_REDIRECT %}
+				<a href="{{ U_ADD_REDIRECT }}" class="button"
+					title="{{ lang('KB_SUBMIT_REDIRECT') }}"><span>{{ lang('KB_SUBMIT_REDIRECT') }}</span>
+					<i class="icon fa-external-link fa-fw" aria-hidden="true"></i>
+				</a>
+			{% endif %}
 		</div>
 	{% endif %}
 	{% if S_IS_SEARCH %}
@@ -82,6 +90,8 @@
 								<a class="topictitle" href="{{ art_row.U_ARTICLE }}">{{ art_row.ARTICLE_TITLE }}</a>
 								{% if art_row.S_CROSS_LISTED %}<i class="icon fa-tag fa-fw" aria-hidden="true"
 										title="{{ lang('KB_CROSS_LISTED') }}"></i>{% endif %}
+								{% if art_row.S_IS_REDIRECT %}<i class="icon fa-external-link fa-fw" aria-hidden="true"
+										title="{{ lang('KB_IS_REDIRECT') }}"></i>{% endif %}
 								{% if art_row.ARTICLE_DESCRIPTION %}<br>{{ art_row.ARTICLE_DESCRIPTION }}{% endif %}
 							</div>
 						</dt>
@@ -126,11 +136,18 @@
 	</div>
 </div>
 <div class="action-bar bar-bottom">
-	{% if S_CAN_ADD %}
+	{% if S_CAN_ADD or S_CAN_ADD_REDIRECT %}
 		<div class="buttons">
-			<a href="{{ U_ADD_ARTICLE }}" class="button" title="{{ lang('ADD_ARTICLE') }}">
-				<span>{{ lang('ADD_ARTICLE') }}</span> <i class="icon fa-file-text-o fa-fw" aria-hidden="true"></i>
-			</a>
+			{% if S_CAN_ADD %}
+				<a href="{{ U_ADD_ARTICLE }}" class="button" title="{{ lang('ADD_ARTICLE') }}">
+					<span>{{ lang('ADD_ARTICLE') }}</span> <i class="icon fa-file-text-o fa-fw" aria-hidden="true"></i>
+				</a>
+			{% endif %}
+			{% if S_CAN_ADD_REDIRECT %}
+				<a href="{{ U_ADD_REDIRECT }}" class="button" title="{{ lang('KB_SUBMIT_REDIRECT') }}">
+					<span>{{ lang('KB_SUBMIT_REDIRECT') }}</span> <i class="icon fa-external-link fa-fw" aria-hidden="true"></i>
+				</a>
+			{% endif %}
 		</div>
 	{% endif %}
 	{% if S_SORT_OPTIONS and not S_IS_BOT %}

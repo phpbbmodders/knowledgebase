@@ -154,6 +154,17 @@ class article
 			redirect($this->helper->route('phpbbmodders_knowledgebase_category', ['id' => $cat_id]));
 		}
 
+		if ($row['is_redirect'])
+		{
+			$views = (int) $row['views'] + 1;
+			$sql = 'UPDATE ' . $this->articles_table . '
+				SET views = ' . $views . '
+				WHERE article_id = ' . (int) $art_id;
+			$this->db->sql_query($sql);
+
+			return new \Symfony\Component\HttpFoundation\RedirectResponse($row['redirect_url']);
+		}
+
 		$catrow = $this->kb->get_cat_info($row['article_category_id']);
 		if (empty($catrow))
 		{

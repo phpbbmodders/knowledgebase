@@ -315,6 +315,7 @@ class category
 				'S_APPROVED'          => (bool) $art_row['approved'],
 				'STATUS'              => (int) $art_row['status'],
 				'S_CROSS_LISTED'      => (int) $art_row['article_category_id'] !== (int) $cat_id,
+				'S_IS_REDIRECT'       => (bool) $art_row['is_redirect'],
 			]);
 		}
 		$this->db->sql_freeresult($result);
@@ -348,9 +349,11 @@ class category
 				'TOTAL_ITEMS'         => $this->language->lang('TOTAL_ITEMS', (int) $article_count),
 				'PAGE_NUMBER'         => $this->pagination->on_page($article_count, $per_page, $start),
 				'U_ADD_ARTICLE'       => $this->helper->route('phpbbmodders_knowledgebase_posting', ['id' => $cat_id]),
+				'U_ADD_REDIRECT'      => $this->helper->route('phpbbmodders_knowledgebase_posting', ['id' => $cat_id, 'mode' => 'redirect']),
 				'U_KB'                => $this->helper->route('phpbbmodders_knowledgebase_index'),
 				'U_KB_SEARCH'         => $this->helper->route('phpbbmodders_knowledgebase_search'),
 				'S_CAN_ADD'           => $this->kb->acl_kb_get($cat_id, 'kb_u_add'),
+				'S_CAN_ADD_REDIRECT'  => $this->auth->acl_get('a_manage_kb') || $this->kb->acl_kb_get($cat_id, 'kb_m_approve'),
 				'S_ACTION'            => $this->helper->route('phpbbmodders_knowledgebase_category', ['id' => $cat_id]),
 				'S_IS_SEARCH'         => (bool) $this->config['kb_search'],
 				'S_KB_SEARCH_ACTION'  => $this->helper->route('phpbbmodders_knowledgebase_search'),
