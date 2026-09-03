@@ -19,6 +19,7 @@
 		</p>
 
 		<form action="{{ S_ACTION }}" method="post">
+			{{ S_FORM_TOKEN }}
 			<fieldset class="submit-buttons" style="border: none;">
 				{% if S_STATUS_NEW and S_IS_MODERATOR %}
 					<label>{{ lang('KB_ASSIGN_TO') }}{{ lang('COLON') }}

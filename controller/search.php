@@ -118,6 +118,11 @@ class search
 	 */
 	public function main(): \Symfony\Component\HttpFoundation\Response
 	{
+		if (!$this->auth->acl_get('u_kb_view') && !$this->auth->acl_get('a_manage_kb'))
+		{
+			trigger_error($this->language->lang('NOT_AUTHORISED'));
+		}
+
 		$this->language->add_lang(['search']);
 
 		// Define initial vars

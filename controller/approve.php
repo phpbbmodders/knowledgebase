@@ -139,6 +139,8 @@ class approve
 	 */
 	public function queue(): \Symfony\Component\HttpFoundation\Response
 	{
+		add_form_key('kb_approve');
+
 		$moderatable = $this->kb->get_moderatable_categories();
 		if (!$this->auth->acl_get('a_manage_kb') && empty($moderatable))
 		{
@@ -235,8 +237,15 @@ class approve
 
 		$redirect = $this->helper->route('phpbbmodders_knowledgebase_category', ['id' => $kb_article_info['article_category_id']]);
 
+		add_form_key('kb_approve');
+
 		if ($action)
 		{
+			if (!check_form_key('kb_approve'))
+			{
+				trigger_error('FORM_INVALID');
+			}
+
 			if (!$is_moderator && $action != 'review')
 			{
 				trigger_error('RULES_KB_APPROVE_MOD_CANNOT');
@@ -478,7 +487,6 @@ class approve
 			'article_description' => $revision['article_description'],
 			'article_body'        => $revision['article_body'],
 			'bbcode_uid'          => $revision['bbcode_uid'],
-			'bbcode_bitfield'     => $revision['bbcode_bitfield'],
 			'redirect_url'        => $revision['redirect_url'] ?? '',
 			'edit_date'           => time(),
 		];

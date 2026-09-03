@@ -83,7 +83,10 @@
 		</div>
 	</div>
 {% endif %}
-<table class="kb-index-table"{% if S_CAN_MOVE %} id="sortable"{% endif %}>
+{% if S_CAN_MOVE %}
+	<div id="kb-reorder-data" style="display: none;" data-cat-id="{{ CATEGORY_ID }}">{{ S_FORM_TOKEN }}</div>
+{% endif %}
+<table class="kb-index-table">
 	<thead>
 	<tr>
 		<th>{{ lang('ARTICLES') }}</th>
@@ -92,7 +95,7 @@
 		<th class="kb-index-author"></th>
 	</tr>
 	</thead>
-	<tbody>
+	<tbody{% if S_CAN_MOVE %} id="sortable"{% endif %}>
 	{% for art_row in loops.art_row %}
 		<tr id="{{ art_row.ID }}">
 			<td>

@@ -144,6 +144,10 @@ class category
 		$s_sort_key = $s_sort_dir = '';
 		$alphabet = [];
 		$s_can_move = !$flat_all && !$sort_type && $this->kb->acl_kb_get($cat_id, 'kb_m_edit');
+		if ($s_can_move)
+		{
+			add_form_key('kb_reorder');
+		}
 
 		$can_see_unapproved = $flat_all ? !empty($this->kb->get_moderatable_categories()) : $this->kb->acl_kb_get($cat_id, 'kb_m_approve');
 		$sql_where = $can_see_unapproved ? '' : 'AND a.approved = 1';

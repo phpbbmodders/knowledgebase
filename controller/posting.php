@@ -203,6 +203,8 @@ class posting
 			trigger_error('RULES_KB_ADD_CANNOT');
 		}
 
+		add_form_key('kb_posting');
+
 		$row = '';
 		$delete_allowed = $edit_allowed = $article_author_id = false;
 		if ($mode === 'edit' || $mode === 'delete')
@@ -404,6 +406,11 @@ class posting
 
 		if ($submit)
 		{
+			if (!check_form_key('kb_posting'))
+			{
+				trigger_error('FORM_INVALID');
+			}
+
 			$has_content = $is_redirect ? $this->kb->is_valid_redirect_url($redirect_url) : (bool) $article_text;
 			if ($article_title && $has_content)
 			{
@@ -466,6 +473,15 @@ class posting
 					// New/Reviewed: approved/status stay as computed above (from the
 					// editor's own kb_u_add_noapprove permission), same as a fresh submit.
 					$redirect = $this->helper->route('phpbbmodders_knowledgebase_article', ['k' => $art_id]);
+
+					// Only move into a category that actually exists and that the
+					// editor could post into directly - same guard the cross-listing
+					// select already applies. An invalid/unauthorised destination is
+					// silently ignored rather than trusted from the request.
+					if ($to_id !== $cat_id && (!$this->kb->get_cat_info($to_id) || !$this->kb->acl_kb_get($to_id, 'kb_u_add')))
+					{
+						$to_id = $cat_id;
+					}
 
 					$moving_category = ($cat_id !== $to_id);
 					if ($moving_category)
@@ -848,21 +864,37 @@ class posting
 
 			if ($index !== false && !empty($attachment_data[$index]))
 			{
-				$sql = 'SELECT physical_filename, thumbnail
-					FROM ' . $this->attachments_table . ' WHERE attach_id = ' . (int) $attachment_data[$index]['attach_id'];
-				$result = $this->db->sql_query($sql);
+				$attach_id = (int) $attachment_data[$index]['attach_id'];
 
-				$filename = $this->db->sql_fetchfield('physical_filename');
+				// Never trust the attach_id the browser sent on its own -
+				// only delete it if it actually belongs to this article, or
+				// (for a not-yet-saved article) is an orphaned upload from
+				// the current user's own posting session.
+				$sql = 'SELECT physical_filename, thumbnail, article_id, poster_id, is_orphan
+					FROM ' . $this->attachments_table . ' WHERE attach_id = ' . $attach_id;
+				$result = $this->db->sql_query($sql);
+				$attach_row = $this->db->sql_fetchrow($result);
 				$this->db->sql_freeresult($result);
 
-				unlink($this->upload_dir . $filename);
-				unlink($this->upload_dir . 'thumb_' . $filename);
+				$owns_attachment = $attach_row && (
+					($art_id && (int) $attach_row['article_id'] === (int) $art_id) ||
+					(!$art_id && $attach_row['is_orphan'] && (int) $attach_row['poster_id'] === (int) $this->user->data['user_id'])
+				);
 
-				$sql = 'DELETE FROM ' . $this->attachments_table . ' WHERE attach_id = ' . (int) $attachment_data[$index]['attach_id'];
-				$this->db->sql_query($sql);
-				unset($attachment_data[$index]);
+				if ($owns_attachment)
+				{
+					unlink($this->upload_dir . $attach_row['physical_filename']);
+					if ($attach_row['thumbnail'])
+					{
+						unlink($this->upload_dir . 'thumb_' . $attach_row['physical_filename']);
+					}
 
-				$attachment_data = array_values($attachment_data);
+					$sql = 'DELETE FROM ' . $this->attachments_table . ' WHERE attach_id = ' . $attach_id;
+					$this->db->sql_query($sql);
+					unset($attachment_data[$index]);
+
+					$attachment_data = array_values($attachment_data);
+				}
 
 				$json_response->send($attachment_data);
 			}

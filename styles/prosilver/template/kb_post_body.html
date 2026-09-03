@@ -3,6 +3,7 @@
 {% INCLUDE '@phpbbmodders_knowledgebase/kb_nav_tabs.html' %}
 
 <form id="postform" method="post" action="{{ S_POST_ACTION }}" {{ S_FORM_ENCTYPE }}>
+	{{ S_FORM_TOKEN }}
 	{% if S_DISPLAY_PREVIEW %}{% INCLUDE 'posting_preview.html' %}{% endif %}
 	<div class="panel" id="postingbox">
 		<div class="inner">

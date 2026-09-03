@@ -9,6 +9,19 @@ A wiki/FAQ system for phpBB: categories and articles with attachments, an approv
 3. Enable the **Knowledge Base** extension
 4. Configure it under **Extensions → Knowledge Base**
 
+Attachments are stored under `ext/phpbbmodders/knowledgebase/files/`,
+protected by that directory's `.htaccess`. **This only works on
+Apache** - nginx ignores `.htaccess` entirely. If you're running
+nginx, add an explicit deny rule for that path in your server config,
+e.g.:
+
+```nginx
+location ~ ^/ext/phpbbmodders/knowledgebase/files/ {
+	deny all;
+	return 403;
+}
+```
+
 ## Automated testing
 
 We use automated unit tests to prevent regressions. Check out our build below:
