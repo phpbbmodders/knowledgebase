@@ -41,4 +41,5 @@ $lang = array_merge($lang, [
 	'ACP_LIBRARY_ATTACHMENTS_EXTRA_FILES' => 'Fichiers supplémentaires',
 	'ACP_LIBRARY_ATTACHMENTS_LOST_FILES'  => 'Fichiers perdus',
 	'ACP_LIBRARY_PERMISSIONS_MASK'        => 'Permissions trace',
+	'ACP_LIBRARY_FIELDS'                  => 'Champs personnalisés',
 ]);

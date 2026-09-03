@@ -41,4 +41,5 @@ if (empty($lang) || !is_array($lang))
 $lang = array_merge($lang, [
 	'KNOWLEDGEBASE'   => 'Base de connaissances',
 	'ACL_A_MANAGE_KB' => 'Peut gérer la base de connaissances.',
+	'ACL_U_KB_VIEW'   => 'Peut voir la base de connaissances',
 ]);

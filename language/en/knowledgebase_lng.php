@@ -68,6 +68,7 @@ $lang = array_merge($lang, [
 	'KB_APPROVE_REVISION'                  => 'Approve revision',
 	'KB_ASSIGN'                            => 'Assign',
 	'KB_ASSIGN_TO'                         => 'Assign to team',
+	'KB_COPY_FALLBACK'                     => 'Please press Ctrl/Cmd+C to copy',
 	'KB_CROSS_CATEGORIES'                  => 'Also list in',
 	'KB_CROSS_CATEGORIES_EXPLAIN'          => 'Optionally list this article in additional categories, alongside the one above. You need permission to post in a category to list an article there.',
 	'KB_CROSS_LISTED'                      => 'This article is cross-listed here from another category',

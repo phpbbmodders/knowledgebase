@@ -115,6 +115,9 @@ class functions_kb
 	/** @var string */
 	protected string $upload_dir;
 
+	/** @var int[]|null */
+	protected ?array $moderatable_categories_cache = null;
+
 	/**
 	 * Constructor
 	 *
@@ -442,6 +445,16 @@ class functions_kb
 	 */
 	public function get_moderatable_categories(): array
 	{
+		// Called from assign_nav_tabs_vars() (for the Administration tab's
+		// visibility) and again by whichever controller rendered the page,
+		// so memoize it for the life of this request - the underlying
+		// per-category acl_kb_get() calls are still one-per-category, but
+		// that set of queries now only runs once instead of twice.
+		if ($this->moderatable_categories_cache !== null)
+		{
+			return $this->moderatable_categories_cache;
+		}
+
 		$sql = 'SELECT category_id FROM ' . $this->categories_table;
 		$result = $this->db->sql_query($sql);
 
@@ -456,6 +469,8 @@ class functions_kb
 			}
 		}
 		$this->db->sql_freeresult($result);
+
+		$this->moderatable_categories_cache = $category_ids;
 
 		return $category_ids;
 	}

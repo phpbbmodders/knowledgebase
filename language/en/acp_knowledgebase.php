@@ -186,6 +186,15 @@ $lang = array_merge($lang, [
 'KB_TRACE_GROUP_YES_TOTAL_NO_LOCAL'    => 'This group’s permission for this category is set to <strong>YES</strong> which becomes the new total value because it wasn’t set yet (set to <strong>NO</strong>).',
 'KB_TRACE_GROUP_YES_TOTAL_YES_LOCAL'   => 'This group’s permission for this category is set to <strong>YES</strong> and the total permission is already set to <strong>YES</strong>, so the total result is kept.',
 
+// Same as the _LOCAL versions above, but for the global (non-category) trace view -
+// controller/acp_controller.php picks between the two sets based on whether a category_id is present.
+'KB_TRACE_GROUP_NEVER_TOTAL_NO'  => 'This group’s permission is set to <strong>NEVER</strong> which becomes the new total value because it wasn’t set yet (set to <strong>NO</strong>).',
+'KB_TRACE_GROUP_NEVER_TOTAL_YES' => 'This group’s permission is set to <strong>NEVER</strong> which overwrites the total <strong>YES</strong> to a <strong>NEVER</strong> for this user.',
+'KB_TRACE_GROUP_NO'              => 'The permission is <strong>NO</strong> for this group so the old total value is kept.',
+'KB_TRACE_GROUP_YES_TOTAL_NEVER' => 'This group’s permission is set to <strong>YES</strong> but the total <strong>NEVER</strong> cannot be overwritten.',
+'KB_TRACE_GROUP_YES_TOTAL_NO'    => 'This group’s permission is set to <strong>YES</strong> which becomes the new total value because it wasn’t set yet (set to <strong>NO</strong>).',
+'KB_TRACE_GROUP_YES_TOTAL_YES'   => 'This group’s permission is set to <strong>YES</strong> and the total permission is already set to <strong>YES</strong>, so the total result is kept.',
+
 'KB_TRACE_USER_FOUNDER' => 'The user is a founder, therefore admin permissions are always set to <strong>YES</strong>.',
 'KB_TRACE_USER_ADMIN'   => 'The user is a board administrator with permission <strong>Can manage Knowledge Base</strong>, therefore admin permissions are always set to <strong>YES</strong>.',
 
@@ -197,6 +206,15 @@ $lang = array_merge($lang, [
 'KB_TRACE_USER_YES_TOTAL_NEVER_LOCAL'   => 'The user’s permission for this category is set to <strong>YES</strong> but the total <strong>NEVER</strong> cannot be overwritten.',
 'KB_TRACE_USER_YES_TOTAL_NO_LOCAL'      => 'The user’s permission for this category is set to <strong>YES</strong> which becomes the total value because it was set to <strong>NO</strong>.',
 'KB_TRACE_USER_YES_TOTAL_YES_LOCAL'     => 'The user’s permission for this category is set to <strong>YES</strong> and the total value is set to <strong>YES</strong>, so nothing is changed.',
+
+'KB_TRACE_USER_KEPT'              => 'The user’s permission is <strong>NO</strong> so the old total value is kept.',
+'KB_TRACE_USER_NEVER_TOTAL_NEVER' => 'The user’s permission is set to <strong>NEVER</strong> and the total value is set to <strong>NEVER</strong>, so nothing is changed.',
+'KB_TRACE_USER_NEVER_TOTAL_NO'    => 'The user’s permission is set to <strong>NEVER</strong> which becomes the total value because it was set to NO.',
+'KB_TRACE_USER_NEVER_TOTAL_YES'   => 'The user’s permission is set to <strong>NEVER</strong> and overwrites the previous <strong>YES</strong>.',
+'KB_TRACE_USER_NO_TOTAL_NO'       => 'The user’s permission is <strong>NO</strong> and the total value was set to NO so it defaults to <strong>NEVER</strong>.',
+'KB_TRACE_USER_YES_TOTAL_NEVER'   => 'The user’s permission is set to <strong>YES</strong> but the total <strong>NEVER</strong> cannot be overwritten.',
+'KB_TRACE_USER_YES_TOTAL_NO'      => 'The user’s permission is set to <strong>YES</strong> which becomes the total value because it was set to <strong>NO</strong>.',
+'KB_TRACE_USER_YES_TOTAL_YES'     => 'The user’s permission is set to <strong>YES</strong> and the total value is set to <strong>YES</strong>, so nothing is changed.',
 
 'KNOWLEDGE_BASE' => 'Knowledge Base',
 ]);

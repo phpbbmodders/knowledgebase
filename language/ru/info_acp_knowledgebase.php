@@ -42,4 +42,5 @@ $lang = array_merge($lang, [
 	'ACP_LIBRARY_ATTACHMENTS_EXTRA_FILES' => 'Лишние файлы',
 	'ACP_LIBRARY_ATTACHMENTS_LOST_FILES'  => 'Потерянные файлы',
 	'ACP_LIBRARY_PERMISSIONS_MASK'        => 'Маски прав доступа',
+	'ACP_LIBRARY_FIELDS'                  => 'Пользовательские поля',
 ]);

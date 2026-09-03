@@ -23,7 +23,7 @@
 					t.classList.remove('copied');
 				}, 1500);
 			} catch (err) {
-				alert('please press Ctrl/Cmd+C to copy');
+				alert(typeof kb_copy_fallback_msg !== 'undefined' ? kb_copy_fallback_msg : 'Please press Ctrl/Cmd+C to copy');
 			}
 		}
 	}

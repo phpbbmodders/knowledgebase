@@ -2258,7 +2258,7 @@ class acp_controller
 
 		$this->template->assign_vars([
 				'L_TITLE'               => ($mode == 'mask') ? $this->language->lang('ACP_LIBRARY_PERMISSIONS_MASK') : $this->language->lang('ACL_SET'),
-				'L_EXPLAIN'             => '', //$this->title_explain,
+				'L_EXPLAIN'             => '',
 				'S_VIEWING_PERMISSIONS' => true,
 				'S_VIEWING_MASK'        => ($mode == 'mask'),
 				'S_HIDDEN_FIELDS'       => build_hidden_fields($s_hidden_fields),
