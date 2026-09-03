@@ -27,17 +27,17 @@ class attachments_info
 				],
 				'orphan'      => [
 					'title' => 'ACP_LIBRARY_ATTACHMENTS_ORPHAN',
-					'auth'  => 'ext_sheer/garage && acl_a_board',
+					'auth'  => 'ext_sheer/knowledgebase && acl_a_board',
 					'cat'   => ['ACP_KNOWLEDGE_BASE'],
 				],
 				'extra_files' => [
 					'title' => 'ACP_LIBRARY_ATTACHMENTS_EXTRA_FILES',
-					'auth'  => 'ext_sheer/garage && acl_a_board',
+					'auth'  => 'ext_sheer/knowledgebase && acl_a_board',
 					'cat'   => ['ACP_KNOWLEDGE_BASE'],
 				],
 				'lost_files'  => [
 					'title' => 'ACP_LIBRARY_ATTACHMENTS_LOST_FILES',
-					'auth'  => 'ext_sheer/garage && acl_a_board',
+					'auth'  => 'ext_sheer/knowledgebase && acl_a_board',
 					'cat'   => ['ACP_KNOWLEDGE_BASE'],
 				],
 			],
