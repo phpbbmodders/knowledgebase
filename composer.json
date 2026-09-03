@@ -1,8 +1,8 @@
 {
-	"name": "sheer/knowledgebase",
+	"name": "phpbbmodders/knowledgebase",
 	"type": "phpbb-extension",
 	"description": "Knowledge Base",
-	"homepage": "https://spssoftware.cz",
+	"homepage": "https://www.phpbbmodders.com/",
 	"version": "2.0.1-RC6",
 	"keywords": [
 		"phpbb",
@@ -15,12 +15,18 @@
 		{
 			"name": "Sheer",
 			"homepage": "https://phpbbguru.net",
-			"role": "Developer"
+			"role": "Past Developer"
 		},
 		{
 			"name": "Zdenek Kamenik",
 			"homepage": "https://spssoftware.cz",
-			"role": "Modifier, optimizer"
+			"role": "Past Developer"
+		},
+		{
+			"name": "phpBB Modders",
+			"email": "board@phpbbmodders.com",
+			"homepage": "https://www.phpbbmodders.com/",
+			"role": "Maintainer"
 		}
 	],
 	"require": {
