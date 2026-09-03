@@ -83,3 +83,44 @@ Built one at a time, with a checkpoint before starting the next.
 Detailed per-phase implementation design (schema, exact state
 transitions, ACP UI specifics) happens as its own scoping pass
 immediately before that phase starts, not all up front.
+
+## Phase 1 design notes (in progress)
+
+Decisions settled so far, ahead of writing the migration/code:
+
+- **Author is polymorphic: a user or a group.** `author_id` stops
+  meaning "always a phpBB user" and can reference either a user or a
+  group (needs a discriminator alongside the id — e.g. an
+  `author_type` column). This replaces the author identity outright
+  (not a separate display-only field) — matches phpbb.com's "Written
+  By: phpBB Team" pattern, generalized to real group entities instead
+  of a special-cased string.
+- **Group-authored "own article" rights**: any member of the author
+  group gets the same `kb_u_edit`/`kb_u_delete` "own article" rights
+  an individual author would have — the group is treated as
+  collectively owning the article.
+- **Group-authored notifications**: every current member of the author
+  group receives the approve/disapprove notification, resolved the
+  same way `find_users_for_notification()` already resolves
+  `kb_m_approve` permission holders via group membership. Each member
+  can still individually opt out through their own UCP notification
+  settings — this falls out of the existing
+  `check_user_notification_options()` filtering already used by all
+  three notification types, so no new opt-out mechanism is needed.
+- **Approval-on-submit gating unchanged**: whether an article needs
+  approval when submitted still depends on `kb_u_add_noapprove`,
+  checked the same way (via `acl_kb_get()`, which already resolves
+  through the acting user's own group memberships) regardless of
+  whether the article's author is set to a user or a group.
+- **Reapproval on edit is existing behavior, not new**: `posting.php`
+  already recomputes `approved` from the *editing user's own*
+  `kb_u_add_noapprove` permission on every submit (add or edit) — an
+  editor without that permission already sends an article back to
+  pending today. This carries over to group-authored articles with no
+  new mechanism, since the check is already per-editor, not
+  per-article-author.
+
+Still open: the exact New/Reviewed/Active/Inactive/Revision state
+transitions (what moves an article between states, and who's allowed
+to trigger each transition), and the ACP checkbox UI specifics for
+picking team usergroups.
