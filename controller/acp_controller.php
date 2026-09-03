@@ -969,9 +969,8 @@ class acp_controller
 		}
 		$sql = 'SELECT *
 			FROM ' . $this->articles_table . '
-			ORDER BY ' . $order_by . ' ' . $sql_sort . '
-			LIMIT ' . $start . ', ' . $per_page;
-		$result = $this->db->sql_query($sql);
+			ORDER BY ' . $order_by . ' ' . $sql_sort;
+		$result = $this->db->sql_query_limit($sql, $per_page, $start);
 		while ($row = $this->db->sql_fetchrow($result))
 		{
 			$category_data = $this->kb->get_cat_info($row['article_category_id']);
