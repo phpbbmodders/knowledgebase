@@ -81,7 +81,7 @@
 	</div>
 
 	<div id="tabs" class="tabs sub-panels"
-		data-show-panel="<!-- IF SHOW_PANEL -->{SHOW_PANEL}<!-- ELSE -->options-panel<!-- ENDIF -->" role="tablist">
+		data-show-panel="{% if SHOW_PANEL %}{{ SHOW_PANEL }}{% else %}options-panel{% endif %}" role="tablist">
 	</div>
 
 	{% if S_PLUPLOAD and FILTERS %}
