@@ -352,12 +352,12 @@ class functions_kb
 		$sql = 'SELECT a.user_id, a.category_id, a.auth_setting, a.auth_option_id, ao.auth_option
 			FROM ' . $this->kb_users_table . ' a, ' . $this->options_table . ' ao
 			WHERE a.auth_option_id = ao.auth_option_id
-				AND a.user_id = ' . (int) $this->user->data['user_id'] . ' AND a.category_id = 1 AND ao.auth_option = \'' . $permission . '\'';
+				AND a.user_id = ' . (int) $this->user->data['user_id'] . ' AND a.category_id = ' . (int) $category_id . ' AND ao.auth_option = \'' . $permission . '\'';
 
 		$result = $this->db->sql_query($sql);
-		$auth_option = $this->db->sql_fetchfield('auth_option_id');
+		$auth_setting = $this->db->sql_fetchfield('auth_setting');
 
-		if ($auth_option == 1)
+		if ($auth_setting == ACL_YES)
 		{
 			$total = ACL_YES;
 		}
