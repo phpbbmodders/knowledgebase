@@ -3,13 +3,13 @@
 	"type": "phpbb-extension",
 	"description": "Knowledge Base",
 	"homepage": "https://www.phpbbmodders.com/",
-	"version": "2.0.1-RC6",
+	"version": "2.0.7",
 	"keywords": [
 		"phpbb",
 		"extension",
 		"knowledge base"
 	],
-	"time": "2024-12-26",
+	"time": "2026-09-03",
 	"license": "GPL-2.0-only",
 	"authors": [
 		{

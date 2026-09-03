@@ -165,6 +165,7 @@ class index
 			'S_IS_SEARCH'        => (bool) $this->config['kb_search'],
 			'S_KB_SEARCH_ACTION' => $this->helper->route('phpbbmodders_knowledgebase_search'),
 			'CATS_DROPBOX'       => $this->kb->make_category_dropbox(),
+			'S_KNOWLEDGEBASE'    => true,
 		]);
 
 		$this->template->assign_block_vars('navlinks', [
@@ -196,7 +197,7 @@ class index
 		$per_page = $this->config['kb_articles_per_page'] ?: 10;
 
 		$user_id = (int) $this->user->data['user_id'];
-		$team_group_ids = $this->kb->get_kb_team_groups();
+		$team_group_ids = $this->kb->get_user_team_groups($user_id);
 
 		$sql_where = '(a.author_type = 0 AND a.author_id = ' . $user_id . ')';
 		if (!empty($team_group_ids))

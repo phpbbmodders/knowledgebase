@@ -16,12 +16,16 @@
 			<td><a href="{{ art_row.U_ARTICLE }}">{{ art_row.ARTICLE_TITLE }}</a>{% if art_row.CATEGORY %}<br><small>{{ art_row.CATEGORY }}</small>{% endif %}</td>
 			<td class="kb-index-author">{{ art_row.ARTICLE_AUTHOR }}<br>{{ art_row.ARTICLE_DATE }}</td>
 			<td class="kb-index-author">
+				{% if art_row.S_STATUS_NEW and not art_row.S_IS_ASSIGNED %}
+					<a class="button2" href="{{ art_row.S_ACTION }}">{{ lang('KB_ASSIGN') }}</a>
+				{% endif %}
 				<form method="post" action="{{ art_row.S_ACTION }}">
 					{{ S_FORM_TOKEN }}
 					<select name="action">
+						{% if art_row.S_STATUS_NEW and art_row.S_IS_ASSIGNED %}
+							<option value="review">{{ lang('KB_MARK_REVIEWED') }}</option>
+						{% endif %}
 						{% if art_row.S_STATUS_NEW %}
-							<option value="assign">{{ lang('KB_ASSIGN') }}</option>
-							{% if art_row.S_IS_ASSIGNED %}<option value="review">{{ lang('KB_MARK_REVIEWED') }}</option>{% endif %}
 							<option value="deny">{{ lang('DISAPPROVE') }}</option>
 						{% endif %}
 						{% if art_row.S_STATUS_REVIEWED %}

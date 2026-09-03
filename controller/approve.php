@@ -426,8 +426,11 @@ class approve
 			return;
 		}
 
-		$sql = 'DELETE FROM ' . $this->articles_table . ' WHERE article_id = ' . $art_id;
-		$this->db->sql_query($sql);
+		// Reuse the same cleanup a manual delete already does (attachments,
+		// category counts, cross-listings, field values, pending
+		// revisions) rather than a bare row delete that leaves those
+		// behind.
+		$this->kb->kb_delete_article($art_id, $kb_article_info['article_title']);
 
 		$this->log->add('admin', $this->user->data['user_id'], $this->user->data['user_ip'], 'LOG_LIBRARY_REJECTED_ARTICLE', time(), [$kb_article_info['article_title'], $kb_category_info['category_name'], $kb_article_info['author']]);
 

@@ -415,6 +415,7 @@ class search
 			$html_template = 'kb_search_body.html';
 		}
 
+		$this->template->assign_var('S_KNOWLEDGEBASE', true);
 		$this->kb->assign_nav_tabs_vars('index');
 
 		return $this->helper->render('@phpbbmodders_knowledgebase/' . $html_template, $this->language->lang('LIBRARY'));

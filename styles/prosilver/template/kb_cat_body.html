@@ -8,7 +8,7 @@
 			<form method="get" action="{{ S_ACTION }}">
 				<select name="id" onchange="this.form.submit();">
 					<option value="0">{{ lang('KB_ALL_CATEGORIES') }}</option>
-					{{ CATS_DROPBOX }}
+					{{ CATS_OPTIONS }}
 				</select>
 				<button class="button2" type="submit">{{ lang('GO') }}</button>
 			</form>

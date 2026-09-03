@@ -464,14 +464,14 @@ class posting
 					$sql_data['author_type'] = $article_author_type;
 					$sql_data['views'] = $views;
 					$sql_data['article_date'] = $article_date;
-					if ($article_status === functions_kb::STATUS_INACTIVE)
-					{
-						// Deliberately deactivated by a moderator - editing shouldn't
-						// silently reactivate it; that's a separate explicit action.
-						unset($sql_data['approved'], $sql_data['status']);
-					}
-					// New/Reviewed: approved/status stay as computed above (from the
-					// editor's own kb_u_add_noapprove permission), same as a fresh submit.
+					// Editing must never change an article's workflow status -
+					// New/Reviewed stays exactly where it was regardless of the
+					// editor's own kb_u_add_noapprove permission, and a moderator
+					// deactivation isn't silently undone by an edit either. Status
+					// changes only ever happen through an explicit moderation
+					// action (approve.php) or, for an Active article, the revision
+					// queue below.
+					unset($sql_data['approved'], $sql_data['status']);
 					$redirect = $this->helper->route('phpbbmodders_knowledgebase_article', ['k' => $art_id]);
 
 					// Only move into a category that actually exists and that the
@@ -744,6 +744,7 @@ class posting
 				'U_KB'           => $this->helper->route('phpbbmodders_knowledgebase_index'),
 				'S_POST_ACTION'  => $action,
 				'S_POST_ARTICLE' => true,
+				'S_KNOWLEDGEBASE' => true,
 			]
 		);
 

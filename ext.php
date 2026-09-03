@@ -20,8 +20,8 @@ class ext extends \phpbb\extension\base
 	 */
 	public function is_enableable()
 	{
-		$phpbb_ver = '3.3.0';
-		$php_ver = '7.4';
+		$phpbb_ver = '3.3.11';
+		$php_ver = '8.0';
 		$config = $this->container->get('config');
 		$enableable = phpbb_version_compare($config['version'], $phpbb_ver, '>=') && version_compare(PHP_VERSION, $php_ver, '>=');
 

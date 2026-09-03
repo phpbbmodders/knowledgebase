@@ -386,10 +386,16 @@ class version_1_0_0 extends \phpbb\db\migration\migration
 		}
 		else
 		{
-			$sql = 'ALTER TABLE ' . $this->table_prefix . 'kb_config DROP is_dynamic';
+			$sql = 'ALTER TABLE ' . $this->table_prefix . 'kb_config DROP COLUMN is_dynamic';
 			$this->db->sql_query($sql);
-			$sql = 'ALTER TABLE ' . $this->table_prefix . 'kb_config CHANGE config_value config_value TEXT CHARACTER SET utf8 COLLATE utf8_bin';
-			$this->db->sql_query($sql);
+			// MySQL-specific CHANGE/CHARACTER SET syntax - only meaningful (and
+			// only valid) on a MySQL-family driver; other DBMS keep whatever
+			// collation the column already had, which is harmless here.
+			if (strpos($this->db->get_sql_layer(), 'mysql') === 0)
+			{
+				$sql = 'ALTER TABLE ' . $this->table_prefix . 'kb_config CHANGE config_value config_value TEXT CHARACTER SET utf8 COLLATE utf8_bin';
+				$this->db->sql_query($sql);
+			}
 			$sql = 'INSERT INTO ' . $this->table_prefix . 'kb_config' . ' (config_name, config_value) VALUES
 				(\'allow_attachments\', 0),
 				(\'max_filesize\', ' . $max_filesize . '),

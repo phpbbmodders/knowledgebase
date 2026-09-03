@@ -149,8 +149,19 @@ class category
 			add_form_key('kb_reorder');
 		}
 
-		$can_see_unapproved = $flat_all ? !empty($this->kb->get_moderatable_categories()) : $this->kb->acl_kb_get($cat_id, 'kb_m_approve');
-		$sql_where = $can_see_unapproved ? '' : 'AND a.approved = 1';
+		if ($flat_all)
+		{
+			// Global visibility would let a moderator of one category see
+			// unapproved articles from every other category too - only the
+			// categories they actually moderate are exempted from the
+			// approval filter, everything else still requires it.
+			$moderatable = $this->kb->get_moderatable_categories();
+			$sql_where = empty($moderatable) ? 'AND a.approved = 1' : 'AND (a.approved = 1 OR ' . $this->db->sql_in_set('a.article_category_id', $moderatable) . ')';
+		}
+		else
+		{
+			$sql_where = $this->kb->acl_kb_get($cat_id, 'kb_m_approve') ? '' : 'AND a.approved = 1';
+		}
 		$pagination_ary = ['id' => $cat_id];
 
 		// Custom field filter: narrow the listing to articles carrying one
@@ -186,10 +197,10 @@ class category
 				$s_sort_dir .= '<option value="' . $key . '"' . $selected . '>' . $value . '</option>';
 			}
 
-			$direction = (($sort_dir == 'd') ? 'ASC' : 'DESC');
+			$direction = (($sort_dir == 'd') ? 'DESC' : 'ASC');
 			$order_by = ' ORDER BY ' . $sort_by_sql[$sort_key] . ' ';
 			$order_by .= $direction;
-			$pagination_ary = ['id' => $cat_id, 'sd' => $sort_dir, 'sk' => $sort_key];
+			$pagination_ary = array_merge($pagination_ary, ['sd' => $sort_dir, 'sk' => $sort_key]);
 		}
 		else if ($sort_type == -1)
 		{
@@ -213,10 +224,16 @@ class category
 
 		$category_name = $flat_all ? $this->language->lang('KB_ALL_CATEGORIES') : $row['category_name'];
 
+		// Shared by the count and the listing below, so a cross-listed
+		// article (Phase 2) is counted the same way it's actually listed -
+		// otherwise pagination undercounts whenever cross-listings exist.
+		$category_filter_sql = $flat_all ? '' : ('AND (a.article_category_id = ' . (int) $cat_id . '
+			OR a.article_id IN (SELECT article_id FROM ' . $this->kb->get_article_categories_table() . ' WHERE category_id = ' . (int) $cat_id . '))');
+
 		$sql = 'SELECT COUNT(a.article_id) as article_count
 			FROM ' . $this->articles_table . ' a
 			WHERE 1=1
-			' . ($flat_all ? '' : 'AND a.article_category_id = ' . (int) $cat_id) . '
+			' . $category_filter_sql . '
 			' . $sql_where;
 		$result = $this->db->sql_query($sql);
 		$row = $this->db->sql_fetchrow($result);
@@ -304,9 +321,7 @@ class category
 			FROM ' . $this->articles_table . ' a
 			LEFT JOIN ' . USERS_TABLE . ' u ON (u.user_id = a.author_id AND a.author_type = 0)
 			WHERE 1=1
-			' . ($flat_all ? '' : '
-			AND (a.article_category_id = ' . (int) $cat_id . '
-				OR a.article_id IN (SELECT article_id FROM ' . $this->kb->get_article_categories_table() . ' WHERE category_id = ' . (int) $cat_id . '))') . '
+			' . $category_filter_sql . '
 			' . $sql_where
 			. $order_by;
 
@@ -361,6 +376,7 @@ class category
 
 		$this->template->assign_vars([
 				'CATS_DROPBOX'        => $this->kb->make_category_dropbox(),
+				'CATS_OPTIONS'        => $flat_all ? $this->kb->make_category_select(0, [], true) : '',
 				'S_FIELD_FILTER'         => $field_filter_options !== '',
 				'FIELD_FILTER_OPTIONS'   => $field_filter_options,
 				'S_FIELD_FILTER_ACTIVE'  => (bool) $filter_value_id,

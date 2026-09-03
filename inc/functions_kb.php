@@ -914,6 +914,42 @@ class functions_kb
 	}
 
 	/**
+	 * Of every KB team group, only the ones the given (or current) user is
+	 * actually a member of - used to scope "Manage Your Articles" to
+	 * teams the viewer really belongs to, rather than every configured
+	 * team.
+	 *
+	 * @param int|null $user_id
+	 * @return int[]
+	 */
+	public function get_user_team_groups(?int $user_id = null): array
+	{
+		$team_group_ids = $this->get_kb_team_groups();
+		if (empty($team_group_ids))
+		{
+			return [];
+		}
+
+		$user_id ??= (int) $this->user->data['user_id'];
+
+		$sql = 'SELECT group_id
+			FROM ' . USER_GROUP_TABLE . '
+			WHERE user_id = ' . $user_id . '
+				AND user_pending = 0
+				AND ' . $this->db->sql_in_set('group_id', $team_group_ids);
+		$result = $this->db->sql_query($sql);
+
+		$group_ids = [];
+		while ($row = $this->db->sql_fetchrow($result))
+		{
+			$group_ids[] = (int) $row['group_id'];
+		}
+		$this->db->sql_freeresult($result);
+
+		return $group_ids;
+	}
+
+	/**
 	 * Is the given (or current) user a member of any of the given groups?
 	 *
 	 * @param int[]    $group_ids
@@ -1103,6 +1139,16 @@ class functions_kb
 		$sql = 'DELETE FROM ' . $this->articles_table . '
 			WHERE article_id = ' . (int) $id;
 		$this->db->sql_query($sql);
+
+		$sql = 'DELETE FROM ' . $this->article_categories_table . '
+			WHERE article_id = ' . (int) $id;
+		$this->db->sql_query($sql);
+
+		$sql = 'DELETE FROM ' . $this->article_field_values_table . '
+			WHERE article_id = ' . (int) $id;
+		$this->db->sql_query($sql);
+
+		$this->delete_article_revision((int) $id);
 
 		$ids = [];
 		$sql = 'SELECT attach_id, physical_filename, thumbnail

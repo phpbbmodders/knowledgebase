@@ -64,7 +64,13 @@ class version_1_0_3 extends \phpbb\db\migration\migration
 
 	public function add_key()
 	{
-		$sql = 'ALTER TABLE ' . $this->table_prefix . 'kb_src_wrdmtch DROP INDEX un_mtch, ADD UNIQUE un_mtch (article_id, word_id, title_match, descr_match) USING BTREE';
-		$this->db->sql_query($sql);
+		// MySQL-specific combined DROP/ADD INDEX syntax with a storage-engine
+		// index-type hint - only valid (and only run) on a MySQL-family
+		// driver. Non-MySQL installs keep the index as it already is.
+		if (strpos($this->db->get_sql_layer(), 'mysql') === 0)
+		{
+			$sql = 'ALTER TABLE ' . $this->table_prefix . 'kb_src_wrdmtch DROP INDEX un_mtch, ADD UNIQUE un_mtch (article_id, word_id, title_match, descr_match) USING BTREE';
+			$this->db->sql_query($sql);
+		}
 	}
 }
