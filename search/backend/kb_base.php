@@ -31,7 +31,7 @@ abstract class kb_base
 	// Batch size for create_index and delete_index
 	private const BATCH_SIZE = 100;
 
-	/** @var \phpbb\cache\service */
+	/** @var service */
 	protected service $cache;
 
 	/** @var config */

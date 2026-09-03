@@ -22,28 +22,28 @@ use phpbbmodders\knowledgebase\inc\functions_kb;
 
 class index
 {
-	/** @var \phpbb\db\driver\driver_interface */
+	/** @var driver_interface */
 	protected driver_interface $db;
 
-	/** @var \phpbb\config\config */
+	/** @var config */
 	protected config $config;
 
-	/** @var \phpbb\controller\helper */
+	/** @var helper */
 	protected helper $helper;
 
-	/** @var \phpbb\language\language */
+	/** @var language */
 	protected language $language;
 
-	/** @var \phpbb\auth\auth */
+	/** @var auth */
 	protected auth $auth;
 
-	/** @var \phpbb\template\template */
+	/** @var template */
 	protected template $template;
 
-	/** @var \phpbb\user */
+	/** @var user */
 	protected user $user;
 
-	/** @var \phpbbmodders\knowledgebase\inc\functions_kb */
+	/** @var functions_kb */
 	protected functions_kb $kb;
 
 	/** @var string */

@@ -17,13 +17,13 @@ use phpbb\request\request_interface;
 
 class set_order
 {
-	/** @var \phpbb\db\driver\driver_interface */
+	/** @var driver_interface */
 	protected driver_interface $db;
 
-	/** @var \phpbb\config\config */
+	/** @var config */
 	protected config $config;
 
-	/** @var \phpbb\request\request_interface */
+	/** @var request_interface */
 	protected request_interface $request;
 
 	/** @var string */

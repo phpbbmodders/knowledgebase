@@ -34,37 +34,37 @@ class functions_kb
 	public const AUTHOR_TYPE_USER = 0;
 	public const AUTHOR_TYPE_GROUP = 1;
 
-	/** @var \phpbb\db\driver\driver_interface */
+	/** @var driver_interface */
 	protected driver_interface $db;
 
-	/** @var \phpbb\config\config $config */
+	/** @var config $config */
 	protected config $config;
 
-	/** @var \phpbb\config\db_text */
+	/** @var db_text */
 	protected db_text $config_text;
 
-	/** @var \phpbb\controller\helper */
+	/** @var helper */
 	protected helper $helper;
 
-	/** @var \phpbb\extension\manager */
+	/** @var manager */
 	protected manager $ext_manager;
 
-	/** @var \phpbb\language\language */
+	/** @var language */
 	protected language $language;
 
-	/** @var \phpbb\auth\auth */
+	/** @var auth */
 	protected auth $auth;
 
-	/** @var \phpbb\template\template */
+	/** @var template */
 	protected template $template;
 
-	/** @var \phpbb\user */
+	/** @var user */
 	protected user $user;
 
-	/** @var \phpbb\cache\driver\driver_interface $cache */
+	/** @var cache $cache */
 	protected cache $cache;
 
-	/** @var \phpbb\log\log */
+	/** @var log */
 	protected log $log;
 
 	/** @var string phpbb_root_path */

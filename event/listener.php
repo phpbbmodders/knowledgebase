@@ -28,22 +28,22 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
  */
 class listener implements EventSubscriberInterface
 {
-	/** @var \phpbb\config\config */
+	/** @var config */
 	protected config $config;
 
-	/** @var \phpbb\config\db_text */
+	/** @var db_text */
 	protected db_text $config_text;
 
-	/** @var \phpbb\controller\helper */
+	/** @var helper */
 	protected helper $helper;
 
 	/* @var \phpbb\language\language */
 	protected language $language;
 
-	/** @var \phpbb\auth\auth */
+	/** @var auth */
 	protected auth $auth;
 
-	/** @var \phpbb\template\template */
+	/** @var template */
 	protected template $template;
 
 	/* @var string */

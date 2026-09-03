@@ -27,9 +27,9 @@ class disapprove extends \phpbb\notification\type\base
 		'lang'  => 'NOTIFICATION_TYPE_ARTICLE_DISAPPROVE',
 		'group' => 'NOTIFICATION_GROUP_MISCELLANEOUS',
 	];
-	/** @var \phpbb\controller\helper */
+	/** @var helper */
 	protected helper $helper;
-	/** @var \phpbb\user_loader */
+	/** @var user_loader */
 	protected user_loader $user_loader;
 	/** @var group_helper */
 	protected group_helper $group_helper;
@@ -65,7 +65,7 @@ class disapprove extends \phpbb\notification\type\base
 	/**
 	 * Set the controller helper
 	 *
-	 * @param \phpbb\controller\helper $helper
+	 * @param helper $helper
 	 * @return void
 	 */
 	public function set_controller_helper(helper $helper): void

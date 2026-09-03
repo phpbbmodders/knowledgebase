@@ -23,25 +23,25 @@ use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 
 class kb_file
 {
-	/** @var \phpbb\db\driver\driver_interface */
+	/** @var driver_interface */
 	protected driver_interface $db;
 
-	/** @var \phpbb\language\language */
+	/** @var language */
 	protected language $language;
 
-	/** @var \phpbb\request\request_interface */
+	/** @var request_interface */
 	protected request_interface $request;
 
-	/** @var \phpbb\extension\manager */
+	/** @var manager */
 	protected manager $ext_manager;
 
-	/** @var \phpbb\auth\auth */
+	/** @var auth */
 	protected auth $auth;
 
-	/** @var \phpbb\user */
+	/** @var user */
 	protected user $user;
 
-	/** @var \phpbbmodders\knowledgebase\inc\functions_kb */
+	/** @var functions_kb */
 	protected functions_kb $kb;
 
 	/** @var string */
@@ -80,7 +80,7 @@ class kb_file
 	}
 
 	/**
-	 * @return \Symfony\Component\HttpFoundation\Response
+	 * @return Response
 	 */
 	public function main(): Response
 	{

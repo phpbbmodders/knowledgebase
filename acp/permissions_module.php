@@ -69,8 +69,8 @@ class permissions_module
 
 		$this->tpl_name = 'acp_knowledgebase_permissions';
 
-//mode: permissions
-//mode: mask
+		//mode: permissions
+		//mode: mask
 		if ($mode === 'mask')
 		{
 			$this->page_title = $language->lang('KNOWLEDGE_BASE') . ' &bull; ' . $language->lang('ACP_LIBRARY_PERMISSIONS_MASK');

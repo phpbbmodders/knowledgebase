@@ -26,37 +26,37 @@ use phpbbmodders\knowledgebase\search\kb_search_backend_factory;
 
 class search
 {
-	/** @var \phpbb\db\driver\driver_interface */
+	/** @var driver_interface */
 	protected driver_interface $db;
 
-	/** @var \phpbb\config\config */
+	/** @var config */
 	protected config $config;
 
-	/** @var \phpbb\controller\helper */
+	/** @var helper */
 	protected helper $helper;
 
-	/** @var \phpbb\language\language */
+	/** @var language */
 	protected language $language;
 
-	/** @var \phpbb\auth\auth */
+	/** @var auth */
 	protected auth $auth;
 
-	/** @var \phpbb\request\request_interface */
+	/** @var request_interface */
 	protected request_interface $request;
 
-	/** @var \phpbb\template\template */
+	/** @var template */
 	protected template $template;
 
-	/** @var \phpbb\user */
+	/** @var user */
 	protected user $user;
 
-	/** @var \phpbb\pagination */
+	/** @var pagination */
 	protected pagination $pagination;
 
-	/** @var \phpbbmodders\knowledgebase\inc\functions_kb */
+	/** @var functions_kb */
 	protected functions_kb $kb;
 
-	/** @var \phpbbmodders\knowledgebase\search\kb_search_backend_factory */
+	/** @var kb_search_backend_factory */
 	protected kb_search_backend_factory $search_factory;
 
 	/** @var string */

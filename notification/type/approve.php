@@ -27,9 +27,9 @@ class approve extends \phpbb\notification\type\base
 		'lang'  => 'NOTIFICATION_TYPE_ARTICLE_APPROVE',
 		'group' => 'NOTIFICATION_GROUP_MISCELLANEOUS',
 	];
-	/** @var \phpbb\controller\helper */
+	/** @var helper */
 	protected helper $helper;
-	/** @var \phpbb\user_loader */
+	/** @var user_loader */
 	protected user_loader $user_loader;
 	/** @var group_helper */
 	protected group_helper $group_helper;
@@ -63,15 +63,15 @@ class approve extends \phpbb\notification\type\base
 	/**
 	 * Set the controller helper
 	 *
-	 * @param \phpbb\controller\helper $helper
+	 * @param helper $helper
 	 * @return void
 	 */
-	public function set_controller_helper(\phpbb\controller\helper $helper): void
+	public function set_controller_helper(helper $helper): void
 	{
 		$this->helper = $helper;
 	}
 
-	public function set_user_loader(\phpbb\user_loader $user_loader): void
+	public function set_user_loader(user_loader $user_loader): void
 	{
 		$this->user_loader = $user_loader;
 	}

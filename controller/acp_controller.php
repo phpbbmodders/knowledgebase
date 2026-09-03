@@ -2704,7 +2704,7 @@ class acp_controller
 				$selected = ($this->config['kb_search_type'] === $type) ? ' selected="selected"' : '';
 				$identifier = substr($type, strrpos($type, '\\') + 1);
 				$search_options .= '<option value="' . $type . '"' . $selected;
-			    $search_options .= ' data-toggle-setting="#search_' . $identifier . '_settings">' . $name . '</option>';
+				$search_options .= ' data-toggle-setting="#search_' . $identifier . '_settings">' . $name . '</option>';
 			}
 		}
 
