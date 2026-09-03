@@ -1,38 +1,26 @@
-Installation :
+# Knowledge Base
 
-1. Download and unzip the Latest release https://spssoftware.cz/viewtopic.php?p=6603
-2. Copy the sheer/knowledgebase folder to /ext/sheer/knowledgebase/
-3. Navigate in the ACP to Customise -> Manage extensions
-4. Look for "Knowledge Base" under the Disabled Extensions list, and click the Enable link
-5. Set up and configure the "Knowledge Base" extension by navigating in the ACP to Extensions -> Knowledge Base
-6. If required Purge the cache in ACP & also if required then in your Browser
-7. Done
+A wiki/FAQ system for phpBB: categories and articles with attachments, an approval workflow, a search index, and its own permission system, all managed from the ACP.
 
-Detailed phpBB standard Installation of Extensions here: https://www.phpbb.com/extensions/installing/#installing
+## Installation
 
-Update :
+1. Copy the extension to: `/ext/phpbbmodders/knowledgebase`
+2. In the Administration Control Panel, navigate to: **Customise → Manage extensions**
+3. Enable the **Knowledge Base** extension
+4. Configure it under **Extensions → Knowledge Base**
 
-1. Navigate in the ACP to Customise -> Manage extensions
-2. Look for "Knowledge Base" under the Enabled Extensions list, and click the Disable link
-3. Folder and files from /ext/sheer/knowledgebase/files !!! MUST NOT BE DELETED !!!
-   The folder contains the attachments of your knowledge base
-4. Delete other Files from the sheer/knowledgebase folder at /ext/sheer/knowledgebase
-5. Download and unzip the new Latest release Files
-6. Copy the new Latest release Files from the sheer/knowledgebase folder to /ext/sheer/knowledgebase
-7. Look for "Knowledge Base" under the Disabled Extensions list, and click the Enable link.
-8. Done
+## Automated testing
 
-Detailed phpBB standard Update of Extensions here : https://www.phpbb.com/extensions/installing/#updating
+We use automated unit tests to prevent regressions. Check out our build below:
 
-Uninstallation :
+[![Tests](https://github.com/phpbbmodders/knowledgebase/actions/workflows/tests.yml/badge.svg)](https://github.com/phpbbmodders/knowledgebase/actions/workflows/tests.yml)
 
-1. Navigate in the ACP to Customise -> Manage extensions
-2. Look for "Knowledge Base" under the Enabled Extensions list, and click the Disable link
-3. If you want to Fully Uninstall then Look for "Knowledge Base" the Disabled Extensions list, and click the Delete data
-   link
-4. At this point you can re-enable the extension, it will be as if it were being installed for the first time
-5. If you want to Remove the Files then delete the sheer/knowledgebase folder from /ext/sheer/knowledgebase
-6. If required Purge the cache in ACP & also if required then in your Browser
-7. Done
+## Acknowledgments
 
-Detailed phpBB standard Uninstallation of Extensions here : https://www.phpbb.com/extensions/installing/#removing
+Based on the original [knowledgebase](https://github.com/sutrus/knowledgebase) extension by sutrus (Zdenek Kamenik), itself building on earlier work by Sheer's [Knowledge Base](https://github.com/AlexSheer/phpbb3.2-Knowledge-Base) extension.
+
+- Code review, bug fixes, and documentation assisted by [Claude](https://www.anthropic.com/claude).
+
+## License
+
+Licensed under the [GNU General Public License v2](license.txt)

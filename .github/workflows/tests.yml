@@ -1,0 +1,31 @@
+name: Tests
+
+# For most extensions, this workflow should not need changing;
+# simply commit it to your repository.
+#
+# See the README for full details and configuration instructions:
+#  - https://github.com/phpbb-extensions/test-framework
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  call-tests:
+    name: Extension tests
+    uses: phpbb-extensions/test-framework/.github/workflows/tests.yml@3.3.x
+    with:
+      EXTNAME: phpbbmodders/knowledgebase
+
+      RUN_MYSQL_JOBS: 0
+      RUN_PGSQL_JOBS: 0
+      RUN_MSSQL_JOBS: 0
+      RUN_WINDOWS_JOBS: 0
+
+      PRIMARY_PHP_VERSION: '8.2'
+      PHP_VERSION_MATRIX: '["8.2", "8.3", "8.4"]'
