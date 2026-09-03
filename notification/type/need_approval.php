@@ -30,6 +30,12 @@ class need_approval extends \phpbb\notification\type\base
 	protected helper $helper;
 	/** @var \phpbb\user_loader */
 	protected user_loader $user_loader;
+	/** @var string */
+	protected string $kb_options_table;
+	/** @var string */
+	protected string $kb_users_table;
+	/** @var string */
+	protected string $kb_groups_table;
 
 	/**
 	 * Get the id of the item
@@ -71,6 +77,19 @@ class need_approval extends \phpbb\notification\type\base
 	public function set_user_loader(\phpbb\user_loader $user_loader): void
 	{
 		$this->user_loader = $user_loader;
+	}
+
+	/**
+	 * @param string $kb_options_table
+	 * @param string $kb_users_table
+	 * @param string $kb_groups_table
+	 * @return void
+	 */
+	public function set_tables(string $kb_options_table, string $kb_users_table, string $kb_groups_table): void
+	{
+		$this->kb_options_table = $kb_options_table;
+		$this->kb_users_table = $kb_users_table;
+		$this->kb_groups_table = $kb_groups_table;
 	}
 
 	/**
@@ -122,14 +141,12 @@ class need_approval extends \phpbb\notification\type\base
 	 */
 	public function check_permission(string $auth, int $category_id = 0): array
 	{
-		global $table_prefix;
-
 		$sql_where = ($category_id) ? ' AND category_id = ' . $category_id : '';
 
 		$moderators = $groups = $exclude = [];
 
 		$sql = 'SELECT auth_option_id
-			FROM ' . $table_prefix . 'kb_options' . '
+			FROM ' . $this->kb_options_table . '
 			WHERE auth_option LIKE \'' . $auth . '\'
 			AND is_local = 1';
 		$result = $this->db->sql_query($sql);
@@ -137,7 +154,7 @@ class need_approval extends \phpbb\notification\type\base
 		$auth_option_id = $row['auth_option_id'];
 		$this->db->sql_freeresult($result);
 
-		$sql = 'SELECT user_id FROM ' . $table_prefix . 'kb_users' . '
+		$sql = 'SELECT user_id FROM ' . $this->kb_users_table . '
 			WHERE auth_option_id = ' . (int) $auth_option_id . '
 				AND auth_setting = 1
 				' . $sql_where;
@@ -149,7 +166,7 @@ class need_approval extends \phpbb\notification\type\base
 		$this->db->sql_freeresult($result);
 
 		$sql = 'SELECT group_id
-			FROM ' . $table_prefix . 'kb_groups' . '
+			FROM ' . $this->kb_groups_table . '
 			WHERE auth_option_id = ' . (int) $auth_option_id . '
 				AND auth_setting = 1
 				' . $sql_where;
@@ -162,7 +179,7 @@ class need_approval extends \phpbb\notification\type\base
 		$this->db->sql_freeresult($result);
 
 		$sql = 'SELECT user_id
-			FROM ' . $table_prefix . 'kb_users' . '
+			FROM ' . $this->kb_users_table . '
 			WHERE auth_setting = 0
 				' . $sql_where;
 		$result = $this->db->sql_query($sql);
