@@ -26,6 +26,7 @@ use phpbb\request\request_interface;
 use phpbb\template\template;
 use phpbb\user;
 use RuntimeException;
+use phpbbmodders\knowledgebase\inc\field\kb_field_type_factory;
 use phpbbmodders\knowledgebase\inc\functions_kb;
 use phpbbmodders\knowledgebase\search\kb_search_backend_factory;
 
@@ -79,6 +80,9 @@ class posting
 	/** @var kb_search_backend_factory */
 	protected kb_search_backend_factory $search_factory;
 
+	/** @var kb_field_type_factory */
+	protected kb_field_type_factory $field_factory;
+
 	/** @var string */
 	protected string $phpbb_root_path;
 
@@ -119,6 +123,7 @@ class posting
 	 * @param notification_manager      $notification_manager
 	 * @param functions_kb              $kb
 	 * @param kb_search_backend_factory $search_factory
+	 * @param kb_field_type_factory     $field_factory
 	 * @param string                    $phpbb_root_path
 	 * @param string                    $php_ext
 	 * @param string                    $logs_table
@@ -130,7 +135,7 @@ class posting
 		driver_interface $db, config $config, helper $helper, manager $ext_manager, language $language, auth $auth,
 		request_interface $request, template $template, user $user, cache $cache, log $log, factory $files_factory,
 		plupload $plupload, notification_manager $notification_manager, functions_kb $kb,
-		kb_search_backend_factory $search_factory,
+		kb_search_backend_factory $search_factory, kb_field_type_factory $field_factory,
 		string $phpbb_root_path, string $php_ext, string $logs_table, string $articles_table,
 		string $categories_table, string $attachments_table
 	)
@@ -151,6 +156,7 @@ class posting
 		$this->notification_manager = $notification_manager;
 		$this->kb = $kb;
 		$this->search_factory = $search_factory;
+		$this->field_factory = $field_factory;
 		$this->phpbb_root_path = $phpbb_root_path;
 		$this->php_ext = $php_ext;
 		$this->logs_table = $logs_table;
@@ -360,6 +366,21 @@ class posting
 		// load, or nothing for a brand new article.
 		$cross_categories_display = $submit ? $cross_categories : (($art_id) ? $this->kb->get_cross_listed_categories($art_id) : []);
 
+		// Custom fields: read every field's submitted values in one go, then
+		// pre-render each enabled field's posting widget for the template.
+		$enabled_fields = $this->kb->get_enabled_fields();
+		$all_field_values = $this->request->variable('field_values', [0 => [0]]);
+		$field_widgets = '';
+		foreach ($enabled_fields as $field)
+		{
+			$field_id = (int) $field['field_id'];
+			$field_values = $this->kb->get_field_values($field_id, true);
+			$submitted_ids = array_map('intval', $all_field_values[$field_id] ?? []);
+			$selected_ids = $submit ? $submitted_ids : (($art_id) ? $this->kb->get_article_field_value_ids($art_id, $field_id) : []);
+
+			$field_widgets .= $this->field_factory->get($field['field_type'])->render_posting_field($field, $field_values, $selected_ids);
+		}
+
 		include($this->phpbb_root_path . 'includes/functions_posting.' . $this->php_ext);
 		generate_smilies('inline', 0);
 		include($this->phpbb_root_path . 'includes/functions_display.' . $this->php_ext);
@@ -490,6 +511,7 @@ class posting
 					}
 
 					$this->kb->set_cross_listed_categories($art_id, $cross_categories);
+					$this->save_article_field_values($art_id, $enabled_fields, $all_field_values);
 					$this->insert_attachments($attachment_data, $art_id);
 
 					$msg .= '<br><br>' . sprintf($this->language->lang('RETURN_ARTICLE'), '<a href="' . $redirect . '">', '</a>');
@@ -508,6 +530,7 @@ class posting
 					$this->db->sql_query($sql);
 					$new = $this->db->sql_nextid();
 					$this->kb->set_cross_listed_categories($new, $cross_categories);
+					$this->save_article_field_values($new, $enabled_fields, $all_field_values);
 					$this->insert_attachments($attachment_data, $new);
 
 					$articles_count++;
@@ -654,6 +677,8 @@ class posting
 				'S_CAN_POST_AS_TEAM' => $this->auth->acl_get('a_manage_kb') || $this->kb->acl_kb_get($cat_id, 'kb_m_approve'),
 				'TEAM_OPTIONS'       => $this->get_team_select_options(),
 
+				'FIELD_WIDGETS' => $field_widgets,
+
 				'U_KB'           => $this->helper->route('phpbbmodders_knowledgebase_index'),
 				'S_POST_ACTION'  => $action,
 				'S_POST_ARTICLE' => true,
@@ -715,6 +740,21 @@ class posting
 			$options .= '<option value="' . $group_id . '">' . $group_name . '</option>';
 		}
 		return $options;
+	}
+
+	/**
+	 * @param int   $article_id
+	 * @param array $enabled_fields
+	 * @param array $all_field_values field_id => submitted value_ids
+	 * @return void
+	 */
+	protected function save_article_field_values(int $article_id, array $enabled_fields, array $all_field_values): void
+	{
+		foreach ($enabled_fields as $field)
+		{
+			$field_id = (int) $field['field_id'];
+			$this->kb->set_article_field_values($article_id, $field_id, $all_field_values[$field_id] ?? []);
+		}
 	}
 
 	/**

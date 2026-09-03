@@ -19,6 +19,7 @@ use phpbb\language\language;
 use phpbb\request\request_interface;
 use phpbb\template\template;
 use phpbb\user;
+use phpbbmodders\knowledgebase\inc\field\kb_field_type_factory;
 use phpbbmodders\knowledgebase\inc\functions_kb;
 
 class article
@@ -50,6 +51,9 @@ class article
 	/** @var functions_kb */
 	protected functions_kb $kb;
 
+	/** @var kb_field_type_factory */
+	protected kb_field_type_factory $field_factory;
+
 	/** @var string */
 	protected string $phpbb_root_path;
 
@@ -73,15 +77,17 @@ class article
 	 * @param request_interface $request
 	 * @param template          $template
 	 * @param user              $user
-	 * @param functions_kb      $kb
-	 * @param string            $phpbb_root_path
-	 * @param string            $php_ext
-	 * @param string            $articles_table
-	 * @param string            $attachments_table
+	 * @param functions_kb          $kb
+	 * @param kb_field_type_factory $field_factory
+	 * @param string                $phpbb_root_path
+	 * @param string                $php_ext
+	 * @param string                $articles_table
+	 * @param string                $attachments_table
 	 */
 	public function __construct(
 		driver_interface $db, config $config, helper $helper, language $language, auth $auth,
 		request_interface $request, template $template, user $user, functions_kb $kb,
+		kb_field_type_factory $field_factory,
 		string $phpbb_root_path, string $php_ext, string $articles_table, string $attachments_table
 	)
 	{
@@ -94,6 +100,7 @@ class article
 		$this->template = $template;
 		$this->user = $user;
 		$this->kb = $kb;
+		$this->field_factory = $field_factory;
 		$this->phpbb_root_path = $phpbb_root_path;
 		$this->php_ext = $php_ext;
 		$this->articles_table = $articles_table;
@@ -172,6 +179,15 @@ class article
 				'S_PRIMARY'     => $article_category_id === (int) $cat_id,
 			]);
 		}
+
+		$field_display = '';
+		foreach ($this->kb->get_enabled_fields() as $field)
+		{
+			$field_id = (int) $field['field_id'];
+			$selected_values = $this->kb->get_article_field_values($art_id, $field_id);
+			$field_display .= $this->field_factory->get($field['field_type'])->render_display($field, $selected_values);
+		}
+		$this->template->assign_var('FIELD_DISPLAY', $field_display);
 
 		$comment_topic_id = $row['topic_id'];
 

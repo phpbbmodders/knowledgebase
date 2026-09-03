@@ -45,6 +45,7 @@ services:
             - '@template'
             - '@user'
             - '@phpbbmodders.knowledgebase.inc'
+            - '@phpbbmodders.knowledgebase.field.factory'
             - '%core.root_path%'
             - '%core.php_ext%'
             - '%tables.articles_table%'
@@ -69,6 +70,7 @@ services:
             - '@notification_manager'
             - '@phpbbmodders.knowledgebase.inc'
             - '@phpbbmodders.knowledgebase.search.backend_factory'
+            - '@phpbbmodders.knowledgebase.field.factory'
             - '%core.root_path%'
             - '%core.php_ext%'
             - '%tables.logs_table%'
@@ -153,6 +155,9 @@ services:
             - '%tables.kb_groups_table%'
             - '%tables.kb_revisions_table%'
             - '%tables.kb_article_categories_table%'
+            - '%tables.kb_fields_table%'
+            - '%tables.kb_field_values_table%'
+            - '%tables.kb_article_field_values_table%'
             - '@group_helper'
 
     phpbbmodders.knowledgebase.controller.kb_file:
@@ -188,6 +193,7 @@ services:
             - '@phpbbmodders.knowledgebase.inc'
             - '@phpbbmodders.knowledgebase.search.backend_collection'
             - '@phpbbmodders.knowledgebase.search.backend_factory'
+            - '@phpbbmodders.knowledgebase.field.factory'
             - '%core.root_path%'
             - '%core.php_ext%'
             - '%tables.articles_table%'
@@ -241,3 +247,23 @@ services:
             - [ 'set_tables', [ '%tables.kb_options_table%', '%tables.kb_users_table%', '%tables.kb_groups_table%' ] ]
         tags:
             - { name: notification.type }
+
+    # Custom fields
+    phpbbmodders.knowledgebase.field.multi_select:
+        class: phpbbmodders\knowledgebase\inc\field\kb_multi_select_field_type
+        arguments:
+            - '@language'
+        tags:
+            - { name: phpbbmodders.knowledgebase.field_type }
+
+    phpbbmodders.knowledgebase.field.factory:
+        class: phpbbmodders\knowledgebase\inc\field\kb_field_type_factory
+        arguments:
+            - '@phpbbmodders.knowledgebase.field.collection'
+
+    phpbbmodders.knowledgebase.field.collection:
+        class: phpbb\di\service_collection
+        arguments:
+            - '@service_container'
+        tags:
+            - { name: service_collection, tag: phpbbmodders.knowledgebase.field_type, class_name_aware: true }

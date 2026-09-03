@@ -37,6 +37,20 @@
 	</div>
 </div>
 
+{% if S_FIELD_FILTER %}
+	<form method="get" action="{{ S_ACTION }}" class="action-bar bar-top">
+		<label>{{ lang('KB_FILTER_BY_FIELD') }}{{ lang('COLON') }}
+			<select name="field_value_id" onchange="this.form.submit();">
+				<option value="0">{{ lang('KB_FILTER_ANY') }}</option>
+				{{ FIELD_FILTER_OPTIONS }}
+			</select>
+		</label>
+		{% if S_FIELD_FILTER_ACTIVE %}
+			<a href="{{ U_RESET_FIELD_FILTER }}">{{ lang('RESET_FILTER') }}</a>
+		{% endif %}
+	</form>
+{% endif %}
+
 {% if S_ALPHABET %}
 	<div class="panel">
 		<div id="alphabet" class="inner">

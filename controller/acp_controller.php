@@ -28,6 +28,7 @@ use phpbb\request\request_interface;
 use phpbb\template\template;
 use phpbb\user;
 use RuntimeException;
+use phpbbmodders\knowledgebase\inc\field\kb_field_type_factory;
 use phpbbmodders\knowledgebase\inc\functions_kb;
 use phpbbmodders\knowledgebase\search\kb_search_backend_factory;
 
@@ -88,6 +89,9 @@ class acp_controller
 	/** @var kb_search_backend_factory */
 	protected kb_search_backend_factory $search_factory;
 
+	/** @var kb_field_type_factory */
+	protected kb_field_type_factory $field_factory;
+
 	/** @var string */
 	protected string $phpbb_root_path;
 
@@ -141,6 +145,7 @@ class acp_controller
 	 * @param functions_kb              $kb
 	 * @param service_collection        $search_collection
 	 * @param kb_search_backend_factory $search_factory
+	 * @param kb_field_type_factory     $field_factory
 	 * @param string                    $phpbb_root_path
 	 * @param string                    $php_ext
 	 * @param string                    $articles_table
@@ -156,6 +161,7 @@ class acp_controller
 		language $language, auth $auth, request_interface $request, template $template, user $user,
 		cache_interface $cache, group_helper $group_helper, pagination $pagination, log $log, functions_kb $kb,
 		service_collection $search_collection, kb_search_backend_factory $search_factory,
+		kb_field_type_factory $field_factory,
 		string $phpbb_root_path, string $php_ext, string $articles_table, string $categories_table,
 		string $logs_table, string $attachments_table, string $options_table, string $kb_users_table,
 		string $kb_groups_table
@@ -178,6 +184,7 @@ class acp_controller
 		$this->kb = $kb;
 		$this->search_collection = $search_collection;
 		$this->search_factory = $search_factory;
+		$this->field_factory = $field_factory;
 		$this->phpbb_root_path = $phpbb_root_path;
 		$this->php_ext = $php_ext;
 		$this->articles_table = $articles_table;
@@ -1080,6 +1087,176 @@ class acp_controller
 	}
 	/**
 	 * END - Article management functions
+	 */
+
+
+	/**
+	 * Custom fields management functions
+	 */
+
+	/**
+	 * @return void
+	 */
+	public function show_fields(): void
+	{
+		foreach ($this->kb->get_all_fields() as $field)
+		{
+			$this->template->assign_block_vars('fields', [
+				'FIELD_ID'        => $field['field_id'],
+				'FIELD_NAME'      => $field['field_name'],
+				'FIELD_KEY'       => $field['field_key'],
+				'FIELD_TYPE_NAME' => $this->field_factory->get($field['field_type'])->get_type_name(),
+				'S_ENABLED'       => (bool) $field['enabled'],
+				'U_TOGGLE'        => $this->u_action . '&amp;action=toggle_field&amp;field_id=' . $field['field_id'],
+				'U_EDIT_VALUES'   => $this->u_action . '&amp;action=edit_values&amp;field_id=' . $field['field_id'],
+			]);
+		}
+
+		$type_options = '';
+		foreach ($this->field_factory->get_all() as $class => $name)
+		{
+			$type_options .= '<option value="' . htmlspecialchars($class) . '">' . htmlspecialchars($name) . '</option>';
+		}
+
+		$this->template->assign_vars([
+			'S_FIELDS'      => true,
+			'TYPE_OPTIONS'  => $type_options,
+			'U_ACTION'      => $this->u_action . '&amp;action=add_field',
+			'L_TITLE'       => $this->language->lang('ACP_LIBRARY_FIELDS'),
+		]);
+	}
+
+	/**
+	 * @return void
+	 */
+	public function add_field(): void
+	{
+		if (!$this->request->is_set_post('submit'))
+		{
+			$this->show_fields();
+			return;
+		}
+
+		$field_key = $this->request->variable('field_key', '');
+		$field_name = utf8_normalize_nfc($this->request->variable('field_name', '', true));
+		$field_type = $this->request->variable('field_type', '');
+
+		if (!preg_match('/^[a-z0-9_]+$/', $field_key) || $field_name === '' || !array_key_exists($field_type, $this->field_factory->get_all()))
+		{
+			trigger_error($this->language->lang('KB_FIELD_INVALID') . adm_back_link($this->u_action), E_USER_WARNING);
+		}
+
+		$sql = 'SELECT field_id FROM ' . $this->kb->get_fields_table() . ' WHERE field_key = \'' . $this->db->sql_escape($field_key) . '\'';
+		$result = $this->db->sql_query($sql);
+		$exists = $this->db->sql_fetchfield('field_id');
+		$this->db->sql_freeresult($result);
+
+		if ($exists)
+		{
+			trigger_error($this->language->lang('KB_FIELD_KEY_TAKEN') . adm_back_link($this->u_action), E_USER_WARNING);
+		}
+
+		$sql = 'INSERT INTO ' . $this->kb->get_fields_table() . ' ' . $this->db->sql_build_array('INSERT', [
+			'field_key'  => $field_key,
+			'field_name' => $field_name,
+			'field_type' => $field_type,
+			'enabled'    => 1,
+		]);
+		$this->db->sql_query($sql);
+
+		meta_refresh(2, $this->u_action);
+		trigger_error($this->language->lang('KB_FIELD_ADDED') . adm_back_link($this->u_action));
+	}
+
+	/**
+	 * @param int $field_id
+	 * @return void
+	 */
+	public function toggle_field(int $field_id): void
+	{
+		$field = $this->kb->get_field($field_id);
+		if (!$field)
+		{
+			trigger_error($this->language->lang('KB_FIELD_NOT_FOUND'), E_USER_WARNING);
+		}
+
+		$sql = 'UPDATE ' . $this->kb->get_fields_table() . ' SET enabled = ' . ($field['enabled'] ? 0 : 1) . ' WHERE field_id = ' . $field_id;
+		$this->db->sql_query($sql);
+
+		meta_refresh(2, $this->u_action);
+		trigger_error($this->language->lang('KB_FIELD_UPDATED') . adm_back_link($this->u_action));
+	}
+
+	/**
+	 * @param int $field_id
+	 * @return void
+	 */
+	public function edit_field_values(int $field_id): void
+	{
+		$field = $this->kb->get_field($field_id);
+		if (!$field)
+		{
+			trigger_error($this->language->lang('KB_FIELD_NOT_FOUND'), E_USER_WARNING);
+		}
+
+		if ($this->request->is_set_post('submit'))
+		{
+			$enabled = $this->request->variable('value_enabled', [0 => 0]);
+			$delete = $this->request->variable('value_delete', [0 => 0]);
+			$new_value_label = utf8_normalize_nfc($this->request->variable('new_value_label', '', true));
+
+			foreach ($this->kb->get_field_values($field_id) as $value)
+			{
+				$value_id = (int) $value['value_id'];
+
+				if (!empty($delete[$value_id]))
+				{
+					$sql = 'DELETE FROM ' . $this->kb->get_field_values_table() . ' WHERE value_id = ' . $value_id;
+					$this->db->sql_query($sql);
+
+					$sql = 'DELETE FROM ' . $this->kb->get_article_field_values_table() . ' WHERE value_id = ' . $value_id;
+					$this->db->sql_query($sql);
+
+					continue;
+				}
+
+				$sql = 'UPDATE ' . $this->kb->get_field_values_table() . '
+					SET enabled = ' . (!empty($enabled[$value_id]) ? 1 : 0) . '
+					WHERE value_id = ' . $value_id;
+				$this->db->sql_query($sql);
+			}
+
+			if ($new_value_label !== '')
+			{
+				$sql = 'SELECT MAX(display_order) AS max_order FROM ' . $this->kb->get_field_values_table() . ' WHERE field_id = ' . $field_id;
+				$result = $this->db->sql_query($sql);
+				$max_order = (int) $this->db->sql_fetchfield('max_order');
+				$this->db->sql_freeresult($result);
+
+				$sql = 'INSERT INTO ' . $this->kb->get_field_values_table() . ' ' . $this->db->sql_build_array('INSERT', [
+					'field_id'      => $field_id,
+					'value_label'   => $new_value_label,
+					'enabled'       => 1,
+					'display_order' => $max_order + 1,
+				]);
+				$this->db->sql_query($sql);
+			}
+
+			meta_refresh(2, $this->u_action . '&amp;action=edit_values&amp;field_id=' . $field_id);
+			trigger_error($this->language->lang('KB_FIELD_UPDATED') . adm_back_link($this->u_action));
+		}
+
+		$this->template->assign_vars([
+			'S_FIELD_VALUES' => true,
+			'FIELD_NAME'     => $field['field_name'],
+			'VALUE_EDITOR'   => $this->field_factory->get($field['field_type'])->render_value_editor($field, $this->kb->get_field_values($field_id)),
+			'U_ACTION'       => $this->u_action . '&amp;action=edit_values&amp;field_id=' . $field_id,
+			'L_TITLE'        => $this->language->lang('ACP_LIBRARY_FIELDS'),
+		]);
+	}
+
+	/**
+	 * END - Custom fields management functions
 	 */
 
 

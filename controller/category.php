@@ -138,6 +138,15 @@ class category
 		$sql_where = ($this->kb->acl_kb_get($cat_id, 'kb_m_approve')) ? '' : 'AND a.approved = 1';
 		$pagination_ary = ['id' => $cat_id];
 
+		// Custom field filter: narrow the listing to articles carrying one
+		// specific field value (e.g. a phpBB version tag).
+		$filter_value_id = $this->request->variable('field_value_id', 0);
+		if ($filter_value_id)
+		{
+			$sql_where .= ' AND a.article_id IN (SELECT article_id FROM ' . $this->kb->get_article_field_values_table() . ' WHERE value_id = ' . $filter_value_id . ')';
+			$pagination_ary['field_value_id'] = $filter_value_id;
+		}
+
 		if ($sort_type == 1)
 		{
 			$sort_dir = $this->request->variable('sd', 'a');
@@ -310,8 +319,30 @@ class category
 		}
 		$this->db->sql_freeresult($result);
 
+		$field_filter_options = '';
+		foreach ($this->kb->get_enabled_fields() as $field)
+		{
+			$values = $this->kb->get_field_values((int) $field['field_id'], true);
+			if (empty($values))
+			{
+				continue;
+			}
+
+			$field_filter_options .= '<optgroup label="' . htmlspecialchars($field['field_name']) . '">';
+			foreach ($values as $value)
+			{
+				$selected = ((int) $value['value_id'] === $filter_value_id) ? ' selected="selected"' : '';
+				$field_filter_options .= '<option value="' . (int) $value['value_id'] . '"' . $selected . '>' . htmlspecialchars($value['value_label']) . '</option>';
+			}
+			$field_filter_options .= '</optgroup>';
+		}
+
 		$this->template->assign_vars([
 				'CATS_DROPBOX'        => $this->kb->make_category_dropbox(),
+				'S_FIELD_FILTER'         => $field_filter_options !== '',
+				'FIELD_FILTER_OPTIONS'   => $field_filter_options,
+				'S_FIELD_FILTER_ACTIVE'  => (bool) $filter_value_id,
+				'U_RESET_FIELD_FILTER'   => $this->helper->route('phpbbmodders_knowledgebase_category', ['id' => $cat_id]),
 				'CATEGORY'            => $category_name,
 				'CATEGORY_ID'         => $cat_id,
 				'TOTAL_ITEMS'         => $this->language->lang('TOTAL_ITEMS', (int) $article_count),

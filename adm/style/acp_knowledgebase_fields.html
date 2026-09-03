@@ -1,0 +1,74 @@
+{% INCLUDE 'overall_header.html' %}
+{% INCLUDECSS 'css/acp_knowledgebase.css' %}
+
+<form action="{{ S_ACTION }}" method="post">
+	{% if S_FIELD_VALUES %}
+		<h1>{{ lang('ACP_LIBRARY_FIELDS') }} &bull; {{ FIELD_NAME }}</h1>
+		<p>{{ lang('KB_FIELD_VALUES_EXPLAIN') }}</p>
+		<fieldset>
+			{{ VALUE_EDITOR }}
+		</fieldset>
+		<fieldset class="submit-buttons">
+			<input class="button1" type="submit" id="submit" name="submit" value="{{ lang('SUBMIT') }}"/>
+			{{ S_FORM_TOKEN }}
+		</fieldset>
+	{% elseif S_FIELDS %}
+		<h1>{{ lang('ACP_LIBRARY_FIELDS') }}</h1>
+		<p>{{ lang('KB_FIELDS_EXPLAIN') }}</p>
+
+		{% if loops.fields|length %}
+			<table class="table1 zebra-table responsive">
+				<colgroup>
+					<col class="row1"/>
+					<col class="row1"/>
+					<col class="row1"/>
+					<col class="row2"/>
+				</colgroup>
+				<tbody>
+				<tr>
+					<th>{{ lang('KB_FIELD_NAME') }}</th>
+					<th>{{ lang('KB_FIELD_KEY') }}</th>
+					<th>{{ lang('KB_FIELD_TYPE') }}</th>
+					<th>&nbsp;</th>
+				</tr>
+				{% for fields in loops.fields %}
+					<tr>
+						<td>{{ fields.FIELD_NAME }}</td>
+						<td>{{ fields.FIELD_KEY }}</td>
+						<td>{{ fields.FIELD_TYPE_NAME }}</td>
+						<td style="text-align: center; vertical-align: top; white-space: nowrap; width: 120px;">
+							<a href="{{ fields.U_EDIT_VALUES }}">{{ lang('KB_FIELD_EDIT_VALUES') }}</a>
+							&bull;
+							<a href="{{ fields.U_TOGGLE }}">{% if fields.S_ENABLED %}{{ lang('KB_DEACTIVATE') }}{% else %}{{ lang('KB_REACTIVATE') }}{% endif %}</a>
+						</td>
+					</tr>
+				{% endfor %}
+				</tbody>
+			</table>
+		{% else %}
+			<div class="errorbox"><p>{{ lang('KB_NO_FIELDS') }}</p></div>
+		{% endif %}
+
+		<fieldset>
+			<legend>{{ lang('KB_FIELD_ADD') }}</legend>
+			<dl>
+				<dt><label for="field_name">{{ lang('KB_FIELD_NAME') }}{{ lang('COLON') }}</label></dt>
+				<dd><input type="text" name="field_name" id="field_name" maxlength="255" class="inputbox"/></dd>
+			</dl>
+			<dl>
+				<dt><label for="field_key">{{ lang('KB_FIELD_KEY') }}{{ lang('COLON') }}</label><br>
+					<span>{{ lang('KB_FIELD_KEY_EXPLAIN') }}</span></dt>
+				<dd><input type="text" name="field_key" id="field_key" maxlength="100" class="inputbox"/></dd>
+			</dl>
+			<dl>
+				<dt><label for="field_type">{{ lang('KB_FIELD_TYPE') }}{{ lang('COLON') }}</label></dt>
+				<dd><label><select name="field_type" id="field_type">{{ TYPE_OPTIONS }}</select></label></dd>
+			</dl>
+		</fieldset>
+		<fieldset class="submit-buttons">
+			<input class="button1" type="submit" id="submit" name="submit" value="{{ lang('KB_FIELD_ADD') }}"/>
+			{{ S_FORM_TOKEN }}
+		</fieldset>
+	{% endif %}
+</form>
+{% INCLUDE 'overall_footer.html' %}

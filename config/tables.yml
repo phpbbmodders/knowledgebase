@@ -11,3 +11,6 @@ parameters:
     tables.wordlist_table: '%core.table_prefix%kb_src_wrdlist'
     tables.kb_revisions_table: '%core.table_prefix%kb_article_revisions'
     tables.kb_article_categories_table: '%core.table_prefix%kb_article_categories'
+    tables.kb_fields_table: '%core.table_prefix%kb_fields'
+    tables.kb_field_values_table: '%core.table_prefix%kb_field_values'
+    tables.kb_article_field_values_table: '%core.table_prefix%kb_article_field_values'

@@ -100,6 +100,15 @@ class functions_kb
 	/** @var string */
 	protected string $article_categories_table;
 
+	/** @var string */
+	protected string $fields_table;
+
+	/** @var string */
+	protected string $field_values_table;
+
+	/** @var string */
+	protected string $article_field_values_table;
+
 	/** @var group_helper */
 	protected group_helper $group_helper;
 
@@ -131,6 +140,9 @@ class functions_kb
 	 * @param string           $kb_groups_table
 	 * @param string           $revisions_table
 	 * @param string           $article_categories_table
+	 * @param string           $fields_table
+	 * @param string           $field_values_table
+	 * @param string           $article_field_values_table
 	 * @param group_helper     $group_helper
 	 */
 	public function __construct(
@@ -138,7 +150,8 @@ class functions_kb
 		language $language, auth $auth, template $template, user $user, cache $cache, log $log,
 		string $phpbb_root_path, string $php_ext, string $articles_table, string $categories_table,
 		string $kb_logs_table, string $attachments_table, string $options_table, string $kb_users_table,
-		string $kb_groups_table, string $revisions_table, string $article_categories_table, group_helper $group_helper
+		string $kb_groups_table, string $revisions_table, string $article_categories_table,
+		string $fields_table, string $field_values_table, string $article_field_values_table, group_helper $group_helper
 	)
 	{
 		$this->db = $db;
@@ -163,6 +176,9 @@ class functions_kb
 		$this->kb_groups_table = $kb_groups_table;
 		$this->revisions_table = $revisions_table;
 		$this->article_categories_table = $article_categories_table;
+		$this->fields_table = $fields_table;
+		$this->field_values_table = $field_values_table;
+		$this->article_field_values_table = $article_field_values_table;
 		$this->group_helper = $group_helper;
 
 		$this->upload_dir = $this->ext_manager->get_extension_path('phpbbmodders/knowledgebase', true) . 'files/';
@@ -425,6 +441,30 @@ class functions_kb
 	}
 
 	/**
+	 * @return string
+	 */
+	public function get_fields_table(): string
+	{
+		return $this->fields_table;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function get_field_values_table(): string
+	{
+		return $this->field_values_table;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function get_article_field_values_table(): string
+	{
+		return $this->article_field_values_table;
+	}
+
+	/**
 	 * Every category an article appears in: its primary category first,
 	 * then any cross-listed categories.
 	 *
@@ -492,6 +532,167 @@ class functions_kb
 			];
 		}
 		$this->db->sql_multi_insert($this->article_categories_table, $sql_ary);
+	}
+
+	/**
+	 * Every enabled custom field.
+	 *
+	 * @return array
+	 */
+	public function get_enabled_fields(): array
+	{
+		$fields = [];
+		$sql = 'SELECT *
+			FROM ' . $this->fields_table . '
+			WHERE enabled = 1';
+		$result = $this->db->sql_query($sql);
+		while ($row = $this->db->sql_fetchrow($result))
+		{
+			$fields[] = $row;
+		}
+		$this->db->sql_freeresult($result);
+
+		return $fields;
+	}
+
+	/**
+	 * @param int $field_id
+	 * @return array|null
+	 */
+	public function get_field(int $field_id): ?array
+	{
+		$sql = 'SELECT *
+			FROM ' . $this->fields_table . '
+			WHERE field_id = ' . $field_id;
+		$result = $this->db->sql_query($sql);
+		$row = $this->db->sql_fetchrow($result);
+		$this->db->sql_freeresult($result);
+
+		return $row ?: null;
+	}
+
+	/**
+	 * Every field defined, enabled or not - for the ACP field list.
+	 *
+	 * @return array
+	 */
+	public function get_all_fields(): array
+	{
+		$fields = [];
+		$sql = 'SELECT *
+			FROM ' . $this->fields_table . '
+			ORDER BY field_id ASC';
+		$result = $this->db->sql_query($sql);
+		while ($row = $this->db->sql_fetchrow($result))
+		{
+			$fields[] = $row;
+		}
+		$this->db->sql_freeresult($result);
+
+		return $fields;
+	}
+
+	/**
+	 * @param int  $field_id
+	 * @param bool $enabled_only
+	 * @return array
+	 */
+	public function get_field_values(int $field_id, bool $enabled_only = false): array
+	{
+		$values = [];
+		$sql = 'SELECT *
+			FROM ' . $this->field_values_table . '
+			WHERE field_id = ' . $field_id .
+			($enabled_only ? ' AND enabled = 1' : '') . '
+			ORDER BY display_order ASC';
+		$result = $this->db->sql_query($sql);
+		while ($row = $this->db->sql_fetchrow($result))
+		{
+			$values[] = $row;
+		}
+		$this->db->sql_freeresult($result);
+
+		return $values;
+	}
+
+	/**
+	 * The value rows (not just ids) assigned to an article for one field.
+	 *
+	 * @param int $article_id
+	 * @param int $field_id
+	 * @return array
+	 */
+	public function get_article_field_values(int $article_id, int $field_id): array
+	{
+		$values = [];
+		$sql = 'SELECT v.*
+			FROM ' . $this->article_field_values_table . ' a, ' . $this->field_values_table . ' v
+			WHERE a.article_id = ' . $article_id . '
+				AND a.value_id = v.value_id
+				AND v.field_id = ' . $field_id;
+		$result = $this->db->sql_query($sql);
+		while ($row = $this->db->sql_fetchrow($result))
+		{
+			$values[] = $row;
+		}
+		$this->db->sql_freeresult($result);
+
+		return $values;
+	}
+
+	/**
+	 * Just the value_ids assigned to an article for one field, for
+	 * pre-checking the posting-form widget.
+	 *
+	 * @param int $article_id
+	 * @param int $field_id
+	 * @return int[]
+	 */
+	public function get_article_field_value_ids(int $article_id, int $field_id): array
+	{
+		return array_map(function ($value) {
+			return (int) $value['value_id'];
+		}, $this->get_article_field_values($article_id, $field_id));
+	}
+
+	/**
+	 * Replace an article's assigned values for one field. Submitted
+	 * value_ids are validated against the field's actual enabled values -
+	 * anything else is silently dropped, same defense-in-depth style as
+	 * set_cross_listed_categories().
+	 *
+	 * @param int   $article_id
+	 * @param int   $field_id
+	 * @param int[] $value_ids
+	 * @return void
+	 */
+	public function set_article_field_values(int $article_id, int $field_id, array $value_ids): void
+	{
+		$valid_value_ids = array_map(function ($value) {
+			return (int) $value['value_id'];
+		}, $this->get_field_values($field_id, true));
+
+		$value_ids = array_intersect(array_map('intval', $value_ids), $valid_value_ids);
+
+		$sql = 'DELETE FROM ' . $this->article_field_values_table . '
+			WHERE article_id = ' . $article_id . '
+				AND ' . $this->db->sql_in_set('value_id', $valid_value_ids ?: [0]);
+		$this->db->sql_query($sql);
+
+		if (empty($value_ids))
+		{
+			return;
+		}
+
+		$sql_ary = [];
+		foreach ($value_ids as $value_id)
+		{
+			$sql_ary[] = [
+				'article_id' => $article_id,
+				'value_id'   => $value_id,
+			];
+		}
+		$this->db->sql_multi_insert($this->article_field_values_table, $sql_ary);
 	}
 
 	/**

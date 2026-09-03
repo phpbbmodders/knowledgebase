@@ -34,6 +34,7 @@ $lang = array_merge($lang, [
 	'ACP_KNOWLEDGE_BASE_CONFIGURE'        => 'Configuration',
 	'ACP_LIBRARY_MANAGE'                  => 'Knowledge Base Management',
 	'ACP_LIBRARY_ARTICLES'                => 'Articles',
+	'ACP_LIBRARY_FIELDS'                  => 'Custom Fields',
 	'ACP_LIBRARY_PERMISSIONS'             => 'Permissions',
 	'ACP_LIBRARY_SEARCH'                  => 'Search',
 	'ACP_LIBRARY_ATTACHMENTS'             => 'Attachment files',
