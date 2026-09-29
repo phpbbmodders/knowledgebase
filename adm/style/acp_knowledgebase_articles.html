@@ -21,7 +21,7 @@
 				<p>{{ ERROR_MSG }}</p>
 			</div>
 		{% endif %}
-		<form method="get" action="{{ S_CATEGORY_FILTER_ACTION }}" style="margin-bottom: 10px;">
+		<form method="post" action="{{ S_CATEGORY_FILTER_ACTION }}" style="margin-bottom: 10px;">
 			<label>{{ lang('CATEGORY') }}{{ lang('COLON') }}
 				<select name="cat_id" onchange="this.form.submit();">{{ S_CATEGORY_FILTER_OPTIONS }}</select>
 			</label>
