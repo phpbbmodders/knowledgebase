@@ -46,6 +46,7 @@ $lang = array_merge($lang, [
 'PER_PAGE_EXPLAIN'                           => 'Počet článků ve správě článků a vyhledávání.',
 'SORT_TYPE'                                  => 'Řazení',
 'SORT_TYPE_EXPLAIN'                          => 'Typ řazení článků',
+'KB_SORT_POSITION'                           => 'Pozice',
 'FORCIBLY'                                   => 'vlastní pořadí',
 'SELECTABLE'                                 => 'dle data přidání',
 'ALPHABET'                                   => 'abecední navigace',
@@ -92,6 +93,7 @@ $lang = array_merge($lang, [
 'MOVE_ARTICLES_TO'                           => 'Přesunout článek',
 'DELETE_ALL_ARTICLES'                        => 'Delete article',
 'NO_ARTICLES_IN_KB'                          => 'Znalostní báze ještě neobsahuje žádné články.',
+'NO_ARTICLES_IN_CATEGORY'                    => 'Tato kategorie zatím neobsahuje žádné články.',
 
 //Permission
 'ACP_LIBRARY_PERMISSIONS'                    => 'Oprávnění',

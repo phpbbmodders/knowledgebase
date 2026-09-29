@@ -46,6 +46,7 @@ $lang = array_merge($lang, [
 'PER_PAGE_EXPLAIN'                           => 'The number of articles on the management page articles and view page search.',
 'SORT_TYPE'                                  => 'Sorting order',
 'SORT_TYPE_EXPLAIN'                          => 'Method of sorting articles',
+'KB_SORT_POSITION'                           => 'Position',
 'FORCIBLY'                                   => 'forcibly',
 'SELECTABLE'                                 => 'selectable',
 'ALPHABET'                                   => 'alphabetic navigation',
@@ -114,7 +115,8 @@ $lang = array_merge($lang, [
 'EDIT_DATE'                                  => 'Edited',
 'MOVE_ARTICLES_TO'                           => 'Move article',
 'DELETE_ALL_ARTICLES'                        => 'Delete article',
-'NO_ARTICLES_IN_KB'                          => 'The Knowledge Base currently no articles.',
+'NO_ARTICLES_IN_KB'                          => 'The Knowledge Base currently has no articles.',
+'NO_ARTICLES_IN_CATEGORY'                    => 'This category currently has no articles.',
 
 //Permission
 'ACP_LIBRARY_PERMISSIONS'                    => 'Permissions',

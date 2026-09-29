@@ -54,6 +54,10 @@ class articles_module
 				$admin_controller->move_article();
 			break;
 
+			case 'reorder':
+				$admin_controller->reorder_article();
+			break;
+
 			case 'delete':
 				// Load the display options handle in the admin controller
 				$admin_controller->delete_article();
