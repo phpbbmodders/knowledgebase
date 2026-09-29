@@ -149,7 +149,17 @@ class article
 			$this->kb->is_team_member([$effective_team_id]);
 		$is_own_article = $this->kb->is_article_author($art_id, (int) $row['author_id'], (int) $row['author_type']);
 
-		if (!$row['approved'] && !$can_moderate && !$can_review && !$is_own_article)
+		// A draft is private to its author/co-authors - never visible to a
+		// moderator or reviewer the way every other unapproved status is,
+		// since it was never actually submitted for anyone to act on.
+		if ($status === functions_kb::STATUS_DRAFT)
+		{
+			if (!$is_own_article)
+			{
+				return $this->render_notice('ARTICLE_NO_EXISTS');
+			}
+		}
+		else if (!$row['approved'] && !$can_moderate && !$can_review && !$is_own_article)
 		{
 			return $this->render_notice('ARTICLE_NO_EXISTS');
 		}
@@ -293,6 +303,7 @@ class article
 			'S_STATUS_REVIEWED'   => $status === functions_kb::STATUS_REVIEWED,
 			'S_STATUS_ACTIVE'     => $status === functions_kb::STATUS_ACTIVE,
 			'S_STATUS_INACTIVE'   => $status === functions_kb::STATUS_INACTIVE,
+			'S_STATUS_DRAFT'      => $status === functions_kb::STATUS_DRAFT,
 			'S_HAS_REVISION'      => in_array($status, [functions_kb::STATUS_ACTIVE, functions_kb::STATUS_INACTIVE], true) && $this->kb->article_has_pending_revision($art_id),
 		]);
 

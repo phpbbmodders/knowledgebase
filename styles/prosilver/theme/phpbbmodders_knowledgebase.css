@@ -211,6 +211,10 @@ dd.action {
 	background: #00801d;
 }
 
+.kb-status-draft {
+	background: #6c6c6c;
+}
+
 .kb-meta {
 	float: right;
 	text-align: left;

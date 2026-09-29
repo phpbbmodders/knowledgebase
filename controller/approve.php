@@ -157,6 +157,11 @@ class approve
 		$sql_where = $this->auth->acl_get('a_manage_kb') ? '' : ('AND (' . $this->db->sql_in_set('article_category_id', $moderatable) . '
 			OR article_id IN (SELECT article_id FROM ' . $this->kb->get_article_categories_table() . ' WHERE ' . $this->db->sql_in_set('category_id', $moderatable) . '))');
 
+		// A draft was never submitted - it has nothing for a moderator to
+		// act on and stays private to its author, regardless of the
+		// show-all toggle below.
+		$sql_where .= ' AND status <> ' . functions_kb::STATUS_DRAFT;
+
 		// Additive narrowing on top of the "needs attention" listing
 		// below - phpbb.com's Administration page offered the same
 		// four-way split (all/redirects/inactive/one team). Only a
@@ -299,6 +304,13 @@ class approve
 		$kb_category_info = $this->kb->get_cat_info($kb_article_info['article_category_id']);
 		$category_name = $kb_category_info['category_name'];
 		$status = (int) $kb_article_info['status'];
+
+		// A draft was never submitted - not even reachable by a moderator
+		// navigating here directly, same as it's excluded from the queue.
+		if ($status === functions_kb::STATUS_DRAFT)
+		{
+			trigger_error('ARTICLE_NO_EXISTS');
+		}
 		$effective_team_id = (int) $kb_article_info['assigned_team_id'] ?: (int) ($kb_category_info['default_team_id'] ?? 0);
 
 		$is_moderator = $this->user->data['user_type'] == USER_FOUNDER ||

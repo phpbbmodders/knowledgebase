@@ -30,6 +30,11 @@ class functions_kb
 	public const STATUS_REVIEWED = 1;
 	public const STATUS_ACTIVE = 2;
 	public const STATUS_INACTIVE = 3;
+	// Never submitted - visible only to its author/co-authors, never to
+	// moderators or in any public listing or the moderation queue. Value
+	// deliberately appended rather than inserted, so it never collides
+	// with a status already stored for an existing article.
+	public const STATUS_DRAFT = 4;
 
 	public const AUTHOR_TYPE_USER = 0;
 	public const AUTHOR_TYPE_GROUP = 1;

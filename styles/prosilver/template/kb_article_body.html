@@ -24,6 +24,7 @@
 			{% elseif S_STATUS_REVIEWED %}<span class="kb-status-badge kb-status-reviewed">{{ lang('KB_STATUS_REVIEWED') }}</span>
 			{% elseif S_STATUS_ACTIVE %}<span class="kb-status-badge kb-status-active">{{ lang('KB_STATUS_ACTIVE') }}</span>{% if S_HAS_REVISION %} <span class="kb-status-badge kb-status-revision">{{ lang('KB_STATUS_REVISION') }}</span>{% endif %}
 			{% elseif S_STATUS_INACTIVE %}<span class="kb-status-badge kb-status-inactive">{{ lang('KB_STATUS_INACTIVE') }}</span>{% if S_HAS_REVISION %} <span class="kb-status-badge kb-status-revision">{{ lang('KB_STATUS_REVISION') }}</span>{% endif %}
+			{% elseif S_STATUS_DRAFT %}<span class="kb-status-badge kb-status-draft">{{ lang('KB_STATUS_DRAFT') }}</span>
 			{% endif %}
 			<h3 class="first">{{ ARTICLE_TITLE }}</h3>
 			<p class="author">
