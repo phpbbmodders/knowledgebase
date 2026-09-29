@@ -143,23 +143,21 @@ class article
 		$article_categories = $this->kb->get_article_categories($art_id);
 		$status = (int) $row['status'];
 
+		$effective_team_id = $this->kb->get_effective_team_id((int) $row['assigned_team_id'], (int) $cat_id);
 		$can_moderate = $this->auth->acl_get('a_manage_kb') || $this->kb->acl_kb_get_any($article_categories, 'kb_m_approve');
-		$can_review = $status === functions_kb::STATUS_NEW && !empty($row['assigned_team_id']) &&
-			$this->kb->is_team_member([(int) $row['assigned_team_id']]);
-		$is_own_article = ((int) $row['author_type'] === 1)
-			? $this->kb->is_team_member([(int) $row['author_id']])
-			: $this->user->data['user_id'] == $row['author_id'];
+		$can_review = $status === functions_kb::STATUS_NEW && $effective_team_id &&
+			$this->kb->is_team_member([$effective_team_id]);
+		$is_own_article = $this->kb->is_article_author($art_id, (int) $row['author_id'], (int) $row['author_type']);
 
 		if (!$row['approved'] && !$can_moderate && !$can_review && !$is_own_article)
 		{
-			redirect($this->helper->route('phpbbmodders_knowledgebase_category', ['id' => $cat_id]));
+			return $this->render_notice('ARTICLE_NO_EXISTS');
 		}
 
 		if ($row['is_redirect'])
 		{
-			$views = (int) $row['views'] + 1;
 			$sql = 'UPDATE ' . $this->articles_table . '
-				SET views = ' . $views . '
+				SET views = views + 1
 				WHERE article_id = ' . (int) $art_id;
 			$this->db->sql_query($sql);
 
@@ -189,6 +187,16 @@ class article
 				'CATEGORY_NAME' => $cross_catrow['category_name'],
 				'U_CATEGORY'    => $this->helper->route('phpbbmodders_knowledgebase_category', ['id' => $article_category_id]),
 				'S_PRIMARY'     => $article_category_id === (int) $cat_id,
+			]);
+		}
+
+		foreach ($this->kb->get_co_authors_display($art_id) as $co_author)
+		{
+			$this->template->assign_block_vars('co_author', [
+				'NAME'   => $co_author['name'],
+				'COLOUR' => $co_author['colour'],
+				'URL'    => $co_author['url'],
+				'S_GROUP' => $co_author['type'] === functions_kb::AUTHOR_TYPE_GROUP,
 			]);
 		}
 
@@ -285,15 +293,14 @@ class article
 			'S_STATUS_REVIEWED'   => $status === functions_kb::STATUS_REVIEWED,
 			'S_STATUS_ACTIVE'     => $status === functions_kb::STATUS_ACTIVE,
 			'S_STATUS_INACTIVE'   => $status === functions_kb::STATUS_INACTIVE,
-			'S_HAS_REVISION'      => $status === functions_kb::STATUS_ACTIVE && $this->kb->article_has_pending_revision($art_id),
+			'S_HAS_REVISION'      => in_array($status, [functions_kb::STATUS_ACTIVE, functions_kb::STATUS_INACTIVE], true) && $this->kb->article_has_pending_revision($art_id),
 		]);
 
 		if ($mode != 'print' && $row['approved'])
 		{
 			// Increase the number of views
-			$views++;
 			$sql = 'UPDATE ' . $this->articles_table . '
-				SET views = ' . $views . '
+				SET views = views + 1
 				WHERE article_id = ' . (int) $article;
 			$this->db->sql_query($sql);
 		}

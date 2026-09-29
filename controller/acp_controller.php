@@ -310,10 +310,16 @@ class acp_controller
 			'ADVANCED_FORM_ON'         => $this->config['kb_anounce'] ? 'checked="checked"' : '',
 			'ADVANCED_FORM'            => $this->config['kb_anounce'] ? '' : 'none',
 			'FLAT_INDEX_ON'            => $this->config['kb_flat_index'] ? 'checked="checked"' : '',
+			'REQUIRE_PM_ON'            => $this->config['kb_require_author_pm'] ? 'checked="checked"' : '',
 			'PER_PAGE'                 => $this->config['kb_articles_per_page'] ?? 10,
 			'S_YES_ATTACH'             => (bool) $this->config['kb_allow_attachments'],
 			'S_YES_THUMBNAIL'          => (bool) $this->config['kb_allow_thumbnail'],
-			'S_FORUM_POST'             => make_forum_select($this->config['kb_forum_id'], 0, true, true, false),
+			// make_forum_select() never offers a "none" choice on its
+			// own - without prepending one, "leave unset to disable"
+			// (the help text under both fields) was never actually
+			// possible once any forum had been selected.
+			'S_FORUM_POST'             => '<option value="0"' . (!$this->config['kb_forum_id'] ? ' selected="selected"' : '') . '>' . $this->language->lang('KB_NONE_DISABLED') . '</option>' . make_forum_select($this->config['kb_forum_id'], 0, true, true, false),
+			'S_CHANGELOG_FORUM_POST'   => '<option value="0"' . (!$this->config['kb_changelog_forum_id'] ? ' selected="selected"' : '') . '>' . $this->language->lang('KB_NONE_DISABLED') . '</option>' . make_forum_select($this->config['kb_changelog_forum_id'], 0, true, true, false),
 			'S_FORUM_PREFIX'           => $this->config_text->get('kb_forum_prefix'),
 			'S_TOPIC_PREFIX'           => $this->config_text->get('kb_topic_prefix'),
 			'S_FORCIBLY'               => $this->config['kb_sort_type'] == 0,
@@ -353,7 +359,9 @@ class acp_controller
 
 		$this->config->set('kb_anounce', $this->request->variable('anounce', 0));
 		$this->config->set('kb_flat_index', $this->request->variable('flat_index', 0));
+		$this->config->set('kb_require_author_pm', $this->request->variable('require_author_pm', 0));
 		$this->config->set('kb_forum_id', $this->request->variable('forum_id', 0));
+		$this->config->set('kb_changelog_forum_id', $this->request->variable('changelog_forum_id', 0));
 		$this->config_text->set('kb_forum_prefix', utf8_normalize_nfc($this->request->variable('forum_prefix', '', true)));
 		$this->config_text->set('kb_topic_prefix', utf8_normalize_nfc($this->request->variable('topic_prefix', '', true)));
 		$this->config->set('kb_articles_per_page', $this->request->variable('articles_per_page', 15));
@@ -1387,6 +1395,11 @@ class acp_controller
 		if ($category_data['category_name'] == '')
 		{
 			$errors[] = $this->language->lang('NO_CAT_NAME');
+		}
+
+		if (!empty($category_data['default_team_id']) && !in_array((int) $category_data['default_team_id'], $this->kb->get_kb_team_groups(), true))
+		{
+			$errors[] = $this->language->lang('NO_SUCH_TEAM');
 		}
 
 		$category_data_sql = $category_data;
@@ -2886,7 +2899,7 @@ class acp_controller
 			}
 		}
 
-		$cfg_array = (isset($_REQUEST['config'])) ? $this->request->variable('config', ['' => ''], true) : [];
+		$cfg_array = ($this->request->is_set('config')) ? $this->request->variable('config', ['' => ''], true) : [];
 		$updated = $this->request->variable('updated', false);
 
 		foreach ($settings as $config_name => $var_type)

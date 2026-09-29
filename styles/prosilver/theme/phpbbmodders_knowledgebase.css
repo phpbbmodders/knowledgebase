@@ -179,10 +179,14 @@ dd.action {
 	background: #f2f5f7;
 }
 
-.kb-index-table .kb-index-views,
-.kb-index-table .kb-index-author {
+.kb-index-table .kb-index-views {
 	white-space: nowrap;
 	width: 1%;
+}
+
+.kb-index-table .kb-index-author {
+	max-width: 200px;
+	overflow-wrap: break-word;
 }
 
 .kb-status-badge {
@@ -216,4 +220,47 @@ dd.action {
 	border: 1px solid #cccccc;
 	border-radius: 3px;
 	padding: 10px;
+}
+
+/*
+ * phpBB core's own button1/button2 CSS (colours.css, forms.css) only
+ * ever qualifies those classes as a.button1/a.button2/input.button1/
+ * input.button2 - never a bare <button> element. Several of this
+ * extension's templates use <button class="button1/button2"> (needed
+ * where the button's submitted form value has to differ from its
+ * visible label, which <input type="submit"> can't do), which core's
+ * CSS silently never matches, leaving them completely unstyled.
+ */
+button.button1,
+button.button2 {
+	width: auto !important;
+	padding: 1px 3px;
+	border: 1px solid #666666;
+	border-radius: 3px;
+	color: #000000;
+	background-color: #efefef;
+	background-image: linear-gradient(to bottom, #d2d2d2 0%, #efefef 100%);
+	font-family: "Lucida Grande", Verdana, Helvetica, Arial, sans-serif;
+	font-size: 1em;
+	line-height: 1.5;
+	cursor: pointer;
+}
+
+button.button1 {
+	font-weight: bold;
+}
+
+button.button1:hover,
+button.button2:hover {
+	border-color: #d31141;
+	color: #d31141;
+	background-color: #d2d2d2;
+	background-image: linear-gradient(to bottom, #efefef 0%, #d2d2d2 100%);
+}
+
+button.button1:focus,
+button.button2:focus {
+	border-color: #11a3ea;
+	color: #0f4987;
+	outline-style: none;
 }

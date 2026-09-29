@@ -144,10 +144,6 @@ class category
 		$s_sort_key = $s_sort_dir = '';
 		$alphabet = [];
 		$s_can_move = !$flat_all && !$sort_type && $this->kb->acl_kb_get($cat_id, 'kb_m_edit');
-		if ($s_can_move)
-		{
-			add_form_key('kb_reorder');
-		}
 
 		if ($flat_all)
 		{
@@ -220,7 +216,7 @@ class category
 				$b_letter = ($first_letter === $letter) ? '<span class="alphabet">' . $letter . '</span>' : $letter;
 				$url[] = '<a href="' . $this->helper->route('phpbbmodders_knowledgebase_category', ['id' => $cat_id, 'l' => $letter]) . '">' . $b_letter . '</a>';
 			}
-			$sql_where .= ' AND a.article_title LIKE "' . $this->db->sql_escape($first_letter) . '%"';
+			$sql_where .= " AND a.article_title LIKE '" . $this->db->sql_escape($first_letter) . "%'";
 
 			$this->template->assign_vars([
 					'ALPHA_URLS'     => $this->language->lang('ALPHABET_NAV') . '&nbsp;&nbsp;' . implode(' - ', $url) . '&nbsp;&nbsp;&nbsp;&nbsp;',
@@ -333,14 +329,35 @@ class category
 			. $order_by;
 
 		$result = $this->db->sql_query_limit($sql, $per_page, $start);
+		$art_rows = [];
 		while ($art_row = $this->db->sql_fetchrow($result))
 		{
+			$art_rows[] = $art_row;
+		}
+		$this->db->sql_freeresult($result);
+
+		// Batched once for the whole page instead of per row, since a
+		// per-row is_article_author()/get_co_authors_display() call would
+		// otherwise re-query the co-author, users, and groups tables for
+		// every article in the listing.
+		$art_ids = array_map(static function ($art_row) {
+			return (int) $art_row['article_id'];
+		}, $art_rows);
+		$is_own_article_map = $this->kb->is_article_author_bulk($art_rows);
+		$co_authors_display_map = $this->kb->get_co_authors_display_bulk($art_ids);
+
+		foreach ($art_rows as $art_row)
+		{
 			$art_id = $art_row['article_id'];
-			$author_id = $art_row['author_id'] ?? ANONYMOUS;
 			$article_categories = $this->kb->get_article_categories($art_id);
-			$is_own_article = ((int) $art_row['author_type'] === 1)
-				? $this->kb->is_team_member([(int) $author_id])
-				: $this->user->data['user_id'] == $author_id;
+			$is_own_article = $is_own_article_map[(int) $art_id] ?? false;
+
+			$co_author_links = [];
+			foreach ($co_authors_display_map[(int) $art_id] ?? [] as $co_author)
+			{
+				$style = $co_author['type'] === functions_kb::AUTHOR_TYPE_GROUP ? ' style="color: #' . $co_author['colour'] . ';"' : '';
+				$co_author_links[] = '<a href="' . $co_author['url'] . '"' . $style . '>' . $co_author['name'] . '</a>';
+			}
 
 			$this->template->assign_block_vars('art_row', [
 				'ID'                  => $art_id,
@@ -348,6 +365,7 @@ class category
 				'U_ARTICLE'           => $this->helper->route('phpbbmodders_knowledgebase_article', ['k' => $art_row['article_id']]),
 				'ARTICLE_TITLE'       => $art_row['article_title'],
 				'ARTICLE_AUTHOR'      => ((int) $art_row['author_type'] === 1) ? $art_row['author'] : get_username_string('full', $art_row['author_id'], $art_row['username'], $art_row['user_colour']),
+				'CO_AUTHORS'          => implode(', ', $co_author_links),
 				'ARTICLE_DESCRIPTION' => $art_row['article_description'],
 				'ARTICLE_DATE'        => $this->user->format_date($art_row['article_date']),
 				'ART_VIEWS'           => $art_row['views'],
@@ -359,9 +377,10 @@ class category
 				'STATUS'              => (int) $art_row['status'],
 				'S_CROSS_LISTED'      => !$flat_all && (int) $art_row['article_category_id'] !== (int) $cat_id,
 				'S_IS_REDIRECT'       => (bool) $art_row['is_redirect'],
+				'U_MOVE_UP'           => $this->helper->route('phpbbmodders_knowledgebase_set_order', ['k' => $art_id, 'cat_id' => $cat_id, 'direction' => 'up', 'start' => $start, 'hash' => generate_link_hash('kb_move_article')]),
+				'U_MOVE_DOWN'         => $this->helper->route('phpbbmodders_knowledgebase_set_order', ['k' => $art_id, 'cat_id' => $cat_id, 'direction' => 'down', 'start' => $start, 'hash' => generate_link_hash('kb_move_article')]),
 			]);
 		}
-		$this->db->sql_freeresult($result);
 
 		$field_filter_options = '';
 		foreach ($this->kb->get_enabled_fields() as $field)

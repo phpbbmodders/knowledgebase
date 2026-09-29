@@ -156,8 +156,39 @@ class approve
 		// acl_kb_get_any() across every one of the article's categories.
 		$sql_where = $this->auth->acl_get('a_manage_kb') ? '' : ('AND (' . $this->db->sql_in_set('article_category_id', $moderatable) . '
 			OR article_id IN (SELECT article_id FROM ' . $this->kb->get_article_categories_table() . ' WHERE ' . $this->db->sql_in_set('category_id', $moderatable) . '))');
-		$sql_where .= ' AND (status <> ' . functions_kb::STATUS_ACTIVE . '
-			OR article_id IN (SELECT article_id FROM ' . $this->kb->get_revisions_table() . '))';
+
+		// Additive narrowing on top of the "needs attention" listing
+		// below - phpbb.com's Administration page offered the same
+		// four-way split (all/redirects/inactive/one team). Only a
+		// filter with "show all" checked can see past needs-attention
+		// (e.g. an already-published, auto-approved redirect) - by
+		// default the queue stays exactly what its name says.
+		$filter = $this->request->variable('filter', '');
+		$show_all = $this->request->variable('show_all', false);
+		$filter_team_id = 0;
+
+		if (!$show_all)
+		{
+			$sql_where .= ' AND (status <> ' . functions_kb::STATUS_ACTIVE . '
+				OR article_id IN (SELECT article_id FROM ' . $this->kb->get_revisions_table() . '))';
+		}
+
+		if ($filter === 'redirect')
+		{
+			$sql_where .= ' AND is_redirect = 1';
+		}
+		else if ($filter === 'inactive')
+		{
+			$sql_where .= ' AND status = ' . functions_kb::STATUS_INACTIVE;
+		}
+		else if (str_starts_with($filter, 'team_'))
+		{
+			$filter_team_id = (int) substr($filter, 5);
+			if ($filter_team_id)
+			{
+				$sql_where .= ' AND assigned_team_id = ' . $filter_team_id;
+			}
+		}
 
 		$sql = 'SELECT COUNT(article_id) AS article_count
 			FROM ' . $this->articles_table . '
@@ -166,7 +197,16 @@ class approve
 		$article_count = (int) $this->db->sql_fetchfield('article_count');
 		$this->db->sql_freeresult($result);
 
-		$pagination_url = $this->helper->route('phpbbmodders_knowledgebase_queue');
+		$pagination_ary = [];
+		if ($filter)
+		{
+			$pagination_ary['filter'] = $filter;
+		}
+		if ($show_all)
+		{
+			$pagination_ary['show_all'] = 1;
+		}
+		$pagination_url = $this->helper->route('phpbbmodders_knowledgebase_queue', $pagination_ary);
 		if ($article_count)
 		{
 			$this->pagination->generate_template_pagination($pagination_url, 'pagination', 'start', $article_count, $per_page, $start);
@@ -182,7 +222,12 @@ class approve
 			$art_id = (int) $art_row['article_id'];
 			$status = (int) $art_row['status'];
 			$category_info = $this->kb->get_cat_info((int) $art_row['article_category_id']);
-			$has_revision = $status === functions_kb::STATUS_ACTIVE && $this->kb->article_has_pending_revision($art_id);
+			// A revision survives deactivation - a moderator pulling a live
+			// article offline over a contentious edit still needs to see
+			// and act on it, not just get "Reactivate".
+			$has_revision = in_array($status, [functions_kb::STATUS_ACTIVE, functions_kb::STATUS_INACTIVE], true) && $this->kb->article_has_pending_revision($art_id);
+			$assigned_team_id = (int) $art_row['assigned_team_id'];
+			$effective_team_id = $assigned_team_id ?: (int) ($category_info['default_team_id'] ?? 0);
 
 			$this->template->assign_block_vars('art_row', [
 				'ID'                     => $art_id,
@@ -197,15 +242,34 @@ class approve
 				'S_STATUS_ACTIVE'        => $status === functions_kb::STATUS_ACTIVE,
 				'S_STATUS_INACTIVE'      => $status === functions_kb::STATUS_INACTIVE,
 				'S_HAS_REVISION'         => $has_revision,
-				'S_IS_ASSIGNED'          => (bool) $art_row['assigned_team_id'],
+				// Whether an explicit per-article team is set - controls
+				// the "Assign" button, independent of the category's
+				// default team below.
+				'S_IS_ASSIGNED'          => (bool) $assigned_team_id,
+				// Whether the article can actually be reviewed right now
+				// (explicit assignment, or the category's default team) -
+				// controls the "Mark Reviewed" option. No separate
+				// moderator check needed: every row reaching this loop
+				// already passed the $moderatable/a_manage_kb scoping in
+				// this method's own SQL WHERE above, the same kb_m_approve
+				// check do_review()'s $is_moderator uses.
+				'S_CAN_REVIEW'           => $status === functions_kb::STATUS_NEW && $effective_team_id,
+				'U_TOPIC'                => $art_row['topic_id'] ? append_sid("{$this->phpbb_root_path}viewtopic." . $this->php_ext, 'f=' . $this->config['kb_forum_id'] . '&amp;t=' . $art_row['topic_id']) : '',
 			]);
 		}
 		$this->db->sql_freeresult($result);
 
 		$this->template->assign_vars([
-			'TOTAL_ITEMS'         => $this->language->lang('TOTAL_ITEMS', $article_count),
-			'CURRENT_PAGE_NUMBER' => $this->pagination->get_on_page($per_page, $start),
-			'S_KNOWLEDGEBASE'     => true,
+			'TOTAL_ITEMS'            => $this->language->lang('TOTAL_ITEMS', $article_count),
+			'CURRENT_PAGE_NUMBER'    => $this->pagination->get_on_page($per_page, $start),
+			'S_KNOWLEDGEBASE'        => true,
+			'S_ACTION'               => $this->helper->route('phpbbmodders_knowledgebase_queue'),
+			'S_FILTER_REDIRECT'      => $filter === 'redirect',
+			'S_FILTER_INACTIVE'      => $filter === 'inactive',
+			'TEAM_FILTER_OPTIONS'    => $this->get_team_filter_options($filter_team_id),
+			'S_SHOW_ALL'             => $show_all,
+			'S_FILTER_ACTIVE'        => (bool) $filter || $show_all,
+			'U_RESET_FILTER'         => $this->helper->route('phpbbmodders_knowledgebase_queue'),
 		]);
 
 		$this->template->assign_block_vars('navlinks', [
@@ -235,12 +299,19 @@ class approve
 		$kb_category_info = $this->kb->get_cat_info($kb_article_info['article_category_id']);
 		$category_name = $kb_category_info['category_name'];
 		$status = (int) $kb_article_info['status'];
+		$effective_team_id = (int) $kb_article_info['assigned_team_id'] ?: (int) ($kb_category_info['default_team_id'] ?? 0);
 
 		$is_moderator = $this->user->data['user_type'] == USER_FOUNDER ||
 			$this->auth->acl_get('a_manage_kb') ||
 			$this->kb->acl_kb_get_any($this->kb->get_article_categories($art_id), 'kb_m_approve');
 
-		$redirect = $this->helper->route('phpbbmodders_knowledgebase_category', ['id' => $kb_article_info['article_category_id']]);
+		// Actions submitted from the Administration queue's own row form
+		// (deactivate/reactivate/review) should return there, not to the
+		// category page - the moderator is working through a list, not
+		// looking at one article's page.
+		$redirect = $this->request->variable('redirect_queue', false)
+			? $this->helper->route('phpbbmodders_knowledgebase_queue')
+			: $this->helper->route('phpbbmodders_knowledgebase_category', ['id' => $kb_article_info['article_category_id']]);
 
 		add_form_key('kb_approve');
 
@@ -256,6 +327,26 @@ class approve
 				trigger_error('RULES_KB_APPROVE_MOD_CANNOT');
 			}
 
+			// Approve/deny message the author (see notification\method\pm) -
+			// the moderator must either write a reason or explicitly skip
+			// messaging them, no silent default either way.
+			$reason = '';
+			if (in_array($action, ['approve', 'deny'], true))
+			{
+				$reason = $this->request->variable('reason', '', true);
+				$skip_message = $this->request->variable('skip_message', false);
+
+				if ($reason === '' && !$skip_message)
+				{
+					// The compact queue-row form has no reason/skip fields
+					// at all, so this is also what a queue-submitted
+					// approve/deny hits - point them at the article's own
+					// approve page, the only place those fields exist.
+					$article_url = $this->helper->route('phpbbmodders_knowledgebase_approve', ['id' => $art_id]);
+					trigger_error(sprintf($this->language->lang('KB_REASON_REQUIRED'), '<a href="' . $article_url . '">', '</a>'), E_USER_WARNING);
+				}
+			}
+
 			switch ($action)
 			{
 				case 'assign':
@@ -263,15 +354,15 @@ class approve
 				break;
 
 				case 'review':
-					$this->do_review($art_id, $status, $kb_article_info, $is_moderator);
+					$this->do_review($art_id, $status, $effective_team_id, $is_moderator);
 				break;
 
 				case 'approve':
-					$this->do_approve($art_id, $status, $kb_article_info, $kb_category_info, $redirect);
+					$this->do_approve($art_id, $status, $kb_article_info, $kb_category_info, $redirect, $reason);
 				break;
 
 				case 'deny':
-					$this->do_deny($art_id, $status, $kb_article_info, $kb_category_info, $redirect);
+					$this->do_deny($art_id, $status, $kb_article_info, $kb_category_info, $redirect, $reason);
 				break;
 
 				case 'deactivate':
@@ -292,7 +383,7 @@ class approve
 			}
 		}
 
-		$has_revision = $status === functions_kb::STATUS_ACTIVE && $this->kb->article_has_pending_revision($art_id);
+		$has_revision = in_array($status, [functions_kb::STATUS_ACTIVE, functions_kb::STATUS_INACTIVE], true) && $this->kb->article_has_pending_revision($art_id);
 		$revision = $has_revision ? $this->kb->get_article_revision($art_id) : null;
 
 		$this->template->assign_vars([
@@ -306,16 +397,24 @@ class approve
 			'S_STATUS_INACTIVE'     => $status === functions_kb::STATUS_INACTIVE,
 			'S_HAS_REVISION'        => $has_revision,
 			// The moderator must see what they're actually approving,
-			// not just the currently-live title/description above.
+			// not just the currently-live title/description above - and
+			// what it's replacing, so the two can be compared on this
+			// page directly instead of needing the changelog topic.
+			'CURRENT_TEXT'          => $has_revision ? generate_text_for_display($kb_article_info['article_body'], $kb_article_info['bbcode_uid'], false, 3, true) : '',
 			'REVISION_TITLE'        => $revision ? $revision['article_title'] : '',
 			'REVISION_DESCRIPTION'  => $revision ? $revision['article_description'] : '',
 			'REVISION_TEXT'         => $revision ? generate_text_for_display($revision['article_body'], $revision['bbcode_uid'], false, 3, true) : '',
 			'S_IS_MODERATOR'        => $is_moderator,
 			'S_IS_ASSIGNED'         => (bool) $kb_article_info['assigned_team_id'],
-			'S_CAN_REVIEW'          => $status === functions_kb::STATUS_NEW && (bool) $kb_article_info['assigned_team_id'] &&
-				($is_moderator || $this->kb->is_team_member([(int) $kb_article_info['assigned_team_id']])),
+			'S_CAN_REVIEW'          => $status === functions_kb::STATUS_NEW && $effective_team_id &&
+				($is_moderator || $this->kb->is_team_member([$effective_team_id])),
 			'S_TEAM_OPTIONS'        => $this->get_team_options((int) $kb_article_info['assigned_team_id']),
+			// Approve and deny both message the author - show the reason
+			// field whenever either button is available.
+			'S_SHOW_REASON_FIELD'   => $is_moderator && in_array($status, [functions_kb::STATUS_NEW, functions_kb::STATUS_REVIEWED], true),
 			'S_ACTION'              => $this->helper->route('phpbbmodders_knowledgebase_approve', ['id' => $art_id]),
+			'U_TOPIC'               => $kb_article_info['topic_id'] ? append_sid("{$this->phpbb_root_path}viewtopic." . $this->php_ext, 'f=' . $this->config['kb_forum_id'] . '&amp;t=' . $kb_article_info['topic_id']) : '',
+			'S_KNOWLEDGEBASE'       => true,
 		]);
 
 		$this->kb->assign_nav_tabs_vars('admin', (int) $kb_article_info['article_category_id']);
@@ -346,20 +445,22 @@ class approve
 	}
 
 	/**
-	 * @param int   $art_id
-	 * @param int   $status
-	 * @param array $kb_article_info
-	 * @param bool  $is_moderator
+	 * @param int  $art_id
+	 * @param int  $status
+	 * @param int  $effective_team_id The article's own assigned_team_id,
+	 *             or its category's default_team_id when unset - see
+	 *             functions_kb::get_effective_team_id().
+	 * @param bool $is_moderator
 	 * @return void
 	 */
-	protected function do_review(int $art_id, int $status, array $kb_article_info, bool $is_moderator): void
+	protected function do_review(int $art_id, int $status, int $effective_team_id, bool $is_moderator): void
 	{
-		if ($status !== functions_kb::STATUS_NEW || empty($kb_article_info['assigned_team_id']))
+		if ($status !== functions_kb::STATUS_NEW || !$effective_team_id)
 		{
 			return;
 		}
 
-		if (!$is_moderator && !$this->kb->is_team_member([(int) $kb_article_info['assigned_team_id']]))
+		if (!$is_moderator && !$this->kb->is_team_member([$effective_team_id]))
 		{
 			trigger_error('RULES_KB_APPROVE_MOD_CANNOT');
 		}
@@ -374,9 +475,10 @@ class approve
 	 * @param array  $kb_article_info
 	 * @param array  $kb_category_info
 	 * @param string $redirect
+	 * @param string $reason Empty means the moderator explicitly skipped messaging the author.
 	 * @return void
 	 */
-	protected function do_approve(int $art_id, int $status, array $kb_article_info, array $kb_category_info, string $redirect): void
+	protected function do_approve(int $art_id, int $status, array $kb_article_info, array $kb_category_info, string $redirect, string $reason = ''): void
 	{
 		if ($status !== functions_kb::STATUS_REVIEWED)
 		{
@@ -418,7 +520,7 @@ class approve
 		$this->log->add('admin', $this->user->data['user_id'], $this->user->data['user_ip'], 'LOG_LIBRARY_APPROVED_ARTICLE', time(), [$kb_article_info['article_title'], $kb_category_info['category_name'], $kb_article_info['author']]);
 
 		$this->delete_need_approval_notification($art_id, $kb_article_info);
-		$this->send_author_notification($art_id, $kb_article_info, 'phpbbmodders.knowledgebase.notification.type.approve');
+		$this->send_author_notification($art_id, $kb_article_info, 'phpbbmodders.knowledgebase.notification.type.approve', $reason);
 
 		meta_refresh(2, $redirect);
 		trigger_error('ARTICLE_APPROVED_SUCESS');
@@ -430,9 +532,10 @@ class approve
 	 * @param array  $kb_article_info
 	 * @param array  $kb_category_info
 	 * @param string $redirect
+	 * @param string $reason Empty means the moderator explicitly skipped messaging the author.
 	 * @return void
 	 */
-	protected function do_deny(int $art_id, int $status, array $kb_article_info, array $kb_category_info, string $redirect): void
+	protected function do_deny(int $art_id, int $status, array $kb_article_info, array $kb_category_info, string $redirect, string $reason = ''): void
 	{
 		if (!in_array($status, [functions_kb::STATUS_NEW, functions_kb::STATUS_REVIEWED], true))
 		{
@@ -448,7 +551,7 @@ class approve
 		$this->log->add('admin', $this->user->data['user_id'], $this->user->data['user_ip'], 'LOG_LIBRARY_REJECTED_ARTICLE', time(), [$kb_article_info['article_title'], $kb_category_info['category_name'], $kb_article_info['author']]);
 
 		$this->delete_need_approval_notification($art_id, $kb_article_info);
-		$this->send_author_notification($art_id, $kb_article_info, 'phpbbmodders.knowledgebase.notification.type.disapprove');
+		$this->send_author_notification($art_id, $kb_article_info, 'phpbbmodders.knowledgebase.notification.type.disapprove', $reason);
 
 		meta_refresh(2, $redirect);
 		trigger_error('ARTICLE_DISAPPROVED_SUCESS');
@@ -474,6 +577,14 @@ class approve
 		$this->db->sql_query($sql);
 		$this->cache->destroy('sql', $this->articles_table);
 
+		// Working through the Administration queue: go straight back to
+		// the list rather than the classic 2-second confirmation page -
+		// there's only one place to go, not a choice between two links.
+		if ($this->request->variable('redirect_queue', false))
+		{
+			redirect($redirect);
+		}
+
 		meta_refresh(2, $redirect);
 		trigger_error($to_status === functions_kb::STATUS_ACTIVE ? 'ARTICLE_REACTIVATED' : 'ARTICLE_DEACTIVATED');
 	}
@@ -487,7 +598,10 @@ class approve
 	 */
 	protected function do_approve_revision(int $art_id, int $status, array $kb_article_info, string $redirect): void
 	{
-		if ($status !== functions_kb::STATUS_ACTIVE)
+		// Deliberately allowed on a deactivated article too - the revision
+		// content is approved/rejected independently of the reactivate
+		// decision, which the moderator still makes separately below.
+		if (!in_array($status, [functions_kb::STATUS_ACTIVE, functions_kb::STATUS_INACTIVE], true))
 		{
 			return;
 		}
@@ -541,7 +655,7 @@ class approve
 	 */
 	protected function do_reject_revision(int $art_id, int $status, string $redirect): void
 	{
-		if ($status !== functions_kb::STATUS_ACTIVE)
+		if (!in_array($status, [functions_kb::STATUS_ACTIVE, functions_kb::STATUS_INACTIVE], true))
 		{
 			return;
 		}
@@ -571,9 +685,10 @@ class approve
 	 * @param int    $art_id
 	 * @param array  $kb_article_info
 	 * @param string $notification_type
+	 * @param string $reason Empty means the moderator explicitly skipped messaging the author (see notification\method\pm).
 	 * @return void
 	 */
-	protected function send_author_notification(int $art_id, array $kb_article_info, string $notification_type): void
+	protected function send_author_notification(int $art_id, array $kb_article_info, string $notification_type, string $reason = ''): void
 	{
 		$this->notification_manager->add_notifications($notification_type, [
 			'author_id'   => $kb_article_info['author_id'],
@@ -581,6 +696,7 @@ class approve
 			'title'       => $kb_article_info['article_title'],
 			'moderator'   => $this->user->data['user_id'],
 			'item_id'     => $art_id,
+			'reason'      => $reason,
 		]);
 	}
 
@@ -594,6 +710,25 @@ class approve
 		foreach ($this->kb->get_kb_team_group_names() as $group_id => $group_name)
 		{
 			$options .= '<option value="' . $group_id . '"' . ($group_id === $selected_team_id ? ' selected="selected"' : '') . '>' . $group_name . '</option>';
+		}
+		return $options;
+	}
+
+	/**
+	 * Same team list as get_team_options(), but for the queue's
+	 * "scoped to one team" filter - option values are prefixed
+	 * (team_<id>) so a single <select> can mix them with the
+	 * non-team filter choices (all/redirects/inactive).
+	 *
+	 * @param int $selected_team_id
+	 * @return string
+	 */
+	protected function get_team_filter_options(int $selected_team_id): string
+	{
+		$options = '';
+		foreach ($this->kb->get_kb_team_group_names() as $group_id => $group_name)
+		{
+			$options .= '<option value="team_' . $group_id . '"' . ($group_id === $selected_team_id ? ' selected="selected"' : '') . '>' . $group_name . '</option>';
 		}
 		return $options;
 	}

@@ -11,6 +11,7 @@
 
 namespace phpbbmodders\knowledgebase\notification\type;
 
+use phpbb\config\config;
 use phpbb\controller\helper;
 use phpbb\group\helper as group_helper;
 use phpbb\user_loader;
@@ -33,6 +34,8 @@ class approve extends \phpbb\notification\type\base
 	protected user_loader $user_loader;
 	/** @var group_helper */
 	protected group_helper $group_helper;
+	/** @var config */
+	protected config $config;
 	/** @var string */
 	protected string $kb_options_table;
 	/** @var string */
@@ -86,6 +89,15 @@ class approve extends \phpbb\notification\type\base
 	}
 
 	/**
+	 * @param config $config
+	 * @return void
+	 */
+	public function set_config(config $config): void
+	{
+		$this->config = $config;
+	}
+
+	/**
 	 * @param string $kb_options_table
 	 * @param string $kb_users_table
 	 * @param string $kb_groups_table
@@ -116,7 +128,7 @@ class approve extends \phpbb\notification\type\base
 	 */
 	public function is_available(): bool
 	{
-		return false;
+		return true;
 	}
 
 	/**
@@ -132,7 +144,32 @@ class approve extends \phpbb\notification\type\base
 		$options = array_merge(['ignore_users' => [],], $options);
 
 		$users = $this->get_author_user_ids((int) $type_data['author_id'], (int) ($type_data['author_type'] ?? 0));
-		return $this->check_user_notification_options($users, $options);
+		$notify_users = $this->check_user_notification_options($users, $options);
+
+		// When required, the author's PM notification can't be something
+		// they've quietly turned off in their UCP notification options -
+		// added here regardless of what check_user_notification_options()
+		// (which only reflects each user's own preference) returned for
+		// them, including a user who disabled every method for this type
+		// entirely (absent from $notify_users, not just missing the PM
+		// method specifically).
+		if (!empty($this->config['kb_require_author_pm']))
+		{
+			$pm_method = 'phpbbmodders.knowledgebase.notification.method.pm';
+			foreach ($users as $user_id)
+			{
+				if (!isset($notify_users[$user_id]))
+				{
+					$notify_users[$user_id] = [];
+				}
+				if (!in_array($pm_method, $notify_users[$user_id], true))
+				{
+					$notify_users[$user_id][] = $pm_method;
+				}
+			}
+		}
+
+		return $notify_users;
 	}
 
 	/**
@@ -289,8 +326,50 @@ class approve extends \phpbb\notification\type\base
 		$this->set_data('title', $type_data['title']);
 		$this->set_data('moderator', $type_data['moderator']);
 		$this->set_data('item_id', $type_data['item_id']);
+		// Empty means the moderator explicitly chose not to message the
+		// author - see approve.php's KB_REASON_REQUIRED validation. Read
+		// by notification\method\pm, not by the bell.
+		$this->set_data('reason', $type_data['reason'] ?? '');
 
 		parent::create_insert_array($type_data, $pre_create_data);
+	}
+
+	/**
+	 * Whether the moderator wrote a reason (vs. explicitly skipping the
+	 * author message) - get_data() is protected, so notification\method\pm
+	 * needs a public accessor to check this before sending anything.
+	 *
+	 * @return string
+	 */
+	public function get_reason(): string
+	{
+		return (string) $this->get_data('reason');
+	}
+
+	/**
+	 * PM subject when this notification is delivered via
+	 * notification\method\pm instead of (or alongside) the bell.
+	 *
+	 * @return string
+	 */
+	public function get_pm_subject(): string
+	{
+		return $this->language->lang('KB_PM_APPROVE_SUBJECT', censor_text($this->get_data('title')));
+	}
+
+	/**
+	 * @return string
+	 */
+	public function get_pm_message(): string
+	{
+		$moderator_name = $this->user_loader->get_username($this->get_data('moderator'), 'username');
+
+		return $this->language->lang(
+			'KB_PM_APPROVE_MESSAGE',
+			$moderator_name,
+			censor_text($this->get_data('title')),
+			(string) $this->get_data('reason')
+		);
 	}
 
 	/**

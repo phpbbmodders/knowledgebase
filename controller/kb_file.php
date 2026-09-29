@@ -182,11 +182,11 @@ class kb_file
 	 */
 	/**
 	 * @param $filename
-	 * @return bool|string
+	 * @return string
 	 */
-	protected function filenameFallback($filename): bool|string
+	protected function filenameFallback($filename): string
 	{
 		$filename = preg_replace(['/[^\x20-\x7e]/', '/%/', '/\//', '/\\\/'], '', $filename);
-		return (!empty($filename)) ?: 'File';
+		return $filename ?: 'File';
 	}
 }

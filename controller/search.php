@@ -348,7 +348,6 @@ class search
 						$row['bbcode_bitfield'] = false;
 						$parse_flags = ($row['bbcode_bitfield'] ? OPTION_FLAG_BBCODE : 0) | OPTION_FLAG_SMILIES;
 						$row['article_body'] = generate_text_for_display($message, $row['bbcode_uid'], $row['bbcode_bitfield'], $parse_flags, false);
-						$row['article_body'] = strtr($row['article_body'], ['&lt;' => '<', '&gt;' => '>']);
 					}
 
 					if ($hilit)

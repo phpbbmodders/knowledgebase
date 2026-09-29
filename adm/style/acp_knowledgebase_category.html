@@ -45,6 +45,18 @@
 			</dl>
 			<dl>
 				<dt>
+					<label for="default_team_id">{{ lang('CAT_DEFAULT_TEAM') }}{{ lang('COLON') }}</label><br>
+					<span>{{ lang('CAT_DEFAULT_TEAM_EXPLAIN') }}</span>
+				</dt>
+				<dd>
+					<select id="default_team_id" name="default_team_id">
+						<option value="0">{{ lang('CAT_DEFAULT_TEAM_NONE') }}</option>
+						{{ S_DEFAULT_TEAM_OPTIONS }}
+					</select>
+				</dd>
+			</dl>
+			<dl>
+				<dt>
 					<label for="cat_perm_from">{{ lang('COPY_CAT_PERMISSIONS') }}{{ lang('COLON') }}</label><br>
 					<span>{{ lang('COPY_CAT_PERMISSIONS_EXPLAIN') }}</span>
 				</dt>

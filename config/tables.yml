@@ -14,3 +14,4 @@ parameters:
     tables.kb_fields_table: '%core.table_prefix%kb_fields'
     tables.kb_field_values_table: '%core.table_prefix%kb_field_values'
     tables.kb_article_field_values_table: '%core.table_prefix%kb_article_field_values'
+    tables.kb_article_co_authors_table: '%core.table_prefix%kb_article_co_authors'

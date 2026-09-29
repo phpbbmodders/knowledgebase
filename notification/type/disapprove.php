@@ -11,6 +11,7 @@
 
 namespace phpbbmodders\knowledgebase\notification\type;
 
+use phpbb\config\config;
 use phpbb\controller\helper;
 use phpbb\group\helper as group_helper;
 use phpbb\user_loader;
@@ -33,6 +34,8 @@ class disapprove extends \phpbb\notification\type\base
 	protected user_loader $user_loader;
 	/** @var group_helper */
 	protected group_helper $group_helper;
+	/** @var config */
+	protected config $config;
 	/** @var string */
 	protected string $kb_options_table;
 	/** @var string */
@@ -91,6 +94,15 @@ class disapprove extends \phpbb\notification\type\base
 	}
 
 	/**
+	 * @param config $config
+	 * @return void
+	 */
+	public function set_config(config $config): void
+	{
+		$this->config = $config;
+	}
+
+	/**
 	 * @param string $kb_options_table
 	 * @param string $kb_users_table
 	 * @param string $kb_groups_table
@@ -118,30 +130,7 @@ class disapprove extends \phpbb\notification\type\base
 	 */
 	public function is_available(): bool
 	{
-		return false;
-		// $available = $this->config['allow_privmsg'] && $this->auth->acl_get('u_readpm');
-
-		// if ($available)
-		// {
-		//   $auth_approve = $this->auth->acl_get_list(false, 'a_manage_kb');
-		//   if (empty($auth_approve))
-		//   {
-		//   	$auth_approve[0]['a_manage_kb'] = array();
-		//   }
-
-		//   $has_permission = $this->check_permission('kb_m_approve', 0);
-		//   if (!empty($auth_approve) || !empty($has_permission))
-		//   {
-		//   	$users = array_merge($has_permission, $auth_approve[0]['a_manage_kb']);
-		//   	$users = array_unique($users);
-		// 		$available = ((in_array($this->user->data['author_id'], $users)));
-		//   }
-		//   else
-		//   {
-		//   	return false;
-		// 	}
-		// }
-		// return $available;
+		return true;
 	}
 
 	/**
@@ -157,7 +146,27 @@ class disapprove extends \phpbb\notification\type\base
 		$options = array_merge(['ignore_users' => [],], $options);
 
 		$users = $this->get_author_user_ids((int) $type_data['author_id'], (int) ($type_data['author_type'] ?? 0));
-		return $this->check_user_notification_options($users, $options);
+		$notify_users = $this->check_user_notification_options($users, $options);
+
+		// See notification\type\approve::find_users_for_notification() -
+		// same required-PM override, same reasoning.
+		if (!empty($this->config['kb_require_author_pm']))
+		{
+			$pm_method = 'phpbbmodders.knowledgebase.notification.method.pm';
+			foreach ($users as $user_id)
+			{
+				if (!isset($notify_users[$user_id]))
+				{
+					$notify_users[$user_id] = [];
+				}
+				if (!in_array($pm_method, $notify_users[$user_id], true))
+				{
+					$notify_users[$user_id][] = $pm_method;
+				}
+			}
+		}
+
+		return $notify_users;
 	}
 
 	/**
@@ -311,8 +320,50 @@ class disapprove extends \phpbb\notification\type\base
 		$this->set_data('title', $type_data['title']);
 		$this->set_data('moderator', $type_data['moderator']);
 		$this->set_data('item_id', $type_data['item_id']);
+		// Empty means the moderator explicitly chose not to message the
+		// author - see approve.php's KB_REASON_REQUIRED validation. Read
+		// by notification\method\pm, not by the bell.
+		$this->set_data('reason', $type_data['reason'] ?? '');
 
 		parent::create_insert_array($type_data, $pre_create_data);
+	}
+
+	/**
+	 * Whether the moderator wrote a reason (vs. explicitly skipping the
+	 * author message) - get_data() is protected, so notification\method\pm
+	 * needs a public accessor to check this before sending anything.
+	 *
+	 * @return string
+	 */
+	public function get_reason(): string
+	{
+		return (string) $this->get_data('reason');
+	}
+
+	/**
+	 * PM subject when this notification is delivered via
+	 * notification\method\pm instead of (or alongside) the bell.
+	 *
+	 * @return string
+	 */
+	public function get_pm_subject(): string
+	{
+		return $this->language->lang('KB_PM_DISAPPROVE_SUBJECT', censor_text($this->get_data('title')));
+	}
+
+	/**
+	 * @return string
+	 */
+	public function get_pm_message(): string
+	{
+		$moderator_name = $this->user_loader->get_username($this->get_data('moderator'), 'username');
+
+		return $this->language->lang(
+			'KB_PM_DISAPPROVE_MESSAGE',
+			$moderator_name,
+			censor_text($this->get_data('title')),
+			(string) $this->get_data('reason')
+		);
 	}
 
 	/**
