@@ -307,8 +307,13 @@ class manage_module
 			}
 		}
 
-		// Jumpbox
-		$cats_box = $kb->make_category_select($parent_id, [], false);
+		// Jumpbox - explicit root option, since no real category has
+		// id 0. Without it the browser just defaults this select to
+		// whichever category happens to be listed first, and "Create a
+		// new category" (which submits this same field) would silently
+		// nest under that category instead of creating a new top-level
+		// one while browsing the root list.
+		$cats_box = '<option value="0"' . (!$parent_id ? ' selected="selected"' : '') . '>' . $language->lang('KB_ROOT') . '</option>' . $kb->make_category_select($parent_id, [], false);
 		$sql = 'SELECT * FROM ' . $categories_table . '
 			WHERE parent_id = ' . (int) $parent_id . '
 			ORDER BY left_id';
