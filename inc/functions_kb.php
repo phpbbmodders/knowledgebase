@@ -109,6 +109,9 @@ class functions_kb
 	/** @var string */
 	protected string $article_field_values_table;
 
+	/** @var string */
+	protected string $article_co_authors_table;
+
 	/** @var group_helper */
 	protected group_helper $group_helper;
 
@@ -146,6 +149,7 @@ class functions_kb
 	 * @param string           $fields_table
 	 * @param string           $field_values_table
 	 * @param string           $article_field_values_table
+	 * @param string           $article_co_authors_table
 	 * @param group_helper     $group_helper
 	 */
 	public function __construct(
@@ -154,7 +158,8 @@ class functions_kb
 		string $phpbb_root_path, string $php_ext, string $articles_table, string $categories_table,
 		string $kb_logs_table, string $attachments_table, string $options_table, string $kb_users_table,
 		string $kb_groups_table, string $revisions_table, string $article_categories_table,
-		string $fields_table, string $field_values_table, string $article_field_values_table, group_helper $group_helper
+		string $fields_table, string $field_values_table, string $article_field_values_table,
+		string $article_co_authors_table, group_helper $group_helper
 	)
 	{
 		$this->db = $db;
@@ -182,6 +187,7 @@ class functions_kb
 		$this->fields_table = $fields_table;
 		$this->field_values_table = $field_values_table;
 		$this->article_field_values_table = $article_field_values_table;
+		$this->article_co_authors_table = $article_co_authors_table;
 		$this->group_helper = $group_helper;
 
 		$this->upload_dir = $this->ext_manager->get_extension_path('phpbbmodders/knowledgebase', true) . 'files/';
@@ -398,13 +404,31 @@ class functions_kb
 				AND a.user_id = ' . (int) $this->user->data['user_id'] . ' AND a.category_id = ' . (int) $category_id . ' AND ao.auth_option = \'' . $permission . '\'';
 
 		$result = $this->db->sql_query($sql);
-		$auth_setting = $this->db->sql_fetchfield('auth_setting');
-
-		if ($auth_setting == ACL_YES)
-		{
-			$total = ACL_YES;
-		}
+		$user_row = $this->db->sql_fetchrow($result);
 		$this->db->sql_freeresult($result);
+
+		// Same ACL_NO/ACL_YES/ACL_NEVER precedence the permission trace
+		// in acp_controller.php displays - a user setting is looked up
+		// the same way there (defaulting to ACL_NO when no override row
+		// exists, never trusting sql_fetchfield()'s false return, which
+		// loosely equals ACL_NEVER (0) and would otherwise misroute an
+		// absent override into the Never case below).
+		$auth_setting = $user_row ? (int) $user_row['auth_setting'] : ACL_NO;
+
+		switch ($auth_setting)
+		{
+			case ACL_NO:
+				$total = ($total == ACL_NO) ? ACL_NEVER : $total;
+			break;
+
+			case ACL_YES:
+				$total = ($total == ACL_NO) ? ACL_YES : $total;
+			break;
+
+			case ACL_NEVER:
+				$total = ACL_NEVER;
+			break;
+		}
 
 		// Take founder or admin status into account, overwriting the default values
 		if ($this->user->data['user_type'] == USER_FOUNDER || $this->auth->acl_get('a_manage_kb'))
@@ -493,33 +517,38 @@ class functions_kb
 	 */
 	public function assign_nav_tabs_vars(string $active, int $cat_id = 0, ?string $extra_tab_label = null): void
 	{
-		// No category context (e.g. the KB index, Manage Your Articles,
-		// or Administration pages): posting.php has nothing to submit
-		// into without a category, so the Submit tabs fall back to the
-		// index page instead of a broken/denied posting link. When a
-		// category IS known, carry it along so the tabs land straight
-		// into that category rather than requiring a second pick.
-		$submit_url = $cat_id
-			? $this->helper->route('phpbbmodders_knowledgebase_posting', ['id' => $cat_id])
-			: $this->helper->route('phpbbmodders_knowledgebase_index');
-		$redirect_url = $cat_id
-			? $this->helper->route('phpbbmodders_knowledgebase_posting', ['id' => $cat_id, 'mode' => 'redirect'])
-			: $this->helper->route('phpbbmodders_knowledgebase_index');
+		// posting.php has nothing to submit into without a category, so
+		// on a page with no category context (the KB index, Manage Your
+		// Articles, search results, the Administration queue, the
+		// article-not-found notice) the Submit/Submit-a-Redirect tabs
+		// are hidden entirely rather than linking back to the page the
+		// visitor is already on - a link that only ever reloads it isn't
+		// a real destination. When a category IS known, both tabs go
+		// straight into it - but only shown at all to a visitor who
+		// actually holds the matching permission (kb_u_add for Submit,
+		// the stricter kb_m_approve for Submit a Redirect, same gate
+		// posting.php itself enforces - acl_kb_get() already folds in
+		// the a_manage_kb/founder override), so a plain viewer isn't
+		// shown a tab that only leads to a refusal page.
+		$can_submit_tab = $cat_id && $this->acl_kb_get($cat_id, 'kb_u_add');
+		$can_redirect_tab = $cat_id && $this->acl_kb_get($cat_id, 'kb_m_approve');
 
 		$this->template->assign_vars([
-			'U_KB_TAB_INDEX'       => $this->helper->route('phpbbmodders_knowledgebase_index'),
-			'U_KB_TAB_MY_ARTICLES' => $this->helper->route('phpbbmodders_knowledgebase_my_articles'),
-			'U_KB_TAB_SUBMIT'      => $submit_url,
-			'U_KB_TAB_REDIRECT'    => $redirect_url,
-			'U_KB_TAB_ADMIN'       => $this->helper->route('phpbbmodders_knowledgebase_queue'),
-			'S_KB_CAN_ADMIN_TAB'   => $this->auth->acl_get('a_manage_kb') || !empty($this->get_moderatable_categories()),
-			'S_KB_TAB_INDEX'       => $active === 'index',
-			'S_KB_TAB_MY_ARTICLES' => $active === 'my_articles',
-			'S_KB_TAB_SUBMIT'      => $active === 'submit',
-			'S_KB_TAB_REDIRECT'    => $active === 'redirect',
-			'S_KB_TAB_ADMIN'       => $active === 'admin',
-			'S_KB_EXTRA_TAB'       => $extra_tab_label !== null,
-			'KB_EXTRA_TAB_LABEL'   => $extra_tab_label ?? '',
+			'U_KB_TAB_INDEX'         => $this->helper->route('phpbbmodders_knowledgebase_index'),
+			'U_KB_TAB_MY_ARTICLES'   => $this->helper->route('phpbbmodders_knowledgebase_my_articles'),
+			'U_KB_TAB_SUBMIT'        => $can_submit_tab ? $this->helper->route('phpbbmodders_knowledgebase_posting', ['id' => $cat_id]) : '',
+			'U_KB_TAB_REDIRECT'      => $can_redirect_tab ? $this->helper->route('phpbbmodders_knowledgebase_posting', ['id' => $cat_id, 'mode' => 'redirect']) : '',
+			'U_KB_TAB_ADMIN'         => $this->helper->route('phpbbmodders_knowledgebase_queue'),
+			'S_KB_CAN_SUBMIT_TAB'    => (bool) $can_submit_tab,
+			'S_KB_CAN_REDIRECT_TAB'  => (bool) $can_redirect_tab,
+			'S_KB_CAN_ADMIN_TAB'     => $this->auth->acl_get('a_manage_kb') || !empty($this->get_moderatable_categories()),
+			'S_KB_TAB_INDEX'         => $active === 'index',
+			'S_KB_TAB_MY_ARTICLES'   => $active === 'my_articles',
+			'S_KB_TAB_SUBMIT'        => $active === 'submit',
+			'S_KB_TAB_REDIRECT'      => $active === 'redirect',
+			'S_KB_TAB_ADMIN'         => $active === 'admin',
+			'S_KB_EXTRA_TAB'         => $extra_tab_label !== null,
+			'KB_EXTRA_TAB_LABEL'     => $extra_tab_label ?? '',
 		]);
 	}
 
@@ -529,6 +558,14 @@ class functions_kb
 	public function get_article_categories_table(): string
 	{
 		return $this->article_categories_table;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function get_article_co_authors_table(): string
+	{
+		return $this->article_co_authors_table;
 	}
 
 	/**
@@ -631,6 +668,378 @@ class functions_kb
 			];
 		}
 		$this->db->sql_multi_insert($this->article_categories_table, $sql_ary);
+	}
+
+	/**
+	 * Whether a user counts as one of an article's authors - its primary
+	 * author_id/author_type (kb_articles), or a co-author user, or an
+	 * approved (not pending) member of a co-author group. Matches the
+	 * existing single-author is_own_article pattern (a direct id compare
+	 * for a user, is_team_member() for a group) rather than flattening
+	 * every author to a user-id set first, so this stays one targeted
+	 * query against kb_article_co_authors plus (at most) one
+	 * is_team_member() call - no query against group membership unless
+	 * the article actually has a group among its authors.
+	 *
+	 * @param int      $article_id
+	 * @param int      $primary_author_id   The article's own author_id (caller already has this loaded).
+	 * @param int      $primary_author_type AUTHOR_TYPE_USER or AUTHOR_TYPE_GROUP.
+	 * @param int|null $user_id             Defaults to the current user.
+	 * @return bool
+	 */
+	public function is_article_author(int $article_id, int $primary_author_id, int $primary_author_type, ?int $user_id = null): bool
+	{
+		$user_id ??= (int) $this->user->data['user_id'];
+
+		if ($primary_author_type === self::AUTHOR_TYPE_USER && $primary_author_id === $user_id)
+		{
+			return true;
+		}
+
+		if ($primary_author_type === self::AUTHOR_TYPE_GROUP && $this->is_team_member([$primary_author_id], $user_id))
+		{
+			return true;
+		}
+
+		$sql = 'SELECT author_type, author_ref_id
+			FROM ' . $this->article_co_authors_table . '
+			WHERE article_id = ' . $article_id;
+		$result = $this->db->sql_query($sql);
+
+		$group_ids = [];
+		$is_co_author = false;
+		while ($row = $this->db->sql_fetchrow($result))
+		{
+			if ((int) $row['author_type'] === self::AUTHOR_TYPE_USER)
+			{
+				if ((int) $row['author_ref_id'] === $user_id)
+				{
+					$is_co_author = true;
+				}
+			}
+			else
+			{
+				$group_ids[] = (int) $row['author_ref_id'];
+			}
+		}
+		$this->db->sql_freeresult($result);
+
+		return $is_co_author || (!empty($group_ids) && $this->is_team_member($group_ids, $user_id));
+	}
+
+	/**
+	 * is_article_author() for many articles at once - a listing page.
+	 * One query for co-authors across every article (not one per row)
+	 * and one query for the viewer's own team-group memberships (not
+	 * one is_team_member() call per row) instead of the per-article
+	 * query pattern is_article_author() itself uses, which is the right
+	 * tradeoff for a single article but not for a whole page of them.
+	 *
+	 * @param array    $articles Each element needs 'article_id', 'author_id', 'author_type'.
+	 * @param int|null $user_id  Defaults to the current user.
+	 * @return array<int, bool> article_id => is_author
+	 */
+	public function is_article_author_bulk(array $articles, ?int $user_id = null): array
+	{
+		$user_id ??= (int) $this->user->data['user_id'];
+
+		$article_ids = array_map(static fn ($article) => (int) $article['article_id'], $articles);
+		$co_authors = $this->get_co_authors_bulk($article_ids);
+		$viewer_team_groups = $this->get_user_team_groups($user_id);
+
+		$result = [];
+		foreach ($articles as $article)
+		{
+			$article_id = (int) $article['article_id'];
+			$author_id = (int) $article['author_id'];
+			$author_type = (int) $article['author_type'];
+
+			$is_author = ($author_type === self::AUTHOR_TYPE_USER && $author_id === $user_id)
+				|| ($author_type === self::AUTHOR_TYPE_GROUP && in_array($author_id, $viewer_team_groups, true));
+
+			if (!$is_author && isset($co_authors[$article_id]))
+			{
+				$is_author = in_array($user_id, $co_authors[$article_id]['users'], true)
+					|| !empty(array_intersect($co_authors[$article_id]['groups'], $viewer_team_groups));
+			}
+
+			$result[$article_id] = $is_author;
+		}
+
+		return $result;
+	}
+
+	/**
+	 * An article's co-authors (everyone besides its primary author),
+	 * split by type - for pre-filling the moderator edit form and for
+	 * get_co_authors_display() below.
+	 *
+	 * @param int $article_id
+	 * @return array{users: int[], groups: int[]}
+	 */
+	public function get_co_authors(int $article_id): array
+	{
+		return $this->get_co_authors_bulk([$article_id])[$article_id] ?? ['users' => [], 'groups' => []];
+	}
+
+	/**
+	 * get_co_authors() for many articles at once - one query instead of
+	 * one per article, for a listing page.
+	 *
+	 * @param int[] $article_ids
+	 * @return array<int, array{users: int[], groups: int[]}>
+	 */
+	public function get_co_authors_bulk(array $article_ids): array
+	{
+		$map = [];
+		foreach ($article_ids as $article_id)
+		{
+			$map[(int) $article_id] = ['users' => [], 'groups' => []];
+		}
+
+		if (empty($map))
+		{
+			return $map;
+		}
+
+		$sql = 'SELECT article_id, author_type, author_ref_id
+			FROM ' . $this->article_co_authors_table . '
+			WHERE ' . $this->db->sql_in_set('article_id', array_keys($map));
+		$result = $this->db->sql_query($sql);
+		while ($row = $this->db->sql_fetchrow($result))
+		{
+			$article_id = (int) $row['article_id'];
+			if ((int) $row['author_type'] === self::AUTHOR_TYPE_USER)
+			{
+				$map[$article_id]['users'][] = (int) $row['author_ref_id'];
+			}
+			else
+			{
+				$map[$article_id]['groups'][] = (int) $row['author_ref_id'];
+			}
+		}
+		$this->db->sql_freeresult($result);
+
+		return $map;
+	}
+
+	/**
+	 * Replace an article's full set of co-authors. Only ever called for
+	 * a moderator setting/changing authors directly (add, or a
+	 * moderator-performed edit) - never from the revision-approval path,
+	 * since a revision cannot change an article's authors.
+	 *
+	 * @param int   $article_id
+	 * @param int[] $user_ids            Co-author user ids.
+	 * @param int[] $group_ids           Co-author group ids (must already be configured KB team groups).
+	 * @param int   $primary_author_id   Excluded if it appears in $user_ids/$group_ids - already implied, shouldn't be duplicated.
+	 * @param int   $primary_author_type
+	 * @return void
+	 */
+	public function set_co_authors(int $article_id, array $user_ids, array $group_ids, int $primary_author_id, int $primary_author_type): void
+	{
+		$sql = 'DELETE FROM ' . $this->article_co_authors_table . '
+			WHERE article_id = ' . $article_id;
+		$this->db->sql_query($sql);
+
+		$user_ids = array_unique(array_map('intval', $user_ids));
+		if ($primary_author_type === self::AUTHOR_TYPE_USER)
+		{
+			$user_ids = array_diff($user_ids, [$primary_author_id]);
+		}
+
+		$group_ids = array_unique(array_map('intval', $group_ids));
+		if ($primary_author_type === self::AUTHOR_TYPE_GROUP)
+		{
+			$group_ids = array_diff($group_ids, [$primary_author_id]);
+		}
+
+		$sql_ary = [];
+		foreach ($user_ids as $user_id)
+		{
+			$sql_ary[] = [
+				'article_id'    => $article_id,
+				'author_type'   => self::AUTHOR_TYPE_USER,
+				'author_ref_id' => $user_id,
+			];
+		}
+		foreach ($group_ids as $group_id)
+		{
+			$sql_ary[] = [
+				'article_id'    => $article_id,
+				'author_type'   => self::AUTHOR_TYPE_GROUP,
+				'author_ref_id' => $group_id,
+			];
+		}
+
+		if (!empty($sql_ary))
+		{
+			$this->db->sql_multi_insert($this->article_co_authors_table, $sql_ary);
+		}
+	}
+
+	/**
+	 * Resolves typed forum usernames to user ids, the same
+	 * case/whitespace-insensitive way phpBB itself compares usernames
+	 * (via username_clean).
+	 *
+	 * @param string[] $usernames As typed, e.g. from a comma-separated field.
+	 * @return array{user_ids: int[], unresolved: string[]} unresolved holds back the original typed text for any name that didn't match a real user.
+	 */
+	public function resolve_usernames(array $usernames): array
+	{
+		$clean_to_original = [];
+		foreach ($usernames as $username)
+		{
+			$clean_to_original[utf8_clean_string($username)] = $username;
+		}
+
+		if (empty($clean_to_original))
+		{
+			return ['user_ids' => [], 'unresolved' => []];
+		}
+
+		$sql = 'SELECT user_id, username_clean
+			FROM ' . USERS_TABLE . '
+			WHERE ' . $this->db->sql_in_set('username_clean', array_keys($clean_to_original));
+		$result = $this->db->sql_query($sql);
+
+		$user_ids = [];
+		while ($row = $this->db->sql_fetchrow($result))
+		{
+			$user_ids[] = (int) $row['user_id'];
+			unset($clean_to_original[$row['username_clean']]);
+		}
+		$this->db->sql_freeresult($result);
+
+		return ['user_ids' => $user_ids, 'unresolved' => array_values($clean_to_original)];
+	}
+
+	/**
+	 * Usernames for a set of user ids, for pre-filling the co-author
+	 * text field when (re-)opening the edit form for an article that
+	 * already has co-authors - the reverse of resolve_usernames().
+	 *
+	 * @param int[] $user_ids
+	 * @return string[]
+	 */
+	public function get_usernames(array $user_ids): array
+	{
+		if (empty($user_ids))
+		{
+			return [];
+		}
+
+		$sql = 'SELECT username
+			FROM ' . USERS_TABLE . '
+			WHERE ' . $this->db->sql_in_set('user_id', array_map('intval', $user_ids));
+		$result = $this->db->sql_query($sql);
+
+		$usernames = [];
+		while ($row = $this->db->sql_fetchrow($result))
+		{
+			$usernames[] = $row['username'];
+		}
+		$this->db->sql_freeresult($result);
+
+		return $usernames;
+	}
+
+	/**
+	 * Every co-author, resolved for direct template output - user
+	 * co-authors linked to their profile, group co-authors in their
+	 * colour and linked to their member list, matching how phpbb.com
+	 * displays multiple credited authors.
+	 *
+	 * @param int $article_id
+	 * @return array<int, array{type: int, name: string, colour: string, url: string}>
+	 */
+	public function get_co_authors_display(int $article_id): array
+	{
+		return $this->get_co_authors_display_bulk([$article_id])[$article_id] ?? [];
+	}
+
+	/**
+	 * get_co_authors_display() for many articles at once - the users
+	 * and groups tables are each queried once for the whole set, not
+	 * once per article, for a listing page.
+	 *
+	 * @param int[] $article_ids
+	 * @return array<int, array<int, array{type: int, name: string, colour: string, url: string}>>
+	 */
+	public function get_co_authors_display_bulk(array $article_ids): array
+	{
+		$co_authors = $this->get_co_authors_bulk($article_ids);
+
+		$all_user_ids = $all_group_ids = [];
+		foreach ($co_authors as $entry)
+		{
+			$all_user_ids = array_merge($all_user_ids, $entry['users']);
+			$all_group_ids = array_merge($all_group_ids, $entry['groups']);
+		}
+		$all_user_ids = array_unique($all_user_ids);
+		$all_group_ids = array_unique($all_group_ids);
+
+		$users_by_id = [];
+		if (!empty($all_user_ids))
+		{
+			$sql = 'SELECT user_id, username, user_colour
+				FROM ' . USERS_TABLE . '
+				WHERE ' . $this->db->sql_in_set('user_id', $all_user_ids);
+			$result = $this->db->sql_query($sql);
+			while ($row = $this->db->sql_fetchrow($result))
+			{
+				$users_by_id[(int) $row['user_id']] = [
+					'type'   => self::AUTHOR_TYPE_USER,
+					'name'   => $row['username'],
+					'colour' => $row['user_colour'],
+					'url'    => append_sid("{$this->phpbb_root_path}memberlist.{$this->php_ext}", 'mode=viewprofile&u=' . (int) $row['user_id']),
+				];
+			}
+			$this->db->sql_freeresult($result);
+		}
+
+		$groups_by_id = [];
+		if (!empty($all_group_ids))
+		{
+			$sql = 'SELECT group_id, group_name, group_colour
+				FROM ' . GROUPS_TABLE . '
+				WHERE ' . $this->db->sql_in_set('group_id', $all_group_ids);
+			$result = $this->db->sql_query($sql);
+			while ($row = $this->db->sql_fetchrow($result))
+			{
+				$groups_by_id[(int) $row['group_id']] = [
+					'type'   => self::AUTHOR_TYPE_GROUP,
+					'name'   => $this->group_helper->get_name($row['group_name']),
+					'colour' => $row['group_colour'],
+					'url'    => append_sid("{$this->phpbb_root_path}memberlist.{$this->php_ext}", 'mode=group&g=' . (int) $row['group_id']),
+				];
+			}
+			$this->db->sql_freeresult($result);
+		}
+
+		$display = [];
+		foreach ($co_authors as $article_id => $entry)
+		{
+			$rows = [];
+			foreach ($entry['users'] as $user_id)
+			{
+				if (isset($users_by_id[$user_id]))
+				{
+					$rows[] = $users_by_id[$user_id];
+				}
+			}
+			foreach ($entry['groups'] as $group_id)
+			{
+				if (isset($groups_by_id[$group_id]))
+				{
+					$rows[] = $groups_by_id[$group_id];
+				}
+			}
+			$display[$article_id] = $rows;
+		}
+
+		return $display;
 	}
 
 	/**
@@ -1109,6 +1518,47 @@ class functions_kb
 	}
 
 	/**
+	 * `<option>` markup for every configured KB team group, for a team
+	 * picker dropdown - shared between the article approve/queue pages
+	 * and the ACP category editor's "default team" field.
+	 *
+	 * @param int $selected_team_id
+	 * @return string
+	 */
+	public function get_team_options(int $selected_team_id): string
+	{
+		$options = '';
+		foreach ($this->get_kb_team_group_names() as $group_id => $group_name)
+		{
+			$options .= '<option value="' . $group_id . '"' . ($group_id === $selected_team_id ? ' selected="selected"' : '') . '>' . $group_name . '</option>';
+		}
+
+		return $options;
+	}
+
+	/**
+	 * An article's effective moderation team: its own explicit
+	 * assigned_team_id if set, otherwise its category's default_team_id
+	 * - "by assignment, or else by its categories". Returns 0 when
+	 * neither the article nor its category has one.
+	 *
+	 * @param int $assigned_team_id The article's own assigned_team_id (0 if unset).
+	 * @param int $category_id      The article's primary category id.
+	 * @return int
+	 */
+	public function get_effective_team_id(int $assigned_team_id, int $category_id): int
+	{
+		if ($assigned_team_id)
+		{
+			return $assigned_team_id;
+		}
+
+		$cat_info = $this->get_cat_info($category_id);
+
+		return (int) ($cat_info['default_team_id'] ?? 0);
+	}
+
+	/**
 	 * @return string
 	 */
 	public function generate_filter_string(): string
@@ -1128,6 +1578,53 @@ class functions_kb
 			);
 		}
 		return implode(',', $filters);
+	}
+
+	/**
+	 * Moves an article one place up or down among its category's
+	 * other articles, swapping display_order with whichever neighbour
+	 * it lands on. Every article in the category is renumbered to a
+	 * clean 1..N sequence as part of the same call, since display_order
+	 * defaults to 0 for every article until something actually sets
+	 * it - without this, "the neighbour" couldn't be found by comparing
+	 * display_order values that are all still identical.
+	 *
+	 * @param int    $article_id
+	 * @param int    $category_id
+	 * @param string $direction 'up' or 'down'.
+	 * @return bool false if the article was already at that end of the list.
+	 */
+	public function move_article_by(int $article_id, int $category_id, string $direction): bool
+	{
+		$sql = 'SELECT article_id
+			FROM ' . $this->articles_table . '
+			WHERE article_category_id = ' . $category_id . '
+			ORDER BY display_order ASC, article_id ASC';
+		$result = $this->db->sql_query($sql);
+		$ids = [];
+		while ($row = $this->db->sql_fetchrow($result))
+		{
+			$ids[] = (int) $row['article_id'];
+		}
+		$this->db->sql_freeresult($result);
+
+		$position = array_search($article_id, $ids, true);
+		$swap_with = ($direction === 'up') ? $position - 1 : $position + 1;
+
+		if ($position === false || !isset($ids[$swap_with]))
+		{
+			return false;
+		}
+
+		[$ids[$position], $ids[$swap_with]] = [$ids[$swap_with], $ids[$position]];
+
+		foreach ($ids as $order => $id)
+		{
+			$sql = 'UPDATE ' . $this->articles_table . ' SET display_order = ' . ($order + 1) . ' WHERE article_id = ' . $id;
+			$this->db->sql_query($sql);
+		}
+
+		return true;
 	}
 
 	/**
@@ -1336,14 +1833,115 @@ class functions_kb
 
 		submit_post('post', $topic_title, $this->user->data['username'], 0, $poll, $data, false);
 
-		$sql = 'SELECT MAX(topic_id) AS last_topic FROM ' . TOPICS_TABLE . ' WHERE forum_id = ' . (int) $fid;
+		// submit_post() fills $data['topic_id'] itself (by reference) -
+		// rediscovering it after the fact with SELECT MAX(topic_id) is a
+		// race: another request's topic created in between would make
+		// this article record someone else's topic id instead of its own.
+		$sql = 'UPDATE ' . $this->articles_table . ' SET topic_id = ' . (int) $data['topic_id'] . ' WHERE article_id = ' . (int) $new;
+		$this->db->sql_query($sql);
+	}
+
+	/**
+	 * Moderator-only changelog thread for an article - a running record of
+	 * every submission/edit/revision, separate from the article's own
+	 * public comments topic (topic_id/kb_forum_id above). Lazily creates
+	 * the topic (titled after the article) the first time this is called
+	 * for it, then replies to it on every later call - so an article
+	 * that already existed before this feature shipped gets its topic
+	 * on its next edit, same as a brand new one gets it on submission.
+	 *
+	 * Best-effort and entirely optional: does nothing if
+	 * kb_changelog_forum_id isn't configured (default) or points at a
+	 * forum that no longer exists - matching how the public comments
+	 * topic (kb_forum_id/kb_anounce) is also opt-in, not a hard
+	 * dependency of submitting or editing an article.
+	 *
+	 * @param int    $article_id
+	 * @param string $article_title
+	 * @param string $message BBCode-enabled changelog entry text.
+	 * @return void
+	 */
+	public function post_changelog_entry(int $article_id, string $article_title, string $message): void
+	{
+		$fid = (int) $this->config['kb_changelog_forum_id'];
+		if (!$fid)
+		{
+			return;
+		}
+
+		$sql = 'SELECT forum_id FROM ' . FORUMS_TABLE . ' WHERE forum_id = ' . $fid;
 		$result = $this->db->sql_query($sql);
-		$row = $this->db->sql_fetchrow($result);
+		$forum_exists = (bool) $this->db->sql_fetchrow($result);
 		$this->db->sql_freeresult($result);
 
-		$last_topic = $row['last_topic'];
-		$sql = 'UPDATE ' . $this->articles_table . ' SET topic_id = ' . (int) $last_topic . ' WHERE article_id = ' . (int) $new;
-		$this->db->sql_query($sql);
+		if (!$forum_exists)
+		{
+			return;
+		}
+
+		if (!function_exists('submit_post'))
+		{
+			include($this->phpbb_root_path . 'includes/functions_posting.' . $this->php_ext);
+		}
+
+		$sql = 'SELECT changelog_topic_id FROM ' . $this->articles_table . ' WHERE article_id = ' . $article_id;
+		$result = $this->db->sql_query($sql);
+		$topic_id = (int) $this->db->sql_fetchfield('changelog_topic_id');
+		$this->db->sql_freeresult($result);
+
+		if (!$topic_id)
+		{
+			// Only the initial post needs this - a moderator following the
+			// topic already has the article link from the first post, and
+			// every reply already carries its own diff/context.
+			$article_url = $this->helper->route('phpbbmodders_knowledgebase_article', ['k' => $article_id]);
+			$message .= "\n\n" . '[url=' . $article_url . ']' . $this->language->lang('KB_CHANGELOG_VIEW_ARTICLE') . '[/url]';
+		}
+
+		$options = '';
+		generate_text_for_storage($message, $bbcode_uid, $bbcode_bitfield, $options, true, true, true);
+
+		$data = [
+			'forum_id'         => $fid,
+			'topic_id'         => $topic_id,
+			'topic_title'      => $article_title,
+			'forum_name'       => '',
+			'icon_id'          => 0,
+			'poster_id'        => (int) $this->user->data['user_id'],
+			'enable_bbcode'    => true,
+			'enable_smilies'   => true,
+			'enable_urls'      => true,
+			'enable_sig'       => false,
+			'notify'           => 0,
+			'notify_set'       => '',
+			'enable_indexing'  => true,
+			'message'          => htmlspecialchars_decode($message),
+			'message_md5'      => md5(time()),
+			'bbcode_bitfield'  => $bbcode_bitfield,
+			'bbcode_uid'       => $bbcode_uid,
+			// Only the extension itself should ever post here - not a
+			// setting a board member could stumble into editing.
+			'post_edit_locked' => 1,
+			// This forum is moderator-only regardless of who triggers the
+			// entry (any author submitting/editing an article ends up as
+			// the poster here) - approval should depend on that, not on
+			// whichever member happens to be the acting author's own
+			// f_noapprove permission in this forum.
+			'force_approved_state' => ITEM_APPROVED,
+		];
+
+		$poll = [];
+		$subject = $topic_id ? $this->language->lang('KB_CHANGELOG_REPLY_SUBJECT', $article_title) : $article_title;
+		submit_post($topic_id ? 'reply' : 'post', $subject, $this->user->data['username'], 0, $poll, $data, false);
+
+		if (!$topic_id)
+		{
+			// submit_post() fills $data['topic_id'] itself (by reference)
+			// on the 'post' path - same race avoided in submit_article()
+			// above, not re-derived with SELECT MAX(topic_id).
+			$sql = 'UPDATE ' . $this->articles_table . ' SET changelog_topic_id = ' . (int) $data['topic_id'] . ' WHERE article_id = ' . $article_id;
+			$this->db->sql_query($sql);
+		}
 	}
 
 	/**

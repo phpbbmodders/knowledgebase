@@ -14,11 +14,21 @@
 			{% if S_STATUS_NEW %}{{ lang('KB_STATUS_NEW') }}
 			{% elseif S_STATUS_REVIEWED %}{{ lang('KB_STATUS_REVIEWED') }}
 			{% elseif S_STATUS_ACTIVE %}{{ lang('KB_STATUS_ACTIVE') }}{% if S_HAS_REVISION %} &bull; {{ lang('KB_STATUS_REVISION') }}{% endif %}
-			{% elseif S_STATUS_INACTIVE %}{{ lang('KB_STATUS_INACTIVE') }}
+			{% elseif S_STATUS_INACTIVE %}{{ lang('KB_STATUS_INACTIVE') }}{% if S_HAS_REVISION %} &bull; {{ lang('KB_STATUS_REVISION') }}{% endif %}
 			{% endif %}
 		</p>
 
+		{% if U_TOPIC %}
+			<p><a class="button2" href="{{ U_TOPIC }}">{{ lang('VIEW_TOPIC') }}</a></p>
+		{% endif %}
+
 		{% if S_HAS_REVISION %}
+			<div class="panel bg1">
+				<div class="inner">
+					<h3>{{ lang('KB_CURRENTLY_PUBLISHED') }}</h3>
+					<div class="content">{{ CURRENT_TEXT }}</div>
+				</div>
+			</div>
 			<div class="panel kb-notice">
 				<div class="inner">
 					<h3>{{ lang('KB_REVISION_PREVIEW') }}</h3>
@@ -31,6 +41,19 @@
 
 		<form action="{{ S_ACTION }}" method="post">
 			{{ S_FORM_TOKEN }}
+
+			{% if S_SHOW_REASON_FIELD %}
+			<fieldset style="border: none;">
+				<dl>
+					<dt><label for="reason">{{ lang('KB_REASON_LABEL') }}{{ lang('COLON') }}</label></dt>
+					<dd>
+						<textarea id="reason" name="reason" rows="3" cols="60"></textarea><br>
+						<label><input type="checkbox" name="skip_message" value="1"> {{ lang('KB_SKIP_MESSAGE') }}</label>
+					</dd>
+				</dl>
+			</fieldset>
+			{% endif %}
+
 			<fieldset class="submit-buttons" style="border: none;">
 				{% if S_STATUS_NEW and S_IS_MODERATOR %}
 					<label>{{ lang('KB_ASSIGN_TO') }}{{ lang('COLON') }}

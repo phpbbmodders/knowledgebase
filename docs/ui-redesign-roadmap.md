@@ -79,6 +79,16 @@ Built one at a time, with a checkpoint before starting the next.
 5. **The restyle pass** — table-style article index, compact article
    metadata sidebar, prominent category-dropdown filter — once the
    data model from phases 1-4 is final.
+   **Status (09/25/2026):** the shared nav-tab strip
+   (`kb_nav_tabs.html`) and the table-style article index exist and
+   are wired up, styled with this extension's own `.kb-tab`/
+   `.kb-index-table` CSS. Decision: this extension's own style keeps
+   the `.kb-tab` button-tab look with no separator text (the buttons
+   already separate visually). A **separate prosilver-native style**
+   is still wanted for submitting the extension upstream - that
+   version should either use a plain-text `&bull;`-separated tab row
+   or be styled with prosilver's own tab-widget CSS classes, not
+   invent a third look. Not started.
 
 Detailed per-phase implementation design (schema, exact state
 transitions, ACP UI specifics) happens as its own scoping pass

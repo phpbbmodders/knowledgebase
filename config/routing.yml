@@ -2,6 +2,10 @@ phpbbmodders_knowledgebase_index:
     path: /knowledgebase
     defaults: { _controller: phpbbmodders.knowledgebase.controller.index:main }
 
+phpbbmodders_knowledgebase_kb_alias:
+    path: /kb
+    defaults: { _controller: phpbbmodders.knowledgebase.controller.index:kb_alias }
+
 phpbbmodders_knowledgebase_category:
     path: /knowledgebase/category
     defaults: { _controller: phpbbmodders.knowledgebase.controller.category:cat }

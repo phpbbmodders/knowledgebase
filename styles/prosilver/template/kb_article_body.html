@@ -10,6 +10,10 @@
 	<div class="inner">
 		<div class="kb-meta">
 			<strong>{{ lang('KB_WRITTEN_BY') }}{{ lang('COLON') }}</strong> {{ ARTICLE_AUTHOR }}<br>
+			{% if loops.co_author|length %}
+				<strong>{{ lang('KB_CO_AUTHORS') }}{{ lang('COLON') }}</strong>
+				{% for co_author in loops.co_author %}<a href="{{ co_author.URL }}"{% if co_author.S_GROUP %} style="color: #{{ co_author.COLOUR }};"{% endif %}>{{ co_author.NAME }}</a>{% if not loop.last %}, {% endif %}{% endfor %}<br>
+			{% endif %}
 			<strong>{{ lang('KB_WRITTEN_ON') }}{{ lang('COLON') }}</strong> {{ ARTICLE_DATE }}<br>
 			{% if EDIT_DATE %}<strong>{{ lang('KB_LAST_MODIFIED') }}{{ lang('COLON') }}</strong> {{ EDIT_DATE }}<br>{% endif %}
 			<strong>{{ lang('VIEWS') }}{{ lang('COLON') }}</strong> {{ VIEWS }}<br>
@@ -19,7 +23,7 @@
 			{% if S_STATUS_NEW %}<span class="kb-status-badge kb-status-new">{{ lang('KB_STATUS_NEW') }}</span>
 			{% elseif S_STATUS_REVIEWED %}<span class="kb-status-badge kb-status-reviewed">{{ lang('KB_STATUS_REVIEWED') }}</span>
 			{% elseif S_STATUS_ACTIVE %}<span class="kb-status-badge kb-status-active">{{ lang('KB_STATUS_ACTIVE') }}</span>{% if S_HAS_REVISION %} <span class="kb-status-badge kb-status-revision">{{ lang('KB_STATUS_REVISION') }}</span>{% endif %}
-			{% elseif S_STATUS_INACTIVE %}<span class="kb-status-badge kb-status-inactive">{{ lang('KB_STATUS_INACTIVE') }}</span>
+			{% elseif S_STATUS_INACTIVE %}<span class="kb-status-badge kb-status-inactive">{{ lang('KB_STATUS_INACTIVE') }}</span>{% if S_HAS_REVISION %} <span class="kb-status-badge kb-status-revision">{{ lang('KB_STATUS_REVISION') }}</span>{% endif %}
 			{% endif %}
 			<h3 class="first">{{ ARTICLE_TITLE }}</h3>
 			<p class="author">
@@ -44,9 +48,9 @@
 				<input value="{{ U_DIRECT_LINK }}" id="link" type="text">
 			</div>
 			<ul class="post-buttons">
-				{% if not S_APPROVED and S_CAN_APPROVE %}
+				{% if (not S_APPROVED or S_HAS_REVISION) and S_CAN_APPROVE %}
 					<li>
-						<a href="{{ U_APPROVE_ART }}" title="{{ lang('NEED_APPROVE') }}"
+						<a href="{{ U_APPROVE_ART }}" title="{{ S_HAS_REVISION ? lang('KB_STATUS_REVISION') : lang('NEED_APPROVE') }}"
 							class="button button-icon-only"><i class="icon fa-check fa-fw icon-orange"
 								aria-hidden="true"></i></a>
 					</li>

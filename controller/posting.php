@@ -203,6 +203,20 @@ class posting
 			trigger_error('RULES_KB_ADD_CANNOT');
 		}
 
+		// Computed here (not just inside the submit branch below) since
+		// the template needs to know whether to show the submit-as
+		// choice on a plain GET load too, not only after a submit.
+		// phpbb.com gives a submitter who holds kb_u_add_noapprove an
+		// explicit choice at submit time rather than always
+		// auto-publishing - defaults to the pre-existing auto-publish
+		// behaviour (checked/true) so an unmodified form submission
+		// behaves exactly as before this was added, and a fresh GET
+		// load shows that same default. Someone without the permission
+		// has no choice to make - their submission always needs
+		// approval, same as today.
+		$can_add_noapprove = $this->kb->acl_kb_get($cat_id, 'kb_u_add_noapprove');
+		$submit_as_approved = $can_add_noapprove ? $this->request->variable('submit_as_approved', true) : false;
+
 		// The article's actual primary category - not necessarily $cat_id,
 		// which is just whichever category (primary or cross-listed) this
 		// request was reached through. Everything that decides where the
@@ -234,9 +248,7 @@ class posting
 
 			$article_author_id = $row['author_id'];
 
-			$is_own_article = ((int) $row['author_type'] === 1)
-				? $this->kb->is_team_member([(int) $article_author_id])
-				: $this->user->data['user_id'] == $article_author_id;
+			$is_own_article = $this->kb->is_article_author($art_id, (int) $article_author_id, (int) $row['author_type']);
 
 			$article_categories = $this->kb->get_article_categories($art_id);
 
@@ -276,7 +288,11 @@ class posting
 		$delete = $this->request->is_set_post('delete');
 		$edit = $mode == 'edit';
 
-		$action = $this->helper->route('phpbbmodders_knowledgebase_posting', ['id' => $cat_id]);
+		// Preserves ?mode=redirect on the form's own POST target, same as
+		// the mode=edit branch below does for edits - without it, a
+		// Preview/Submit POST back to this page loses redirect mode
+		// entirely and the request re-validates as a normal article.
+		$action = $this->helper->route('phpbbmodders_knowledgebase_posting', $is_redirect ? ['id' => $cat_id, 'mode' => 'redirect'] : ['id' => $cat_id]);
 
 		if ($mode == 'delete' || $delete)
 		{
@@ -340,6 +356,13 @@ class posting
 			$redirect_url = (string) ($row['redirect_url'] ?? '');
 			$article_category_id = (int) $row['article_category_id'];
 
+			// Captured before $row gets reassigned to category info below
+			// (get_cat_info() reuses the same variable) - the changelog
+			// diff still needs the article's original stored body/uid
+			// further down, once $row no longer holds it.
+			$original_article_body = (string) $row['article_body'];
+			$original_bbcode_uid = (string) $row['bbcode_uid'];
+
 			$article_text = $this->decode_message($article_text, $row['bbcode_uid']);
 
 			if (!$edit_allowed)
@@ -348,6 +371,40 @@ class posting
 			}
 		}
 
+		// Optimistic-locking fingerprint for the pending-revision race: two
+		// editors both starting from the same (or no) pending revision and
+		// both saving must not let the second save silently clobber the
+		// first. A fresh GET load takes the fingerprint from the revision
+		// that actually exists right now (0 if there is none); a preview or
+		// submit instead carries forward whatever fingerprint the form
+		// itself started with, so the conflict check below still compares
+		// against the *original* basis, not whatever's current by then.
+		$revision_fingerprint = $this->request->variable('revision_fingerprint', 0);
+		if ($mode === 'edit' && !$submit && !$preview && ($article_status ?? 0) === functions_kb::STATUS_ACTIVE)
+		{
+			$current_revision = $this->kb->get_article_revision($art_id);
+			$revision_fingerprint = $current_revision ? (int) $current_revision['submitted_date'] : 0;
+		}
+
+		// Co-author fields: on a fresh GET load, pre-fill from the
+		// article's actual current co-authors so a moderator resubmitting
+		// the form without touching these fields round-trips the same
+		// set back (set_co_authors() below is a full replace, same as
+		// set_cross_listed_categories()) rather than silently wiping them.
+		// A submit or preview instead shows back whatever was just typed.
+		$co_author_usernames_display = $this->request->variable('co_author_usernames', '', true);
+		$co_author_groups_prefill = array_map('intval', $this->request->variable('co_author_groups', [0]));
+		if ($mode === 'edit' && !$submit && !$preview)
+		{
+			$existing_co_authors = $this->kb->get_co_authors($art_id);
+			$co_author_groups_prefill = $existing_co_authors['groups'];
+			if (!empty($existing_co_authors['users']))
+			{
+				$co_author_usernames_display = implode(', ', $this->kb->get_usernames($existing_co_authors['users']));
+			}
+		}
+
+		$attachment_data = [];
 		if (!$is_redirect)
 		{
 			$this->kb_parse_attachments($art_id, $attachment_data, $preview, $edit, $submit);
@@ -436,9 +493,14 @@ class posting
 					$bbcode_uid = $bbcode_bitfield = '';
 				}
 
-				// Post-as-team: only offered to users who can already moderate this category's approvals.
+				// Post-as-team, and co-authors below: both only offered to
+				// users who can already moderate this category's approvals -
+				// "only the team" can credit anyone besides themselves,
+				// matching the reference text's own stated behaviour.
+				$is_moderator_for_cat = $this->auth->acl_get('a_manage_kb') || $this->kb->acl_kb_get($cat_id, 'kb_m_approve');
+
 				$post_as_group = 0;
-				if ($this->auth->acl_get('a_manage_kb') || $this->kb->acl_kb_get($cat_id, 'kb_m_approve'))
+				if ($is_moderator_for_cat)
 				{
 					$post_as_group = $this->request->variable('post_as_group', 0);
 				}
@@ -447,7 +509,41 @@ class posting
 				$author_id = $posting_as_group ? $post_as_group : (int) $this->user->data['user_id'];
 				$author_name = $posting_as_group ? ($this->kb->get_kb_team_group_names()[$post_as_group] ?? '') : $this->user->data['username'];
 
-				$can_add_noapprove = $this->kb->acl_kb_get($cat_id, 'kb_u_add_noapprove');
+				// Co-authors: a revision cannot change them (the reference text), so
+				// this only ever runs for the add path and the direct-edit
+				// (not-yet-published) path below - never through
+				// save_article_revision(). Unresolved usernames become a
+				// validation error rather than being silently dropped.
+				$co_author_user_ids = $co_author_group_ids = [];
+				if ($is_moderator_for_cat)
+				{
+					$co_author_usernames = $this->request->variable('co_author_usernames', '', true);
+					$co_author_group_ids = array_intersect(
+						array_map('intval', $this->request->variable('co_author_groups', [0])),
+						$this->kb->get_kb_team_groups()
+					);
+
+					if ($co_author_usernames !== '')
+					{
+						$requested_names = array_filter(array_map('trim', explode(',', $co_author_usernames)), 'strlen');
+						if (!empty($requested_names))
+						{
+							$resolved = $this->kb->resolve_usernames($requested_names);
+							$co_author_user_ids = array_values($resolved['user_ids']);
+
+							// A hard stop here, not $error[] - this whole
+							// branch ends in a trigger_error() success
+							// redirect further down that never looks at
+							// $error, so that's the only way an unresolved
+							// name would actually be surfaced rather than
+							// silently dropped.
+							if (!empty($resolved['unresolved']))
+							{
+								trigger_error(sprintf($this->language->lang('KB_UNKNOWN_USERNAME'), implode(', ', $resolved['unresolved'])), E_USER_WARNING);
+							}
+						}
+					}
+				}
 
 				$sql_data = [
 					'article_category_id' => $cat_id,
@@ -462,8 +558,8 @@ class posting
 					'redirect_url'        => $is_redirect ? $redirect_url : '',
 					'views'               => 0,
 					'author'              => $author_name,
-					'approved'            => $can_add_noapprove ? 1 : 0,
-					'status'              => $can_add_noapprove ? functions_kb::STATUS_ACTIVE : functions_kb::STATUS_NEW,
+					'approved'            => $submit_as_approved ? 1 : 0,
+					'status'              => $submit_as_approved ? functions_kb::STATUS_ACTIVE : functions_kb::STATUS_NEW,
 				];
 
 				$root = $this->helper->route('phpbbmodders_knowledgebase_category', ['id' => $cat_id]);
@@ -508,6 +604,17 @@ class posting
 
 					if ($article_status === functions_kb::STATUS_ACTIVE)
 					{
+						// Refuse rather than silently overwrite if the pending
+						// revision changed since this edit was opened -
+						// save_article_revision() itself unconditionally
+						// deletes-and-replaces whatever's there.
+						$current_revision = $this->kb->get_article_revision($art_id);
+						$current_fingerprint = $current_revision ? (int) $current_revision['submitted_date'] : 0;
+						if ($current_fingerprint !== $revision_fingerprint)
+						{
+							trigger_error($this->language->lang('KB_REVISION_CONFLICT'), E_USER_WARNING);
+						}
+
 						// Live article: queue the content edit as a pending revision rather
 						// than touching the published content.
 						$this->kb->save_article_revision($art_id, [
@@ -527,6 +634,13 @@ class posting
 							$this->db->sql_query($sql);
 						}
 
+						$changelog_message = $this->append_changelog_body_diff(
+							$this->language->lang('KB_CHANGELOG_REVISION_SUBMITTED', $this->user->data['username']),
+							$original_article_body, $original_bbcode_uid,
+							$article_text, $bbcode_uid
+						);
+						$this->kb->post_changelog_entry($art_id, $article_title, $changelog_message);
+
 						$msg = $this->language->lang('ARTICLE_REVISION_SUBMITTED');
 					}
 					else
@@ -543,6 +657,22 @@ class posting
 						{
 							$kb_search->index('edit', $art_id, $article_text, $article_title, $article_description, (int) $article_author_id);
 						}
+
+						// Co-authors can only change here (a moderator's direct
+						// edit of a not-yet-published article) or on add below -
+						// never through the revision path above, matching
+						// the reference text's "a revision cannot change the authors".
+						if ($is_moderator_for_cat)
+						{
+							$this->kb->set_co_authors($art_id, $co_author_user_ids, $co_author_group_ids, (int) $article_author_id, (int) $article_author_type);
+						}
+
+						$changelog_message = $this->append_changelog_body_diff(
+							$this->language->lang('KB_CHANGELOG_EDITED', $this->user->data['username']),
+							$original_article_body, $original_bbcode_uid,
+							$article_text, $bbcode_uid
+						);
+						$this->kb->post_changelog_entry($art_id, $article_title, $changelog_message);
 
 						$msg = $this->language->lang('ARTICLE_EDITED');
 					}
@@ -589,8 +719,13 @@ class posting
 					$this->db->sql_query($sql);
 					$new = $this->db->sql_nextid();
 					$this->kb->set_cross_listed_categories($new, $cross_categories);
+					if ($is_moderator_for_cat)
+					{
+						$this->kb->set_co_authors((int) $new, $co_author_user_ids, $co_author_group_ids, $author_id, $author_type);
+					}
 					$this->save_article_field_values($new, $enabled_fields, $all_field_values);
 					$this->insert_attachments($attachment_data, $new);
+					$this->kb->post_changelog_entry($new, $article_title, $this->language->lang('KB_CHANGELOG_SUBMITTED', $this->user->data['username']));
 
 					$articles_count++;
 					$this->config->increment('kb_num_articles', 1);
@@ -599,7 +734,7 @@ class posting
 						WHERE category_id = ' . $cat_id;
 					$this->db->sql_query($sql);
 
-					if ($can_add_noapprove)
+					if ($submit_as_approved)
 					{
 						$redirect = $this->helper->route('phpbbmodders_knowledgebase_article', ['k' => $new]);
 
@@ -734,6 +869,14 @@ class posting
 				'S_BBCODE_QUOTE'    => true,
 				'S_EDIT_POST'       => $mode == 'edit',
 				'S_CAN_DELETE'      => isset($delete_allowed) && $delete_allowed,
+				'REVISION_FINGERPRINT' => $revision_fingerprint,
+
+				// Shown only on a new-article submission (never edit -
+				// editing must never change an article's workflow status)
+				// and only to a submitter who actually holds
+				// kb_u_add_noapprove - anyone else has no choice to make.
+				'S_CAN_CHOOSE_SUBMIT_AS' => $mode != 'edit' && $can_add_noapprove,
+				'S_SUBMIT_AS_APPROVED'   => $submit_as_approved,
 
 				'S_FORM_ENCTYPE' => ($this->config['kb_allow_attachments']) ? ' enctype="multipart/form-data"' : '',
 
@@ -755,6 +898,9 @@ class posting
 				'S_CAN_POST_AS_TEAM' => $this->auth->acl_get('a_manage_kb') || $this->kb->acl_kb_get($cat_id, 'kb_m_approve'),
 				'TEAM_OPTIONS'       => $this->get_team_select_options(),
 
+				'S_CAN_SET_CO_AUTHORS'  => $this->auth->acl_get('a_manage_kb') || $this->kb->acl_kb_get($cat_id, 'kb_m_approve'),
+				'CO_AUTHOR_USERNAMES'   => $co_author_usernames_display,
+
 				'FIELD_WIDGETS' => $field_widgets,
 
 				'U_KB'           => $this->helper->route('phpbbmodders_knowledgebase_index'),
@@ -763,6 +909,15 @@ class posting
 				'S_KNOWLEDGEBASE' => true,
 			]
 		);
+
+		foreach ($this->kb->get_kb_team_group_names() as $group_id => $group_name)
+		{
+			$this->template->assign_block_vars('co_author_group', [
+				'GROUP_ID'   => $group_id,
+				'GROUP_NAME' => $group_name,
+				'S_CHECKED'  => in_array($group_id, $co_author_groups_prefill, true),
+			]);
+		}
 
 		$this->template->assign_block_vars('navlinks', [
 				'FORUM_NAME'   => $this->language->lang('LIBRARY'),
@@ -784,6 +939,41 @@ class posting
 		$this->kb->assign_nav_tabs_vars($is_redirect ? 'redirect' : 'submit', $cat_id);
 
 		return $this->helper->render('@phpbbmodders_knowledgebase/kb_post_body.html', ($this->language->lang('LIBRARY') . ' &raquo; ' . $title));
+	}
+
+	/**
+	 * Appends an original-vs-new quoted diff of the article body to a
+	 * changelog message, when the body actually changed - the reference text's "a
+	 * changelog against the published article". Skipped when the edit
+	 * didn't touch the body (a title/description-only edit stays a
+	 * plain notice, not a no-op diff of two identical quotes).
+	 *
+	 * Both bodies are decode_message()'d first - the stored form of
+	 * each carries its own bbcode_uid-tagged markers, which only mean
+	 * something paired with that specific uid. Stripped down to plain
+	 * portable BBCode source, they're safe to embed in this new post,
+	 * which gets its own fresh uid when it's saved.
+	 *
+	 * @param string $base_message
+	 * @param string $old_body
+	 * @param string $old_bbcode_uid
+	 * @param string $new_body
+	 * @param string $new_bbcode_uid
+	 * @return string
+	 */
+	private function append_changelog_body_diff(string $base_message, string $old_body, string $old_bbcode_uid, string $new_body, string $new_bbcode_uid): string
+	{
+		$old_body = (string) $this->decode_message($old_body, $old_bbcode_uid);
+		$new_body = (string) $this->decode_message($new_body, $new_bbcode_uid);
+
+		if ($old_body === $new_body)
+		{
+			return $base_message;
+		}
+
+		return $base_message . "\n\n"
+			. '[quote="' . $this->language->lang('KB_CHANGELOG_ORIGINAL_TEXT') . '"]' . $old_body . '[/quote]' . "\n"
+			. '[quote="' . $this->language->lang('KB_CHANGELOG_NEW_TEXT') . '"]' . $new_body . '[/quote]';
 	}
 
 	/**

@@ -107,6 +107,7 @@ class manage_module
 						'category_parents' => '',
 						'category_name'    => utf8_normalize_nfc($request->variable('category_name', '', true)),
 						'category_details' => utf8_normalize_nfc($request->variable('category_details', '', true)),
+						'default_team_id'  => $request->variable('default_team_id', 0),
 					];
 					$errors = $admin_controller->update_category_data($category_data, $copy_perm_from_id);
 					if (!count($errors))
@@ -183,6 +184,7 @@ class manage_module
 							'parent_id'        => $parent_id,
 							'category_name'    => utf8_normalize_nfc($request->variable('category_name', '', true)),
 							'category_details' => '',
+							'default_team_id'  => 0,
 						];
 					}
 				}
@@ -224,6 +226,7 @@ class manage_module
 						'CATEGORY_DESCR'       => $category_desc_data['text'],
 						'S_PARENT_OPTIONS'     => $parents_list,
 						'S_COPY_OPTIONS'       => $kb->make_category_select(false, [$copy_category_id], false),
+						'S_DEFAULT_TEAM_OPTIONS' => $kb->get_team_options((int) ($category_data['default_team_id'] ?? 0)),
 					]
 				);
 

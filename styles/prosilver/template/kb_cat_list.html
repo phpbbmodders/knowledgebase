@@ -28,7 +28,7 @@
 						{% if cat_row.U_ARTICLE %}
 							<a href="{{ cat_row.U_ARTICLE }}" class="lastsubject">
 								{% if cat_row.NEED_APPROVE %}<i class="icon fa fa-exclamation-triangle fa-fw orange"
-									aria-hidden="true"></i>{% endif %} {{ cat_row.ARTICLE_TITLE }}
+									title="{{ lang('NEED_APPROVE') }}" aria-hidden="true"></i>{% endif %} {{ cat_row.ARTICLE_TITLE }}
 							</a>
 							<br>
 							{{ cat_row.ARTICLE_AUTHOR }}, {{ cat_row.ARTICLE_TIME }}

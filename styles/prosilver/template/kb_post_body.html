@@ -4,6 +4,7 @@
 
 <form id="postform" method="post" action="{{ S_POST_ACTION }}" {{ S_FORM_ENCTYPE }}>
 	{{ S_FORM_TOKEN }}
+	<input type="hidden" name="revision_fingerprint" value="{{ REVISION_FINGERPRINT }}">
 	{% if S_DISPLAY_PREVIEW %}{% INCLUDE 'posting_preview.html' %}{% endif %}
 	<div class="panel" id="postingbox">
 		<div class="inner">
@@ -28,6 +29,37 @@
 						<dt><label for="post_as_group">{{ lang('KB_POST_AS') }}{{ lang('COLON') }}</label></dt>
 						<dd><label><select name="post_as_group" id="post_as_group">{{ TEAM_OPTIONS }}</select></label></dd>
 					</dl>
+				{% endif %}
+				{% if S_CAN_CHOOSE_SUBMIT_AS %}
+					<dl style="clear: left;">
+						<dt><label>{{ lang('KB_SUBMIT_AS') }}{{ lang('COLON') }}</label></dt>
+						<dd>
+							<label><input type="radio" name="submit_as_approved" value="1"
+									{% if S_SUBMIT_AS_APPROVED %}checked="checked"{% endif %}/> {{ lang('KB_SUBMIT_AS_APPROVED') }}</label><br>
+							<label><input type="radio" name="submit_as_approved" value="0"
+									{% if not S_SUBMIT_AS_APPROVED %}checked="checked"{% endif %}/> {{ lang('KB_SUBMIT_AS_PENDING') }}</label>
+						</dd>
+					</dl>
+				{% endif %}
+				{% if S_CAN_SET_CO_AUTHORS %}
+					<dl style="clear: left;">
+						<dt><label for="co_author_usernames">{{ lang('KB_CO_AUTHORS') }}{{ lang('COLON') }}</label><br>
+							<span>{{ lang('KB_CO_AUTHORS_EXPLAIN') }}</span></dt>
+						<dd><input type="text" class="text full" name="co_author_usernames" id="co_author_usernames"
+								value="{{ CO_AUTHOR_USERNAMES }}"/></dd>
+					</dl>
+					{% if loops.co_author_group|length %}
+						<dl style="clear: left;">
+							<dt><label>{{ lang('KB_CO_AUTHOR_GROUPS') }}{{ lang('COLON') }}</label></dt>
+							<dd>
+								{% for co_author_group in loops.co_author_group %}
+									<label><input type="checkbox" name="co_author_groups[]"
+											value="{{ co_author_group.GROUP_ID }}"
+											{% if co_author_group.S_CHECKED %}checked="checked"{% endif %}/> {{ co_author_group.GROUP_NAME }}</label><br>
+								{% endfor %}
+							</dd>
+						</dl>
+					{% endif %}
 				{% endif %}
 				<dl style="clear: left;">
 					<dt><label for="cross_categories">{{ lang('KB_CROSS_CATEGORIES') }}{{ lang('COLON') }}</label><br>

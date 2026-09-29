@@ -2,6 +2,21 @@
 <h2><a href="{{ U_LIBRARY }}" class="nav">{{ lang('LIBRARY') }}</a></h2>
 {% INCLUDE '@phpbbmodders_knowledgebase/kb_nav_tabs.html' %}
 
+<form method="get" action="{{ S_ACTION }}" class="action-bar bar-top">
+	<label>{{ lang('KB_FILTER_BY_FIELD') }}{{ lang('COLON') }}
+		<select name="filter" onchange="this.form.submit();">
+			<option value="">{{ lang('KB_FILTER_ANY') }}</option>
+			<option value="redirect"{% if S_FILTER_REDIRECT %} selected="selected"{% endif %}>{{ lang('KB_FILTER_REDIRECTS') }}</option>
+			<option value="inactive"{% if S_FILTER_INACTIVE %} selected="selected"{% endif %}>{{ lang('KB_STATUS_INACTIVE') }}</option>
+			{{ TEAM_FILTER_OPTIONS }}
+		</select>
+	</label>
+	<label title="{{ lang('KB_SHOW_ALL_ARTICLES') }}"><input type="checkbox" name="show_all" value="1" onchange="this.form.submit();"{% if S_SHOW_ALL %} checked="checked"{% endif %}> {{ lang('KB_SHOW_ALL') }}</label>
+	{% if S_FILTER_ACTIVE %}
+		<a href="{{ U_RESET_FILTER }}">{{ lang('RESET_FILTER') }}</a>
+	{% endif %}
+</form>
+
 <table class="kb-index-table">
 	<thead>
 	<tr>
@@ -16,35 +31,40 @@
 			<td><a href="{{ art_row.U_ARTICLE }}">{{ art_row.ARTICLE_TITLE }}</a>{% if art_row.CATEGORY %}<br><small>{{ art_row.CATEGORY }}</small>{% endif %}</td>
 			<td class="kb-index-author">{{ art_row.ARTICLE_AUTHOR }}<br>{{ art_row.ARTICLE_DATE }}</td>
 			<td class="kb-index-author">
-				{% if art_row.S_STATUS_NEW and not art_row.S_IS_ASSIGNED %}
-					<a class="button2" href="{{ art_row.S_ACTION }}">{{ lang('KB_ASSIGN') }}</a>
+				{% if art_row.U_TOPIC %}
+					<a class="button2" href="{{ art_row.U_TOPIC }}">{{ lang('VIEW_TOPIC') }}</a>&nbsp;
 				{% endif %}
-				<form method="post" action="{{ art_row.S_ACTION }}">
-					{{ S_FORM_TOKEN }}
-					<select name="action">
-						{% if art_row.S_STATUS_NEW and art_row.S_IS_ASSIGNED %}
-							<option value="review">{{ lang('KB_MARK_REVIEWED') }}</option>
-						{% endif %}
-						{% if art_row.S_STATUS_NEW %}
-							<option value="deny">{{ lang('DISAPPROVE') }}</option>
-						{% endif %}
-						{% if art_row.S_STATUS_REVIEWED %}
-							<option value="approve">{{ lang('APPROVE') }}</option>
-							<option value="deny">{{ lang('DISAPPROVE') }}</option>
-						{% endif %}
-						{% if art_row.S_STATUS_ACTIVE %}
-							<option value="deactivate">{{ lang('KB_DEACTIVATE') }}</option>
-							{% if art_row.S_HAS_REVISION %}
-								<option value="approve_revision">{{ lang('KB_APPROVE_REVISION') }}</option>
-								<option value="reject_revision">{{ lang('KB_REJECT_REVISION') }}</option>
+				{% if art_row.S_STATUS_NEW and not art_row.S_IS_ASSIGNED %}
+					<a class="button2" href="{{ art_row.S_ACTION }}">{{ lang('KB_ASSIGN') }}</a>&nbsp;
+				{% endif %}
+				{% if art_row.S_STATUS_NEW %}
+					<a class="button2" href="{{ art_row.S_ACTION }}">{{ lang('DISAPPROVE') }}</a>
+				{% endif %}
+				{% if art_row.S_STATUS_REVIEWED %}
+					<a class="button2" href="{{ art_row.S_ACTION }}">{{ lang('APPROVE') }}</a>&nbsp;
+					<a class="button2" href="{{ art_row.S_ACTION }}">{{ lang('DISAPPROVE') }}</a>
+				{% endif %}
+				{% if art_row.S_HAS_REVISION %}
+					<a class="button2" href="{{ art_row.S_ACTION }}">{{ lang('KB_REVIEW_REVISION') }}</a>&nbsp;
+				{% endif %}
+				{% if (art_row.S_STATUS_NEW and art_row.S_CAN_REVIEW) or art_row.S_STATUS_ACTIVE or art_row.S_STATUS_INACTIVE %}
+					<form method="post" action="{{ art_row.S_ACTION }}">
+						{{ S_FORM_TOKEN }}
+						<input type="hidden" name="redirect_queue" value="1">
+						<select name="action">
+							{% if art_row.S_STATUS_NEW and art_row.S_CAN_REVIEW %}
+								<option value="review">{{ lang('KB_MARK_REVIEWED') }}</option>
 							{% endif %}
-						{% endif %}
-						{% if art_row.S_STATUS_INACTIVE %}
-							<option value="reactivate">{{ lang('KB_REACTIVATE') }}</option>
-						{% endif %}
-					</select>
-					<button class="button2" type="submit">{{ lang('GO') }}</button>
-				</form>
+							{% if art_row.S_STATUS_ACTIVE %}
+								<option value="deactivate">{{ lang('KB_DEACTIVATE') }}</option>
+							{% endif %}
+							{% if art_row.S_STATUS_INACTIVE %}
+								<option value="reactivate">{{ lang('KB_REACTIVATE') }}</option>
+							{% endif %}
+						</select>&nbsp;
+						<button class="button2" type="submit">{{ lang('GO') }}</button>
+					</form>
+				{% endif %}
 			</td>
 		</tr>
 	{% endfor %}

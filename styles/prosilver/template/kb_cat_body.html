@@ -84,9 +84,6 @@
 		</div>
 	</div>
 {% endif %}
-{% if S_CAN_MOVE %}
-	<div id="kb-reorder-data" style="display: none;" data-cat-id="{{ CATEGORY_ID }}">{{ S_FORM_TOKEN }}</div>
-{% endif %}
 <table class="kb-index-table">
 	<thead>
 	<tr>
@@ -96,7 +93,7 @@
 		<th class="kb-index-author"></th>
 	</tr>
 	</thead>
-	<tbody{% if S_CAN_MOVE %} id="sortable"{% endif %}>
+	<tbody>
 	{% for art_row in loops.art_row %}
 		<tr id="{{ art_row.ID }}">
 			<td>
@@ -108,12 +105,15 @@
 				{% if art_row.ARTICLE_DESCRIPTION %}<br>{{ art_row.ARTICLE_DESCRIPTION }}{% endif %}
 			</td>
 			<td class="kb-index-views">{{ art_row.ART_VIEWS }}</td>
-			<td class="kb-index-author">{{ art_row.ARTICLE_AUTHOR }}<br>{{ art_row.ARTICLE_DATE }}</td>
+			<td class="kb-index-author">{{ art_row.ARTICLE_AUTHOR }}{% if art_row.CO_AUTHORS %}, {{ art_row.CO_AUTHORS }}{% endif %}<br>{{ art_row.ARTICLE_DATE }}</td>
 			<td class="kb-index-author">
 				<ul class="post-buttons">
 					{% if S_CAN_MOVE %}
-						<li id="move"><a href="#" title="{{ lang('MOVE_DRAGNDROP') }}"
-							class="button button-icon-only"><i class="icon fa-arrows fa-fw green"
+						<li><a href="{{ art_row.U_MOVE_UP }}" title="{{ lang('KB_MOVE_UP') }}"
+							class="button button-icon-only"><i class="icon fa-arrow-up fa-fw green"
+								aria-hidden="true"></i></a></li>
+						<li><a href="{{ art_row.U_MOVE_DOWN }}" title="{{ lang('KB_MOVE_DOWN') }}"
+							class="button button-icon-only"><i class="icon fa-arrow-down fa-fw green"
 								aria-hidden="true"></i></a></li>{% endif %}
 					{% if art_row.S_CAN_DELETE %}
 						<li><a href="{{ art_row.U_DELETE }}" title="{{ lang('DELETE') }}"

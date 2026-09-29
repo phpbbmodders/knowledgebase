@@ -161,6 +161,7 @@ services:
             - '%tables.kb_fields_table%'
             - '%tables.kb_field_values_table%'
             - '%tables.kb_article_field_values_table%'
+            - '%tables.kb_article_co_authors_table%'
             - '@group_helper'
 
     phpbbmodders.knowledgebase.controller.kb_file:
@@ -212,6 +213,7 @@ services:
         arguments:
             - '@dbal.conn'
             - '@config'
+            - '@controller.helper'
             - '@request'
             - '@user'
             - '@phpbbmodders.knowledgebase.inc'
@@ -238,6 +240,7 @@ services:
             - [ 'set_user_loader', [ '@user_loader' ] ]
             - [ 'set_group_helper', [ '@group_helper' ] ]
             - [ 'set_tables', [ '%tables.kb_options_table%', '%tables.kb_users_table%', '%tables.kb_groups_table%' ] ]
+            - [ 'set_config', [ '@config' ] ]
         tags:
             - { name: notification.type }
 
@@ -250,8 +253,19 @@ services:
             - [ 'set_user_loader', [ '@user_loader' ] ]
             - [ 'set_group_helper', [ '@group_helper' ] ]
             - [ 'set_tables', [ '%tables.kb_options_table%', '%tables.kb_users_table%', '%tables.kb_groups_table%' ] ]
+            - [ 'set_config', [ '@config' ] ]
         tags:
             - { name: notification.type }
+
+    phpbbmodders.knowledgebase.notification.method.pm:
+        class: phpbbmodders\knowledgebase\notification\method\pm
+        shared: false # service MUST not be shared for this to work!
+        arguments:
+            - '@user'
+            - '%core.root_path%'
+            - '%core.php_ext%'
+        tags:
+            - { name: notification.method }
 
     # Custom fields
     phpbbmodders.knowledgebase.field.multi_select:

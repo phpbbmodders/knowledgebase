@@ -12,6 +12,7 @@
 namespace phpbbmodders\knowledgebase\controller;
 
 use phpbb\config\config;
+use phpbb\controller\helper;
 use phpbb\db\driver\driver_interface;
 use phpbb\request\request_interface;
 use phpbb\user;
@@ -24,6 +25,9 @@ class set_order
 
 	/** @var config */
 	protected config $config;
+
+	/** @var helper */
+	protected helper $helper;
 
 	/** @var request_interface */
 	protected request_interface $request;
@@ -42,18 +46,20 @@ class set_order
 	 *
 	 * @param driver_interface  $db
 	 * @param config            $config
+	 * @param helper            $helper
 	 * @param request_interface $request
 	 * @param user              $user
 	 * @param functions_kb      $kb
 	 * @param string            $articles_table
 	 */
 	public function __construct(
-		driver_interface $db, config $config,
+		driver_interface $db, config $config, helper $helper,
 		request_interface $request, user $user, functions_kb $kb, string $articles_table
 	)
 	{
 		$this->db = $db;
 		$this->config = $config;
+		$this->helper = $helper;
 		$this->request = $request;
 		$this->user = $user;
 		$this->kb = $kb;
@@ -61,67 +67,39 @@ class set_order
 	}
 
 	/**
-	 * Persists the drag-and-drop article order submitted by
-	 * reorder.js. Every article id in the submitted list is checked
-	 * against the category the request claims to reorder, so a
-	 * tampered list can only ever affect articles the caller already
-	 * has kb_m_edit in that category for - it can't be used to touch
-	 * articles in other categories.
+	 * Moves one article up or down among its category's other
+	 * articles, then sends the moderator back to the category listing
+	 * they came from. A plain GET link (matching phpBB's own
+	 * forum/category admin move-up/move-down controls) rather than the
+	 * drag-and-drop UI this replaced - that never actually worked,
+	 * since it relied on jQuery UI's sortable widget, which nothing in
+	 * this extension or phpBB core loads.
 	 *
 	 * @return \Symfony\Component\HttpFoundation\Response
 	 */
 	public function main(): \Symfony\Component\HttpFoundation\Response
 	{
-		if ($this->user->data['user_id'] == ANONYMOUS || !$this->request->is_set_post('list_order'))
-		{
-			return new \Symfony\Component\HttpFoundation\Response('', 400);
-		}
+		$article_id = $this->request->variable('k', 0);
+		$cat_id = $this->request->variable('cat_id', 0);
+		$direction = $this->request->variable('direction', '');
+		$start = $this->request->variable('start', 0);
 
-		if (!check_form_key('kb_reorder'))
-		{
-			return new \Symfony\Component\HttpFoundation\Response('', 403);
-		}
-
-		$cat_id = $this->request->variable('cat_id', 0, false, request_interface::POST);
-		if (!$cat_id || !$this->kb->acl_kb_get($cat_id, 'kb_m_edit'))
+		if ($this->user->data['user_id'] == ANONYMOUS
+			|| !$article_id
+			|| !$cat_id
+			|| !in_array($direction, ['up', 'down'], true)
+			|| !check_link_hash($this->request->variable('hash', ''), 'kb_move_article'))
 		{
 			return new \Symfony\Component\HttpFoundation\Response('', 403);
 		}
 
-		$list_order = $this->request->variable('list_order', '', false, request_interface::POST);
-		$page = $this->request->variable('page', 0, false, request_interface::POST);
-		$per_page = $this->config['kb_articles_per_page'];
-		$ids = array_filter(array_map('intval', explode(',', $list_order)));
-		if (empty($ids))
+		if (!$this->kb->acl_kb_get($cat_id, 'kb_m_edit'))
 		{
-			return new \Symfony\Component\HttpFoundation\Response('', 400);
+			return new \Symfony\Component\HttpFoundation\Response('', 403);
 		}
 
-		// Only ids that actually belong to the claimed category are
-		// reordered - anything else in the submitted list is ignored.
-		$owned_ids = [];
-		$sql = 'SELECT article_id
-			FROM ' . $this->articles_table . '
-			WHERE article_category_id = ' . $cat_id . '
-				AND ' . $this->db->sql_in_set('article_id', $ids);
-		$result = $this->db->sql_query($sql);
-		while ($row = $this->db->sql_fetchrow($result))
-		{
-			$owned_ids[(int) $row['article_id']] = true;
-		}
-		$this->db->sql_freeresult($result);
+		$this->kb->move_article_by($article_id, $cat_id, $direction);
 
-		$i = 1 + (($page - 1) * $per_page);
-		foreach ($ids as $id)
-		{
-			if (isset($owned_ids[$id]))
-			{
-				$sql = 'UPDATE ' . $this->articles_table . ' SET display_order = ' . $i . ' WHERE article_id = ' . $id;
-				$this->db->sql_query($sql);
-			}
-			$i++;
-		}
-
-		return new \Symfony\Component\HttpFoundation\Response('', 200);
+		redirect($this->helper->route('phpbbmodders_knowledgebase_category', ['id' => $cat_id, 'start' => $start]));
 	}
 }

@@ -205,6 +205,15 @@ class index
 			$sql_where .= ' OR (a.author_type = 1 AND ' . $this->db->sql_in_set('a.author_id', $team_group_ids) . ')';
 		}
 
+		// Also count articles this user is a co-author on - directly, or
+		// via one of their own team groups being credited as a co-author.
+		$co_author_where = '(author_type = 0 AND author_ref_id = ' . $user_id . ')';
+		if (!empty($team_group_ids))
+		{
+			$co_author_where .= ' OR (author_type = 1 AND ' . $this->db->sql_in_set('author_ref_id', $team_group_ids) . ')';
+		}
+		$sql_where .= ' OR a.article_id IN (SELECT article_id FROM ' . $this->kb->get_article_co_authors_table() . ' WHERE ' . $co_author_where . ')';
+
 		$sql = 'SELECT COUNT(a.article_id) AS article_count
 			FROM ' . $this->articles_table . ' a
 			WHERE ' . $sql_where;
@@ -238,7 +247,7 @@ class index
 				'S_STATUS_REVIEWED' => $status === functions_kb::STATUS_REVIEWED,
 				'S_STATUS_ACTIVE'   => $status === functions_kb::STATUS_ACTIVE,
 				'S_STATUS_INACTIVE' => $status === functions_kb::STATUS_INACTIVE,
-				'S_HAS_REVISION'    => $status === functions_kb::STATUS_ACTIVE && $this->kb->article_has_pending_revision($art_id),
+				'S_HAS_REVISION'    => in_array($status, [functions_kb::STATUS_ACTIVE, functions_kb::STATUS_INACTIVE], true) && $this->kb->article_has_pending_revision($art_id),
 			]);
 		}
 		$this->db->sql_freeresult($result);
@@ -257,5 +266,16 @@ class index
 		$this->kb->assign_nav_tabs_vars('my_articles');
 
 		return $this->helper->render('@phpbbmodders_knowledgebase/kb_my_articles_body.html', $this->language->lang('LIBRARY') . ' &raquo; ' . $this->language->lang('KB_TAB_MY_ARTICLES'));
+	}
+
+	/**
+	 * Short alias so the knowledge base is reachable at /kb, not just
+	 * /knowledgebase.
+	 *
+	 * @return void
+	 */
+	public function kb_alias(): void
+	{
+		redirect($this->helper->route('phpbbmodders_knowledgebase_index'));
 	}
 }
