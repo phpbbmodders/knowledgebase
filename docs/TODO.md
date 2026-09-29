@@ -42,3 +42,16 @@ under [`docs/TODO/`](TODO/).
   1: "Your articles" was never showing an author column at all before
   this feature existed, so it wasn't given one now either (its
   underlying query was still fixed to include co-authored articles).
+- Two known, deliberately-deferred `[valinfo]` findings from
+  [`docs/ai-validation-review-2026-09-26.md`](ai-validation-review-2026-09-26.md)
+  (neither is a bug, both are design suggestions): `migrations/version_1_0_2.php`
+  has an N+1 query pattern (a per-category query inside a loop, plus a
+  discarded first result) - real on a large install, but it's a
+  historical already-released migration, and editing a released
+  migration in place is itself the riskier move, so this needs an
+  actual migration-replacement/maintenance-path decision, not a quick
+  patch. Separately, `kb_version` is stored in phpBB config with no
+  migration ever removing it; the suggestion is to make package
+  metadata/migration dependencies authoritative instead and clean up
+  the config value in a later migration - migration `2_0_11` still
+  writes it, so this remains unaddressed by choice for now.
