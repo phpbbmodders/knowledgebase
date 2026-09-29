@@ -46,6 +46,7 @@ $lang = array_merge($lang, [
 'PER_PAGE_EXPLAIN'                           => 'Permet de saisir le nombre d’articles à afficher sur la page de gestion des articles et sur la page des résulats de la recherche.',
 'SORT_TYPE'                                  => 'Sorting order',
 'SORT_TYPE_EXPLAIN'                          => 'Method of sorting articles',
+'KB_SORT_POSITION'                           => 'Position',
 'FORCIBLY'                                   => 'forcibly',
 'SELECTABLE'                                 => 'selectable',
 'ALPHABET'                                   => 'alphabetic navigation',
@@ -92,6 +93,7 @@ $lang = array_merge($lang, [
 'MOVE_ARTICLES_TO'                           => 'Déplacer les articles',
 'DELETE_ALL_ARTICLES'                        => 'Supprimer les articles',
 'NO_ARTICLES_IN_KB'                          => 'La base de connaissances n’a aucun article.',
+'NO_ARTICLES_IN_CATEGORY'                    => 'Cette catégorie n’a aucun article.',
 
 //Permission
 'ACP_LIBRARY_PERMISSIONS'                    => 'Permissions',

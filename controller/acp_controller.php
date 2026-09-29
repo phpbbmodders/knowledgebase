@@ -942,6 +942,7 @@ class acp_controller
 		$sort_key = $this->request->variable('sk', 'd');
 		$sort_dir = $this->request->variable('sd', 'd');
 		$start = $this->request->variable('start', 0);
+		$cat_id = $this->request->variable('cat_id', 0);
 
 		// Sorting
 		$limit_days = [];
@@ -951,11 +952,20 @@ class acp_controller
 			'c' => $this->language->lang('CATEGORY'),
 			'e' => $this->language->lang('EDIT_DATE'),
 		];
+		// display_order is a per-category 1..N sequence - sorting/reordering
+		// by it only means anything once the list is scoped to one category,
+		// so this choice (and the up/down controls it enables below) only
+		// appear once a category filter is actually selected.
+		if ($cat_id)
+		{
+			$sort_by_text['p'] = $this->language->lang('KB_SORT_POSITION');
+		}
 		$sort_by_sql = [
 			'u' => 'article_title',
 			'd' => 'article_date',
 			'c' => 'article_category_id',
 			'e' => 'edit_date',
+			'p' => 'display_order',
 		];
 
 		$s_limit_days = $s_sort_key = $s_sort_dir = $u_sort_param = '';
@@ -963,10 +973,14 @@ class acp_controller
 		gen_sort_selects($limit_days, $sort_by_text, $sort_days, $sort_key, $sort_dir, $s_limit_days, $s_sort_key, $s_sort_dir, $u_sort_param);
 		// Sorting
 		$sql_sort = (($sort_dir == 'd') ? 'DESC' : 'ASC');
-		$order_by = $sort_by_sql[$sort_key];
+		$order_by = $sort_by_sql[$sort_key] ?? $sort_by_sql['d'];
+		$s_can_reorder = $cat_id && $sort_key === 'p';
+		$cat_param = $cat_id ? '&amp;cat_id=' . $cat_id : '';
+
+		$sql_where = $cat_id ? ' WHERE article_category_id = ' . $cat_id : '';
 
 		$sql = 'SELECT COUNT(article_id) as article_count
-			FROM ' . $this->articles_table;
+			FROM ' . $this->articles_table . $sql_where;
 		$result = $this->db->sql_query($sql);
 		$row = $this->db->sql_fetchrow($result);
 		$article_count = $row['article_count'];
@@ -978,7 +992,7 @@ class acp_controller
 			$per_page = 10;
 		}
 		$sql = 'SELECT *
-			FROM ' . $this->articles_table . '
+			FROM ' . $this->articles_table . $sql_where . '
 			ORDER BY ' . $order_by . ' ' . $sql_sort;
 		$result = $this->db->sql_query_limit($sql, $per_page, $start);
 		while ($row = $this->db->sql_fetchrow($result))
@@ -998,26 +1012,59 @@ class acp_controller
 					'EDIT_TIME'        => ($row['edit_date']) ? $this->user->format_date($row['edit_date']) : 0,
 					'U_MOVE'           => $this->u_action . '&amp;action=move&amp;aid=' . $row['article_id'],
 					'U_DELETE'         => $this->u_action . '&amp;action=delete&amp;aid=' . $row['article_id'],
+					'S_CAN_REORDER'    => $s_can_reorder,
+					'U_MOVE_UP'        => $s_can_reorder ? ($this->u_action . '&amp;action=reorder&amp;aid=' . $row['article_id'] . '&amp;direction=up' . $cat_param . '&amp;sk=p&amp;sd=' . $sort_dir . '&amp;start=' . $start . '&amp;hash=' . generate_link_hash('kb_reorder_article')) : '',
+					'U_MOVE_DOWN'      => $s_can_reorder ? ($this->u_action . '&amp;action=reorder&amp;aid=' . $row['article_id'] . '&amp;direction=down' . $cat_param . '&amp;sk=p&amp;sd=' . $sort_dir . '&amp;start=' . $start . '&amp;hash=' . generate_link_hash('kb_reorder_article')) : '',
 				]
 			);
 		}
 		$this->db->sql_freeresult($result);
 
-		$pagination_url = $this->u_action . '&amp;' . $u_sort_param . '&amp;' . $keywords_param;
+		$pagination_url = $this->u_action . '&amp;' . $u_sort_param . '&amp;' . $keywords_param . $cat_param;
 		if ($article_count)
 		{
 			$this->pagination->generate_template_pagination($pagination_url, 'pagination', 'start', $article_count, $per_page, $start);
 		}
 
 		$this->template->assign_vars([
-				'S_SORT_KEY'  => $s_sort_key,
-				'S_SORT_DIR'  => $s_sort_dir,
-				'S_ARTICLES'  => true,
-				'S_ACTION'    => $this->u_action . '&amp;' . $u_sort_param . $keywords_param . '&amp;start=' . $start,
-				'TOTAL_ITEMS' => $this->language->lang('TOTAL_ITEMS', (int) $article_count),
-				'PAGE_NUMBER' => $this->pagination->on_page($article_count, $per_page, $start),
+				'S_SORT_KEY'                => $s_sort_key,
+				'S_SORT_DIR'                => $s_sort_dir,
+				'S_ARTICLES'                => true,
+				'S_ACTION'                  => $this->u_action . '&amp;' . $u_sort_param . $keywords_param . '&amp;start=' . $start . $cat_param,
+				'S_CATEGORY_FILTER_ACTION'  => $this->u_action,
+				'S_CATEGORY_FILTER_OPTIONS' => '<option value="0"' . (!$cat_id ? ' selected="selected"' : '') . '>' . $this->language->lang('ALL_CATS') . '</option>' . $this->kb->make_category_select($cat_id, [], true),
+				'S_CATEGORY_FILTERED'       => (bool) $cat_id,
+				'TOTAL_ITEMS'               => $this->language->lang('TOTAL_ITEMS', (int) $article_count),
+				'PAGE_NUMBER'               => $this->pagination->on_page($article_count, $per_page, $start),
 			]
 		);
+	}
+
+	/**
+	 * Swaps an article's position with its neighbour within its own
+	 * category - only reachable from show_articles() when the list is
+	 * both scoped to one category and sorted by position, since
+	 * display_order is meaningless compared across categories.
+	 *
+	 * @return void
+	 */
+	public function reorder_article(): void
+	{
+		$article_id = $this->request->variable('aid', 0);
+		$cat_id = $this->request->variable('cat_id', 0);
+		$direction = $this->request->variable('direction', '');
+		$sort_dir = $this->request->variable('sd', 'd');
+		$start = $this->request->variable('start', 0);
+
+		if (!$article_id || !$cat_id || !in_array($direction, ['up', 'down'], true)
+			|| !check_link_hash($this->request->variable('hash', ''), 'kb_reorder_article'))
+		{
+			trigger_error('FORM_INVALID', E_USER_WARNING);
+		}
+
+		$this->kb->move_article_by($article_id, $cat_id, $direction);
+
+		redirect($this->u_action . '&amp;cat_id=' . $cat_id . '&amp;sk=p&amp;sd=' . $sort_dir . '&amp;start=' . $start);
 	}
 
 	/**
@@ -1042,7 +1089,7 @@ class acp_controller
 
 		$this->template->assign_vars([
 				'S_MOVE_ART'              => true,
-				'S_MOVE_CATEGORY_OPTIONS' => $this->kb->make_category_select(0, $info['article_category_id'], false),
+				'S_MOVE_CATEGORY_OPTIONS' => $this->kb->make_category_select(0, [(int) $info['article_category_id']], false),
 				'S_ACTION'                => $this->u_action . '&amp;action=move&amp;aid=' . $article_id,
 			]
 		);
