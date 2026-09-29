@@ -143,7 +143,7 @@ class listener implements EventSubscriberInterface
 			($forum_row['FORUM_ID'] == $this->config['kb_forum_id']) &&
 			(!empty($this->config_text->get('kb_forum_prefix'))))
 		{
-			$forum_row['FORUM_NAME'] = htmlspecialchars_decode($this->config_text->get('kb_forum_prefix'), ENT_HTML5) . ' ' . $forum_row['FORUM_NAME'];
+			$forum_row['FORUM_NAME'] = $this->decode_prefix_entities($this->config_text->get('kb_forum_prefix')) . ' ' . $forum_row['FORUM_NAME'];
 		}
 		$event['forum_row'] = $forum_row;
 	}
@@ -159,9 +159,28 @@ class listener implements EventSubscriberInterface
 		if ($this->config['kb_anounce'] && $topic_row['FORUM_ID'] == $this->config['kb_forum_id'] &&
 			!empty($this->config_text->get('kb_topic_prefix')))
 		{
-			$topic_row['TOPIC_TITLE'] = htmlspecialchars_decode($this->config_text->get('kb_topic_prefix'), ENT_HTML5) . ' ' . $topic_row['TOPIC_TITLE'];
+			$topic_row['TOPIC_TITLE'] = $this->decode_prefix_entities($this->config_text->get('kb_topic_prefix')) . ' ' . $topic_row['TOPIC_TITLE'];
 		}
 		$event['topic_row'] = $topic_row;
+	}
+
+	/**
+	 * The ACP help text for these two prefixes explicitly advertises
+	 * typing HTML entities like &bull;/&laquo;/&raquo; into them
+	 * (FORUM_PREFIX_EXPLAIN/TOPIC_PREFIX_EXPLAIN). request->variable()
+	 * stores the prefix HTML-safe, escaping a literal "&" in "&bull;"
+	 * to "&amp;bull;" - undoing just that one substitution restores the
+	 * entity so it renders, without touching "&lt;"/"&gt;", so a "<"/">"
+	 * the admin actually typed stays inert text instead of becoming a
+	 * real tag. A blanket htmlspecialchars_decode() would undo both,
+	 * turning a crafted prefix into active markup for every visitor.
+	 *
+	 * @param string $prefix
+	 * @return string
+	 */
+	protected function decode_prefix_entities(string $prefix): string
+	{
+		return str_replace('&amp;', '&', $prefix);
 	}
 
 	/**
