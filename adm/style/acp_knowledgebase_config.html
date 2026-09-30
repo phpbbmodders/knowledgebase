@@ -38,24 +38,6 @@
 					{{ ADVANCED_FORM_ON }}/>
 			</dd>
 		</dl>
-		<dl>
-			<dt>
-				<label for="flat_index">{{ lang('KB_FLAT_INDEX') }}{{ lang('COLON') }}</label><br>
-				<span>{{ lang('KB_FLAT_INDEX_EXPLAIN') }}</span>
-			</dt>
-			<dd>
-				<input name="flat_index" id="flat_index" type="checkbox" value="1" {{ FLAT_INDEX_ON }}/>
-			</dd>
-		</dl>
-		<dl>
-			<dt>
-				<label for="require_author_pm">{{ lang('KB_REQUIRE_PM') }}{{ lang('COLON') }}</label><br>
-				<span>{{ lang('KB_REQUIRE_PM_EXPLAIN') }}</span>
-			</dt>
-			<dd>
-				<input name="require_author_pm" id="require_author_pm" type="checkbox" value="1" {{ REQUIRE_PM_ON }}/>
-			</dd>
-		</dl>
 		<div id="form_advanced" style="display: {{ ADVANCED_FORM }};">
 			<dl>
 				<dt>
@@ -91,6 +73,24 @@
 				<span>{{ lang('KB_CHANGELOG_FORUM_EXPLAIN') }}</span>
 			</dt>
 			<dd><label><select name="changelog_forum_id">{{ S_CHANGELOG_FORUM_POST }}</select></label></dd>
+		</dl>
+		<dl>
+			<dt>
+				<label for="flat_index">{{ lang('KB_FLAT_INDEX') }}{{ lang('COLON') }}</label><br>
+				<span>{{ lang('KB_FLAT_INDEX_EXPLAIN') }}</span>
+			</dt>
+			<dd>
+				<input name="flat_index" id="flat_index" type="checkbox" value="1" {{ FLAT_INDEX_ON }}/>
+			</dd>
+		</dl>
+		<dl>
+			<dt>
+				<label for="require_author_pm">{{ lang('KB_REQUIRE_PM') }}{{ lang('COLON') }}</label><br>
+				<span>{{ lang('KB_REQUIRE_PM_EXPLAIN') }}</span>
+			</dt>
+			<dd>
+				<input name="require_author_pm" id="require_author_pm" type="checkbox" value="1" {{ REQUIRE_PM_ON }}/>
+			</dd>
 		</dl>
 		<dl>
 			<dt>
