@@ -995,7 +995,12 @@ class acp_controller
 			FROM ' . $this->articles_table . $sql_where . '
 			ORDER BY ' . $order_by . ' ' . $sql_sort;
 		$result = $this->db->sql_query_limit($sql, $per_page, $start);
-		while ($row = $this->db->sql_fetchrow($result))
+		$rows = $this->db->sql_fetchrowset($result);
+		$this->db->sql_freeresult($result);
+
+		$author_colours = $this->kb->get_author_colours_bulk($rows);
+
+		foreach ($rows as $row)
 		{
 			$category_data = $this->kb->get_cat_info($row['article_category_id']);
 			$this->template->assign_block_vars('articles', [
@@ -1007,7 +1012,7 @@ class acp_controller
 					'U_CATEGORY'       => $this->helper->route('phpbbmodders_knowledgebase_index', ['i' => '-phpbbmodders-knowledgebase-acp-manage_module', 'mode' => 'manage', 'parent_id' => $row['article_category_id']]),
 					'U_ARTICLE'        => $this->helper->route('phpbbmodders_knowledgebase_article', ['k' => $row['article_id']]),
 					'U_ARTICLE_EDIT'   => $this->helper->route('phpbbmodders_knowledgebase_posting', ['mode' => 'edit', 'id' => $row['article_category_id'], 'k' => $row['article_id']]),
-					'AUTHOR'           => $row['author'],
+					'AUTHOR'           => $this->kb->get_author_display($row, $author_colours),
 					'TIME'             => $this->user->format_date($row['article_date']),
 					'EDIT_TIME'        => ($row['edit_date']) ? $this->user->format_date($row['edit_date']) : 0,
 					'U_MOVE'           => $this->u_action . '&amp;action=move&amp;aid=' . $row['article_id'],
@@ -1018,7 +1023,6 @@ class acp_controller
 				]
 			);
 		}
-		$this->db->sql_freeresult($result);
 
 		$pagination_url = $this->u_action . '&amp;' . $u_sort_param . '&amp;' . $keywords_param . $cat_param;
 		if ($article_count)
