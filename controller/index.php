@@ -127,6 +127,7 @@ class index
 			array_shift($exclude_cats);
 
 			$sql_where = ($this->auth->acl_get('a_manage_kb') || $this->kb->acl_kb_get($cat_row['category_id'], 'kb_m_approve')) ? '' : 'AND approved = 1';
+			$sql_where .= ' AND status <> ' . functions_kb::STATUS_DRAFT;
 			$art_count = (int) $cat_row['number_articles'];
 
 			$sql = 'SELECT a.article_id, a.article_title, a.article_date, a.author_id, a.author, a.author_type, a.approved, u.user_id, u.user_colour
@@ -195,6 +196,7 @@ class index
 
 		$start = $this->request->variable('start', 0);
 		$per_page = $this->config['kb_articles_per_page'] ?: 10;
+		$drafts_only = $this->request->variable('drafts_only', false);
 
 		$user_id = (int) $this->user->data['user_id'];
 		$team_group_ids = $this->kb->get_user_team_groups($user_id);
@@ -214,6 +216,14 @@ class index
 		}
 		$sql_where .= ' OR a.article_id IN (SELECT article_id FROM ' . $this->kb->get_article_co_authors_table() . ' WHERE ' . $co_author_where . ')';
 
+		// Wrapped so the optional drafts_only filter ANDs onto the whole
+		// ownership condition above, not just its last OR clause.
+		$sql_where = '(' . $sql_where . ')';
+		if ($drafts_only)
+		{
+			$sql_where .= ' AND a.status = ' . functions_kb::STATUS_DRAFT;
+		}
+
 		$sql = 'SELECT COUNT(a.article_id) AS article_count
 			FROM ' . $this->articles_table . ' a
 			WHERE ' . $sql_where;
@@ -221,7 +231,7 @@ class index
 		$article_count = (int) $this->db->sql_fetchfield('article_count');
 		$this->db->sql_freeresult($result);
 
-		$pagination_url = $this->helper->route('phpbbmodders_knowledgebase_my_articles');
+		$pagination_url = $this->helper->route('phpbbmodders_knowledgebase_my_articles', $drafts_only ? ['drafts_only' => 1] : []);
 		if ($article_count)
 		{
 			$this->pagination->generate_template_pagination($pagination_url, 'pagination', 'start', $article_count, $per_page, $start);
@@ -247,6 +257,7 @@ class index
 				'S_STATUS_REVIEWED' => $status === functions_kb::STATUS_REVIEWED,
 				'S_STATUS_ACTIVE'   => $status === functions_kb::STATUS_ACTIVE,
 				'S_STATUS_INACTIVE' => $status === functions_kb::STATUS_INACTIVE,
+				'S_STATUS_DRAFT'    => $status === functions_kb::STATUS_DRAFT,
 				'S_HAS_REVISION'    => in_array($status, [functions_kb::STATUS_ACTIVE, functions_kb::STATUS_INACTIVE], true) && $this->kb->article_has_pending_revision($art_id),
 			]);
 		}
@@ -256,6 +267,8 @@ class index
 			'TOTAL_ITEMS'         => $this->language->lang('TOTAL_ITEMS', $article_count),
 			'CURRENT_PAGE_NUMBER' => $this->pagination->get_on_page($per_page, $start),
 			'S_KNOWLEDGEBASE'     => true,
+			'S_DRAFTS_ONLY'       => $drafts_only,
+			'S_ACTION'            => $this->helper->route('phpbbmodders_knowledgebase_my_articles'),
 		]);
 
 		$this->template->assign_block_vars('navlinks', [

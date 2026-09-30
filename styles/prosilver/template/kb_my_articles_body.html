@@ -16,9 +16,15 @@
 			<dd>{{ lang('KB_STATUS_INACTIVE') }}</dd>
 			<dt><span class="kb-status-badge kb-status-revision">{{ lang('KB_STATUS_REVISION') }}</span></dt>
 			<dd>{{ lang('KB_STATUS_REVISION') }}</dd>
+			<dt><span class="kb-status-badge kb-status-draft">{{ lang('KB_STATUS_DRAFT') }}</span></dt>
+			<dd>{{ lang('KB_STATUS_DRAFT_EXPLAIN') }}</dd>
 		</dl>
 	</div>
 </div>
+
+<form method="get" action="{{ S_ACTION }}" class="action-bar bar-top">
+	<label><input type="checkbox" name="drafts_only" value="1" onchange="this.form.submit();"{% if S_DRAFTS_ONLY %} checked="checked"{% endif %}> {{ lang('KB_DRAFTS_ONLY') }}</label>
+</form>
 
 <table class="kb-index-table">
 	<thead>
@@ -40,6 +46,7 @@
 				{% elseif art_row.S_STATUS_REVIEWED %}<span class="kb-status-badge kb-status-reviewed">{{ lang('KB_STATUS_REVIEWED') }}</span>
 				{% elseif art_row.S_STATUS_ACTIVE %}<span class="kb-status-badge kb-status-active">{{ lang('KB_STATUS_ACTIVE') }}</span>
 				{% elseif art_row.S_STATUS_INACTIVE %}<span class="kb-status-badge kb-status-inactive">{{ lang('KB_STATUS_INACTIVE') }}</span>
+				{% elseif art_row.S_STATUS_DRAFT %}<span class="kb-status-badge kb-status-draft">{{ lang('KB_STATUS_DRAFT') }}</span>
 				{% endif %}
 			</td>
 		</tr>

@@ -252,15 +252,24 @@ class posting
 
 			$article_categories = $this->kb->get_article_categories($art_id);
 
-			$edit_allowed = ($this->kb->acl_kb_get_any($article_categories, 'kb_m_edit') || (
-					$is_own_article &&
-					$this->kb->acl_kb_get_any($article_categories, 'kb_u_edit'))
-			);
+			// A draft is private to its author/co-authors - not even a
+			// moderator with kb_m_edit/kb_m_delete can open or remove
+			// someone else's draft, unlike every other status.
+			$is_draft = (int) $row['status'] === functions_kb::STATUS_DRAFT;
 
-			$delete_allowed = ($this->kb->acl_kb_get_any($article_categories, 'kb_m_delete') || (
-					$is_own_article &&
-					$this->kb->acl_kb_get_any($article_categories, 'kb_u_delete'))
-			);
+			$edit_allowed = $is_draft
+				? ($is_own_article && $this->kb->acl_kb_get_any($article_categories, 'kb_u_edit'))
+				: ($this->kb->acl_kb_get_any($article_categories, 'kb_m_edit') || (
+						$is_own_article &&
+						$this->kb->acl_kb_get_any($article_categories, 'kb_u_edit'))
+				);
+
+			$delete_allowed = $is_draft
+				? ($is_own_article && $this->kb->acl_kb_get_any($article_categories, 'kb_u_delete'))
+				: ($this->kb->acl_kb_get_any($article_categories, 'kb_m_delete') || (
+						$is_own_article &&
+						$this->kb->acl_kb_get_any($article_categories, 'kb_u_delete'))
+				);
 		}
 
 		// Select which method we'll use to obtain the post_id or topic_id information
@@ -283,6 +292,7 @@ class posting
 
 		$error = [];
 		$submit = $this->request->is_set_post('submit');
+		$savedraft = $this->request->is_set_post('savedraft');
 		$preview = $this->request->is_set_post('preview');
 		$cancel = $this->request->is_set_post('cancel');
 		$delete = $this->request->is_set_post('delete');
@@ -364,6 +374,28 @@ class posting
 			$original_bbcode_uid = (string) $row['bbcode_uid'];
 
 			$article_text = $this->decode_message($article_text, $row['bbcode_uid']);
+
+			// A draft-of-an-edit is entirely separate from a real pending
+			// revision - private scratch space for an in-progress edit of
+			// an already-submitted article, never visible to a moderator
+			// and never interfering with any real pending revision that
+			// already exists. Only applies on a fresh load (not a submit
+			// or preview, which already carry the form's own current
+			// values) and never for a STATUS_DRAFT article itself, which
+			// already IS the draft.
+			$has_draft_edit = false;
+			if ($article_status !== functions_kb::STATUS_DRAFT && !$submit && !$preview)
+			{
+				$draft_edit = $this->kb->get_article_draft_edit($art_id);
+				if ($draft_edit)
+				{
+					$has_draft_edit = true;
+					$article_title = (string) $draft_edit['article_title'];
+					$article_description = (string) $draft_edit['article_description'];
+					$redirect_url = (string) $draft_edit['redirect_url'];
+					$article_text = $this->decode_message((string) $draft_edit['article_body'], $draft_edit['bbcode_uid']);
+				}
+			}
 
 			if (!$edit_allowed)
 			{
@@ -472,15 +504,18 @@ class posting
 		include($this->phpbb_root_path . 'includes/functions_display.' . $this->php_ext);
 		display_custom_bbcodes();
 
-		if ($submit)
+		if ($submit || $savedraft)
 		{
 			if (!check_form_key('kb_posting'))
 			{
 				trigger_error('FORM_INVALID');
 			}
 
+			// A draft-in-progress doesn't need finished content yet - only
+			// a title, so it can be found again later. A real submission
+			// (including promoting an existing draft) still needs it.
 			$has_content = $is_redirect ? $this->kb->is_valid_redirect_url($redirect_url) : (bool) $article_text;
-			if ($article_title && $has_content)
+			if ($article_title && ($savedraft || $has_content))
 			{
 				if (!$is_redirect)
 				{
@@ -558,8 +593,8 @@ class posting
 					'redirect_url'        => $is_redirect ? $redirect_url : '',
 					'views'               => 0,
 					'author'              => $author_name,
-					'approved'            => $submit_as_approved ? 1 : 0,
-					'status'              => $submit_as_approved ? functions_kb::STATUS_ACTIVE : functions_kb::STATUS_NEW,
+					'approved'            => ($savedraft || !$submit_as_approved) ? 0 : 1,
+					'status'              => $savedraft ? functions_kb::STATUS_DRAFT : ($submit_as_approved ? functions_kb::STATUS_ACTIVE : functions_kb::STATUS_NEW),
 				];
 
 				$root = $this->helper->route('phpbbmodders_knowledgebase_category', ['id' => $cat_id]);
@@ -576,9 +611,15 @@ class posting
 					// editor's own kb_u_add_noapprove permission, and a moderator
 					// deactivation isn't silently undone by an edit either. Status
 					// changes only ever happen through an explicit moderation
-					// action (approve.php) or, for an Active article, the revision
-					// queue below.
-					unset($sql_data['approved'], $sql_data['status']);
+					// action (approve.php), for an Active article the revision
+					// queue below, or - the one deliberate exception - promoting
+					// a draft into a real submission via $submit below, where
+					// $sql_data['approved']/['status'] were computed above
+					// specifically to make that transition happen.
+					if ($article_status !== functions_kb::STATUS_DRAFT)
+					{
+						unset($sql_data['approved'], $sql_data['status']);
+					}
 					// The article's real primary category, not wherever this
 					// edit happened to be reached from (see $article_category_id
 					// above) - fixes a bug where editing via a cross-listed
@@ -602,7 +643,35 @@ class posting
 						$sql_data['display_order'] = 0;
 					}
 
-					if ($article_status === functions_kb::STATUS_ACTIVE)
+					if ($savedraft && $article_status !== functions_kb::STATUS_DRAFT)
+					{
+						// A private draft of a further edit to an already-
+						// submitted article - kept entirely separate from any
+						// real pending revision (which may already exist for
+						// an Active article) until actually submitted, and
+						// scoped to the same core content fields the existing
+						// revision system itself covers. Category moves and
+						// cross-listing/custom-field/attachment changes made
+						// while drafting are deliberately not stashed - only
+						// a real submit applies those.
+						$this->kb->save_article_draft_edit($art_id, [
+							'article_title'       => $article_title,
+							'article_description' => $article_description,
+							'article_body'        => $article_text,
+							'bbcode_uid'          => $bbcode_uid,
+							'bbcode_bitfield'     => $bbcode_bitfield,
+							'redirect_url'        => $redirect_url,
+						], (int) $this->user->data['user_id']);
+
+						$msg = $this->language->lang('KB_DRAFT_SAVED');
+						$redirect = $this->helper->route('phpbbmodders_knowledgebase_my_articles');
+						$root = $this->helper->route('phpbbmodders_knowledgebase_category', ['id' => $cat_id]);
+
+						$msg .= '<br><br>' . sprintf($this->language->lang('RETURN_CAT'), '<a href="' . $root . '">', '</a>');
+						meta_refresh(2, $redirect);
+						trigger_error($msg);
+					}
+					else if ($article_status === functions_kb::STATUS_ACTIVE)
 					{
 						// Refuse rather than silently overwrite if the pending
 						// revision changed since this edit was opened -
@@ -641,7 +710,77 @@ class posting
 						);
 						$this->kb->post_changelog_entry($art_id, $article_title, $changelog_message);
 
+						// Superseded by the real pending revision just queued.
+						$this->kb->delete_article_draft_edit($art_id);
+
 						$msg = $this->language->lang('ARTICLE_REVISION_SUBMITTED');
+					}
+					else if ($article_status === functions_kb::STATUS_DRAFT && $submit)
+					{
+						// Promoting a draft into a real submission - the same
+						// outcome as adding a brand new article (search index,
+						// changelog, announce/notify per the submit-as-approved
+						// choice), just via UPDATE on the existing draft row
+						// instead of INSERT. The author (set when the draft was
+						// first saved) is deliberately left as the shared
+						// override above already set it - promoting isn't a
+						// chance to reassign authorship.
+						$sql_data['article_date'] = time();
+						$sql_data['edit_date'] = time();
+
+						$sql = 'UPDATE ' . $this->articles_table . '
+							SET ' . $this->db->sql_build_array('UPDATE', $sql_data) . '
+							WHERE article_id = ' . $art_id;
+						$this->db->sql_query($sql);
+
+						// A draft was never counted in its category's
+						// number_articles - promoting it is this article's
+						// first time being counted, same as a brand new
+						// article. Counted against its category as of before
+						// any move below, so the shared moving_category
+						// transfer further down (which assumes the article
+						// was already counted in its old category) balances
+						// out correctly if this submit also moves it.
+						$this->config->increment('kb_num_articles', 1);
+						$sql = 'UPDATE ' . $this->categories_table . '
+							SET number_articles = number_articles + 1
+							WHERE category_id = ' . $article_category_id;
+						$this->db->sql_query($sql);
+
+						if ($is_moderator_for_cat)
+						{
+							$this->kb->set_co_authors($art_id, $co_author_user_ids, $co_author_group_ids, (int) $sql_data['author_id'], (int) $sql_data['author_type']);
+						}
+
+						$this->kb->post_changelog_entry($art_id, $article_title, $this->language->lang('KB_CHANGELOG_SUBMITTED', $this->user->data['username']));
+
+						if ($submit_as_approved)
+						{
+							if ($kb_search)
+							{
+								$kb_search->index('add', $art_id, $article_text, $article_title, $article_description, (int) $sql_data['author_id']);
+							}
+
+							if (!empty($this->config['kb_forum_id']) && $this->config['kb_anounce'])
+							{
+								$this->kb->submit_article($cat_id, $fid, $article_title, $article_description, $sql_data['author'], $category_name, $art_id);
+							}
+
+							$msg = $this->language->lang('ARTICLE_SUBMITTED');
+						}
+						else
+						{
+							$msg = $this->language->lang('ARTICLE_NEED_APPROVE');
+
+							$notification_data = [
+								'author_id'           => $sql_data['author_id'],
+								'author_type'         => $sql_data['author_type'],
+								'title'               => $article_title,
+								'article_category_id' => $cat_id,
+								'item_id'             => $art_id,
+							];
+							$this->notification_manager->add_notifications('phpbbmodders.knowledgebase.notification.type.need_approval', $notification_data);
+						}
 					}
 					else
 					{
@@ -652,12 +791,6 @@ class posting
 							WHERE article_id = ' . $art_id;
 						$this->db->sql_query($sql);
 
-						// Upd search index
-						if ($kb_search)
-						{
-							$kb_search->index('edit', $art_id, $article_text, $article_title, $article_description, (int) $article_author_id);
-						}
-
 						// Co-authors can only change here (a moderator's direct
 						// edit of a not-yet-published article) or on add below -
 						// never through the revision path above, matching
@@ -667,14 +800,36 @@ class posting
 							$this->kb->set_co_authors($art_id, $co_author_user_ids, $co_author_group_ids, (int) $article_author_id, (int) $article_author_type);
 						}
 
-						$changelog_message = $this->append_changelog_body_diff(
-							$this->language->lang('KB_CHANGELOG_EDITED', $this->user->data['username']),
-							$original_article_body, $original_bbcode_uid,
-							$article_text, $bbcode_uid
-						);
-						$this->kb->post_changelog_entry($art_id, $article_title, $changelog_message);
+						// A draft being saved as a draft again has nothing to
+						// index or log yet - it was never submitted, so there's
+						// no search entry or changelog thread to update.
+						if (!$savedraft)
+						{
+							if ($kb_search)
+							{
+								$kb_search->index('edit', $art_id, $article_text, $article_title, $article_description, (int) $article_author_id);
+							}
 
-						$msg = $this->language->lang('ARTICLE_EDITED');
+							$changelog_message = $this->append_changelog_body_diff(
+								$this->language->lang('KB_CHANGELOG_EDITED', $this->user->data['username']),
+								$original_article_body, $original_bbcode_uid,
+								$article_text, $bbcode_uid
+							);
+							$this->kb->post_changelog_entry($art_id, $article_title, $changelog_message);
+
+							// Superseded by the real edit just applied.
+							$this->kb->delete_article_draft_edit($art_id);
+						}
+
+						if ($savedraft)
+						{
+							$msg = $this->language->lang('KB_DRAFT_SAVED');
+							$redirect = $this->helper->route('phpbbmodders_knowledgebase_my_articles');
+						}
+						else
+						{
+							$msg = $this->language->lang('ARTICLE_EDITED');
+						}
 					}
 
 					if ($moving_category)
@@ -703,9 +858,19 @@ class posting
 					$this->save_article_field_values($art_id, $enabled_fields, $all_field_values);
 					$this->insert_attachments($attachment_data, $art_id);
 
-					$msg .= '<br><br>' . sprintf($this->language->lang('RETURN_ARTICLE'), '<a href="' . $redirect . '">', '</a>');
+					// Saving a draft (whether still a draft, or just promoted)
+					// redirects to Manage Your Articles, not this same "back to
+					// article" link, and isn't a moderation-relevant admin-log
+					// event when it's still just a draft.
+					if (!$savedraft)
+					{
+						$msg .= '<br><br>' . sprintf($this->language->lang('RETURN_ARTICLE'), '<a href="' . $redirect . '">', '</a>');
+					}
 					$msg .= '<br><br>' . sprintf($this->language->lang('RETURN_CAT'), '<a href="' . $root . '">', '</a>');
-					$this->log->add('admin', $this->user->data['user_id'], $this->user->data['user_ip'], 'LOG_LIBRARY_EDIT_ARTICLE', time(), [$article_title, $category_name]);
+					if (!$savedraft)
+					{
+						$this->log->add('admin', $this->user->data['user_id'], $this->user->data['user_ip'], 'LOG_LIBRARY_EDIT_ARTICLE', time(), [$article_title, $category_name]);
+					}
 				}
 				else
 				{
@@ -725,54 +890,77 @@ class posting
 					}
 					$this->save_article_field_values($new, $enabled_fields, $all_field_values);
 					$this->insert_attachments($attachment_data, $new);
-					$this->kb->post_changelog_entry($new, $article_title, $this->language->lang('KB_CHANGELOG_SUBMITTED', $this->user->data['username']));
 
-					$articles_count++;
-					$this->config->increment('kb_num_articles', 1);
-					$sql = 'UPDATE ' . $this->categories_table . '
-						SET number_articles = ' . $articles_count . '
-						WHERE category_id = ' . $cat_id;
-					$this->db->sql_query($sql);
-
-					if ($submit_as_approved)
+					// A draft doesn't count yet - it isn't visible anywhere
+					// that count is shown, and gets counted for real once
+					// promote-on-submit runs, below.
+					if (!$savedraft)
 					{
-						$redirect = $this->helper->route('phpbbmodders_knowledgebase_article', ['k' => $new]);
+						$articles_count++;
+						$this->config->increment('kb_num_articles', 1);
+						$sql = 'UPDATE ' . $this->categories_table . '
+							SET number_articles = ' . $articles_count . '
+							WHERE category_id = ' . $cat_id;
+						$this->db->sql_query($sql);
+					}
 
-						if (isset($kb_search))
-						{
-							// Add search index
-							$kb_search->index('add', (int) $new, $article_text, $article_title, $article_description, $author_id);
-						}
-
-						if (!empty($this->config['kb_forum_id']) && $this->config['kb_anounce'])
-						{
-							$this->kb->submit_article($cat_id, $fid, $article_title, $article_description, $author_name, $category_name, $new);
-						}
-
-						$msg = $this->language->lang('ARTICLE_SUBMITTED');
-						$msg .= '<br><br>' . sprintf($this->language->lang('RETURN_ARTICLE'), '<a href="' . $redirect . '">', '</a>');
+					if ($savedraft)
+					{
+						// Nothing to index, announce, or log to the changelog -
+						// a draft was never submitted, so there's nothing yet
+						// for a moderator or search visitor to see.
+						$msg = $this->language->lang('KB_DRAFT_SAVED');
+						$redirect = $this->helper->route('phpbbmodders_knowledgebase_my_articles');
 					}
 					else
 					{
-						$msg = $this->language->lang('ARTICLE_NEED_APPROVE');
-						$redirect = $this->helper->route('phpbbmodders_knowledgebase_category', ['id' => $cat_id]);
+						$this->kb->post_changelog_entry($new, $article_title, $this->language->lang('KB_CHANGELOG_SUBMITTED', $this->user->data['username']));
 
-						// Add notification
-						$notification_data = [
-							'author_id'           => $author_id,
-							'author_type'         => $author_type,
-							'title'               => $article_title,
-							'article_category_id' => $cat_id,
-							'item_id'             => $new,
-						];
-						$this->notification_manager->add_notifications('phpbbmodders.knowledgebase.notification.type.need_approval', $notification_data);
+						if ($submit_as_approved)
+						{
+							$redirect = $this->helper->route('phpbbmodders_knowledgebase_article', ['k' => $new]);
+
+							if (isset($kb_search))
+							{
+								// Add search index
+								$kb_search->index('add', (int) $new, $article_text, $article_title, $article_description, $author_id);
+							}
+
+							if (!empty($this->config['kb_forum_id']) && $this->config['kb_anounce'])
+							{
+								$this->kb->submit_article($cat_id, $fid, $article_title, $article_description, $author_name, $category_name, $new);
+							}
+
+							$msg = $this->language->lang('ARTICLE_SUBMITTED');
+							$msg .= '<br><br>' . sprintf($this->language->lang('RETURN_ARTICLE'), '<a href="' . $redirect . '">', '</a>');
+						}
+						else
+						{
+							$msg = $this->language->lang('ARTICLE_NEED_APPROVE');
+							$redirect = $this->helper->route('phpbbmodders_knowledgebase_category', ['id' => $cat_id]);
+
+							// Add notification
+							$notification_data = [
+								'author_id'           => $author_id,
+								'author_type'         => $author_type,
+								'title'               => $article_title,
+								'article_category_id' => $cat_id,
+								'item_id'             => $new,
+							];
+							$this->notification_manager->add_notifications('phpbbmodders.knowledgebase.notification.type.need_approval', $notification_data);
+						}
 					}
 
 					$this->cache->destroy('sql', $this->categories_table);
 					$this->cache->destroy('sql', $this->articles_table);
 
 					$msg .= '<br><br>' . sprintf($this->language->lang('RETURN_CAT'), '<a href="' . $root . '">', '</a>');
-					$this->log->add('admin', $this->user->data['user_id'], $this->user->data['user_ip'], 'LOG_LIBRARY_ADD_ARTICLE', time(), [$article_title, $category_name]);
+					// A draft is private and freely re-editable - not yet a
+					// moderation-relevant event worth recording in the admin log.
+					if (!$savedraft)
+					{
+						$this->log->add('admin', $this->user->data['user_id'], $this->user->data['user_ip'], 'LOG_LIBRARY_ADD_ARTICLE', time(), [$article_title, $category_name]);
+					}
 				}
 				meta_refresh(2, $redirect);
 				trigger_error($msg);
@@ -877,6 +1065,14 @@ class posting
 				// kb_u_add_noapprove - anyone else has no choice to make.
 				'S_CAN_CHOOSE_SUBMIT_AS' => $mode != 'edit' && $can_add_noapprove,
 				'S_SUBMIT_AS_APPROVED'   => $submit_as_approved,
+
+				// Always available: a brand new article, continuing to edit
+				// one that's already saved as a draft, or a private draft
+				// of a further edit to an already-submitted article (kept
+				// entirely separate from any real pending revision until
+				// it's actually submitted).
+				'S_CAN_SAVE_DRAFT' => true,
+				'S_HAS_DRAFT_EDIT' => $has_draft_edit ?? false,
 
 				'S_FORM_ENCTYPE' => ($this->config['kb_allow_attachments']) ? ' enctype="multipart/form-data"' : '',
 

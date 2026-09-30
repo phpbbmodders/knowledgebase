@@ -11,6 +11,7 @@
 			<h3>{{ lang('POST_A') }}</h3>
 			<fieldset class="fields1">
 				{% if ERROR %}<p class="error">{{ ERROR }}</p>{% endif %}
+				{% if S_HAS_DRAFT_EDIT %}<p class="kb-notice">{{ lang('KB_VIEWING_DRAFT_EDIT') }}</p>{% endif %}
 				{% if S_EDIT_POST %}
 					{% if S_CAN_DELETE %}
 						<dl>
@@ -127,9 +128,13 @@
 				<fieldset class="submit-buttons">
 					<input type="submit" accesskey="p" tabindex="5" name="preview" value="{{ lang('PREVIEW') }}"
 						class="button1" onclick="document.getElementById('postform').action += '#preview';"/>&nbsp
-					<input type="submit" accesskey="s" tabindex="6" name="submit" value="{{ lang('SUBMIT') }}"
+					{% if S_CAN_SAVE_DRAFT %}
+						<input type="submit" accesskey="d" tabindex="6" name="savedraft" value="{{ lang('KB_SAVE_DRAFT') }}"
+							class="button2" formnovalidate="formnovalidate"/>&nbsp
+					{% endif %}
+					<input type="submit" accesskey="s" tabindex="7" name="submit" value="{{ lang('SUBMIT') }}"
 						class="button1 default-submit-action"/>&nbsp
-					<input type="submit" accesskey="c" tabindex="7" name="cancel" value="{{ lang('CANCEL') }}"
+					<input type="submit" accesskey="c" tabindex="8" name="cancel" value="{{ lang('CANCEL') }}"
 						class="button1"/>
 				</fieldset>
 			</div>

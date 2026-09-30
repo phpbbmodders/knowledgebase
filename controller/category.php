@@ -160,6 +160,12 @@ class category
 		{
 			$sql_where = $this->kb->acl_kb_get($cat_id, 'kb_m_approve') ? '' : 'AND a.approved = 1';
 		}
+
+		// A draft is private to its author/co-authors - never listed here,
+		// not even for a moderator who can otherwise see every unapproved
+		// article. It's only ever reachable via Manage Your Articles.
+		$sql_where .= ' AND a.status <> ' . functions_kb::STATUS_DRAFT;
+
 		$pagination_ary = ['id' => $cat_id];
 
 		// Custom field filter: narrow the listing to articles carrying one
@@ -281,6 +287,7 @@ class category
 				array_shift($exclude_cats);
 
 				$where = ($this->kb->acl_kb_get($cat_row['category_id'], 'kb_m_approve')) ? '' : 'AND approved = 1';
+				$where .= ' AND status <> ' . functions_kb::STATUS_DRAFT;
 				$sql = 'SELECT COUNT(article_id) AS articles
 					FROM ' . $this->articles_table . '
 					WHERE article_category_id = ' . (int) $cat_row['category_id'] . '
