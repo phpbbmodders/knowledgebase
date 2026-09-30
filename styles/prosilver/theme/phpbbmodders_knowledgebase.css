@@ -257,10 +257,24 @@ dd.action {
 	background: #6c6c6c;
 }
 
+/*
+ * .postbody (core, see the .kb-meta ~ .postbody rules above) is
+ * position:relative with no z-index of its own - browsers still
+ * stack a position:relative box above a plain, unpositioned float
+ * wherever the two overlap, which is exactly the region .kb-meta
+ * occupies now that .postbody spans the full width. Without this,
+ * .postbody's own box - not .kb-meta's link text on top of it -
+ * receives clicks meant for the author/co-author links, since a
+ * plain float carries no stacking of its own to compete with a
+ * positioned sibling. position + a z-index above auto (0) puts
+ * .kb-meta's own content back on top, where it visually already is.
+ */
 .kb-meta {
 	float: right;
 	text-align: left;
 	width: 260px;
+	position: relative;
+	z-index: 1;
 }
 
 .kb-notice {
