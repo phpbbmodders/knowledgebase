@@ -227,6 +227,10 @@ class approve
 
 		$author_colours = $this->kb->get_author_colours_bulk($art_rows);
 
+		// Same options for every unassigned row below - computed once
+		// rather than re-querying the team group list per row.
+		$team_options = $this->get_team_options(0);
+
 		foreach ($art_rows as $art_row)
 		{
 			$art_id = (int) $art_row['article_id'];
@@ -265,6 +269,7 @@ class approve
 				// check do_review()'s $is_moderator uses.
 				'S_CAN_REVIEW'           => $status === functions_kb::STATUS_NEW && $effective_team_id,
 				'U_TOPIC'                => $art_row['topic_id'] ? append_sid("{$this->phpbb_root_path}viewtopic." . $this->php_ext, 'f=' . $this->config['kb_forum_id'] . '&amp;t=' . $art_row['topic_id']) : '',
+				'TEAM_OPTIONS'           => $team_options,
 			]);
 		}
 
@@ -315,7 +320,7 @@ class approve
 		{
 			trigger_error('ARTICLE_NO_EXISTS');
 		}
-		$effective_team_id = (int) $kb_article_info['assigned_team_id'] ?: (int) ($kb_category_info['default_team_id'] ?? 0);
+		$effective_team_id = $this->kb->get_effective_team_id((int) $kb_article_info['assigned_team_id'], (int) $kb_article_info['article_category_id']);
 
 		$is_moderator = $this->user->data['user_type'] == USER_FOUNDER ||
 			$this->auth->acl_get('a_manage_kb') ||
@@ -366,11 +371,11 @@ class approve
 			switch ($action)
 			{
 				case 'assign':
-					$this->do_assign($art_id, $status);
+					$this->do_assign($art_id, $status, $redirect);
 				break;
 
 				case 'review':
-					$this->do_review($art_id, $status, $effective_team_id, $is_moderator);
+					$this->do_review($art_id, $status, $effective_team_id, $is_moderator, $redirect);
 				break;
 
 				case 'approve':
@@ -396,6 +401,20 @@ class approve
 				case 'reject_revision':
 					$this->do_reject_revision($art_id, $status, $redirect);
 				break;
+			}
+
+			// assign/review are the only actions that reach here instead of
+			// exiting via redirect()/trigger_error() above - re-read what
+			// they just changed so the page rendered below reflects it
+			// immediately (e.g. the "Mark Reviewed" button appearing right
+			// after assigning a team, without a manual reload) instead of
+			// showing the pre-action snapshot fetched at the top of this
+			// method.
+			if (in_array($action, ['assign', 'review'], true))
+			{
+				$kb_article_info = $this->kb->get_kb_article_info($art_id);
+				$status = (int) $kb_article_info['status'];
+				$effective_team_id = $this->kb->get_effective_team_id((int) $kb_article_info['assigned_team_id'], (int) $kb_article_info['article_category_id']);
 			}
 		}
 
@@ -439,11 +458,14 @@ class approve
 	}
 
 	/**
-	 * @param int $art_id
-	 * @param int $status
+	 * @param int    $art_id
+	 * @param int    $status
+	 * @param string $redirect Where redirect_queue sends the moderator back
+	 *                         to - unused otherwise, since the caller falls
+	 *                         through and re-renders this article's own page.
 	 * @return void
 	 */
-	protected function do_assign(int $art_id, int $status): void
+	protected function do_assign(int $art_id, int $status, string $redirect): void
 	{
 		if ($status !== functions_kb::STATUS_NEW)
 		{
@@ -458,6 +480,15 @@ class approve
 
 		$sql = 'UPDATE ' . $this->articles_table . ' SET assigned_team_id = ' . $team_id . ' WHERE article_id = ' . $art_id;
 		$this->db->sql_query($sql);
+
+		// Working through the Administration queue: go straight back to the
+		// list, same as do_set_active() below - assigning from the article's
+		// own page instead falls through and re-renders it (see the
+		// assign/review refresh right after the switch below).
+		if ($this->request->variable('redirect_queue', false))
+		{
+			redirect($redirect);
+		}
 	}
 
 	/**
@@ -466,10 +497,13 @@ class approve
 	 * @param int  $effective_team_id The article's own assigned_team_id,
 	 *             or its category's default_team_id when unset - see
 	 *             functions_kb::get_effective_team_id().
-	 * @param bool $is_moderator
+	 * @param bool   $is_moderator
+	 * @param string $redirect Where redirect_queue sends the moderator back
+	 *                         to - unused otherwise, since the caller falls
+	 *                         through and re-renders this article's own page.
 	 * @return void
 	 */
-	protected function do_review(int $art_id, int $status, int $effective_team_id, bool $is_moderator): void
+	protected function do_review(int $art_id, int $status, int $effective_team_id, bool $is_moderator, string $redirect): void
 	{
 		if ($status !== functions_kb::STATUS_NEW || !$effective_team_id)
 		{
@@ -483,6 +517,14 @@ class approve
 
 		$sql = 'UPDATE ' . $this->articles_table . ' SET status = ' . functions_kb::STATUS_REVIEWED . ' WHERE article_id = ' . $art_id;
 		$this->db->sql_query($sql);
+
+		// Working through the Administration queue: go straight back to the
+		// list, same as do_assign()/do_set_active() - reviewing from the
+		// article's own page instead falls through and re-renders it.
+		if ($this->request->variable('redirect_queue', false))
+		{
+			redirect($redirect);
+		}
 	}
 
 	/**

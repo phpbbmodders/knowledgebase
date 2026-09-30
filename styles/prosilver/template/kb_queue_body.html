@@ -35,7 +35,13 @@
 					<a class="button2" href="{{ art_row.U_TOPIC }}">{{ lang('VIEW_TOPIC') }}</a>&nbsp;
 				{% endif %}
 				{% if art_row.S_STATUS_NEW and not art_row.S_IS_ASSIGNED %}
-					<a class="button2" href="{{ art_row.S_ACTION }}">{{ lang('KB_ASSIGN') }}</a>&nbsp;
+					<form method="post" action="{{ art_row.S_ACTION }}" style="display: inline;">
+						{{ S_FORM_TOKEN }}
+						<input type="hidden" name="redirect_queue" value="1">
+						<input type="hidden" name="action" value="assign">
+						<select name="team_id">{{ art_row.TEAM_OPTIONS }}</select>
+						<button class="button2" type="submit">{{ lang('KB_ASSIGN') }}</button>
+					</form>&nbsp;
 				{% endif %}
 				{% if art_row.S_STATUS_NEW %}
 					<a class="button2" href="{{ art_row.S_ACTION }}">{{ lang('DISAPPROVE') }}</a>
