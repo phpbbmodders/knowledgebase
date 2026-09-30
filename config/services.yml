@@ -162,6 +162,7 @@ services:
             - '%tables.kb_field_values_table%'
             - '%tables.kb_article_field_values_table%'
             - '%tables.kb_article_co_authors_table%'
+            - '%tables.kb_draft_edits_table%'
             - '@group_helper'
 
     phpbbmodders.knowledgebase.controller.kb_file:

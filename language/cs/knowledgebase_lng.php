@@ -174,6 +174,7 @@ $lang = array_merge($lang, [
 	'KB_DRAFT_SAVED'                          => 'Koncept byl uložen.',
 	'KB_DRAFTS_ONLY'                          => 'Zobrazit pouze koncepty',
 	'KB_SAVE_DRAFT'                           => 'Uložit koncept',
+	'KB_VIEWING_DRAFT_EDIT'                   => 'Prohlížíte uložený koncept této úpravy, nikoli aktuálně publikovanou verzi.',
 	'KB_SUBMIT_AS'                            => 'Odeslat jako',
 	'KB_SUBMIT_AS_APPROVED'                   => 'Schválený článek',
 	'KB_SUBMIT_AS_PENDING'                    => 'Článek čekající na schválení',

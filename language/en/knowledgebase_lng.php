@@ -122,6 +122,7 @@ $lang = array_merge($lang, [
 	'KB_DRAFT_SAVED'                        => 'Your draft has been saved.',
 	'KB_DRAFTS_ONLY'                        => 'Show drafts only',
 	'KB_SAVE_DRAFT'                         => 'Save Draft',
+	'KB_VIEWING_DRAFT_EDIT'                 => 'You are viewing your saved draft of this edit, not the currently published version.',
 	'KB_SUBMIT_AS'                          => 'Submit as',
 	'KB_SUBMIT_AS_APPROVED'                 => 'Approved article',
 	'KB_SUBMIT_AS_PENDING'                  => 'Article requiring approval',

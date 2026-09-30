@@ -117,6 +117,9 @@ class functions_kb
 	/** @var string */
 	protected string $article_co_authors_table;
 
+	/** @var string */
+	protected string $draft_edits_table;
+
 	/** @var group_helper */
 	protected group_helper $group_helper;
 
@@ -155,6 +158,7 @@ class functions_kb
 	 * @param string           $field_values_table
 	 * @param string           $article_field_values_table
 	 * @param string           $article_co_authors_table
+	 * @param string           $draft_edits_table
 	 * @param group_helper     $group_helper
 	 */
 	public function __construct(
@@ -164,7 +168,7 @@ class functions_kb
 		string $kb_logs_table, string $attachments_table, string $options_table, string $kb_users_table,
 		string $kb_groups_table, string $revisions_table, string $article_categories_table,
 		string $fields_table, string $field_values_table, string $article_field_values_table,
-		string $article_co_authors_table, group_helper $group_helper
+		string $article_co_authors_table, string $draft_edits_table, group_helper $group_helper
 	)
 	{
 		$this->db = $db;
@@ -193,6 +197,7 @@ class functions_kb
 		$this->field_values_table = $field_values_table;
 		$this->article_field_values_table = $article_field_values_table;
 		$this->article_co_authors_table = $article_co_authors_table;
+		$this->draft_edits_table = $draft_edits_table;
 		$this->group_helper = $group_helper;
 
 		$this->upload_dir = $this->ext_manager->get_extension_path('phpbbmodders/knowledgebase', true) . 'files/';
@@ -571,6 +576,14 @@ class functions_kb
 	public function get_article_co_authors_table(): string
 	{
 		return $this->article_co_authors_table;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function get_draft_edits_table(): string
+	{
+		return $this->draft_edits_table;
 	}
 
 	/**
@@ -1492,6 +1505,60 @@ class functions_kb
 	}
 
 	/**
+	 * A private draft of a further edit to an already-submitted article -
+	 * entirely separate from a real pending revision (kb_article_revisions),
+	 * which may already exist for the same article at the same time.
+	 *
+	 * @param int $article_id
+	 * @return array|null
+	 */
+	public function get_article_draft_edit(int $article_id): ?array
+	{
+		$sql = 'SELECT *
+			FROM ' . $this->draft_edits_table . '
+			WHERE article_id = ' . $article_id;
+		$result = $this->db->sql_query($sql);
+		$row = $this->db->sql_fetchrow($result);
+		$this->db->sql_freeresult($result);
+
+		return $row ?: null;
+	}
+
+	/**
+	 * Store (or replace) the draft-of-an-edit for an article. At most one
+	 * is kept per article, same as a pending revision.
+	 *
+	 * @param int   $article_id
+	 * @param array $fields article_title, article_description, article_body,
+	 *                      bbcode_uid, bbcode_bitfield, redirect_url
+	 * @param int   $edited_by
+	 * @return void
+	 */
+	public function save_article_draft_edit(int $article_id, array $fields, int $edited_by): void
+	{
+		$this->delete_article_draft_edit($article_id);
+
+		$sql_ary = array_merge($fields, [
+			'article_id'  => $article_id,
+			'edited_by'   => $edited_by,
+			'edited_date' => time(),
+		]);
+
+		$sql = 'INSERT INTO ' . $this->draft_edits_table . ' ' . $this->db->sql_build_array('INSERT', $sql_ary);
+		$this->db->sql_query($sql);
+	}
+
+	/**
+	 * @param int $article_id
+	 * @return void
+	 */
+	public function delete_article_draft_edit(int $article_id): void
+	{
+		$sql = 'DELETE FROM ' . $this->draft_edits_table . ' WHERE article_id = ' . $article_id;
+		$this->db->sql_query($sql);
+	}
+
+	/**
 	 * KB team group_id => display name, for the assign-to-team dropdown.
 	 * Uses group_helper::get_name() (same as acp_controller.php) so
 	 * special/translated group names resolve exactly as they do
@@ -1666,6 +1733,7 @@ class functions_kb
 		$this->db->sql_query($sql);
 
 		$this->delete_article_revision((int) $id);
+		$this->delete_article_draft_edit((int) $id);
 
 		$ids = [];
 		$sql = 'SELECT attach_id, physical_filename, thumbnail

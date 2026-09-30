@@ -194,6 +194,7 @@ $lang = array_merge($lang, [
 	'KB_DRAFT_SAVED'                          => 'Votre brouillon a été enregistré.',
 	'KB_DRAFTS_ONLY'                          => 'Afficher uniquement les brouillons',
 	'KB_SAVE_DRAFT'                           => 'Enregistrer le brouillon',
+	'KB_VIEWING_DRAFT_EDIT'                   => 'Vous consultez votre brouillon enregistré de cette modification, pas la version actuellement publiée.',
 	'KB_SUBMIT_AS'                            => 'Soumettre en tant que',
 	'KB_SUBMIT_AS_APPROVED'                   => 'Article approuvé',
 	'KB_SUBMIT_AS_PENDING'                    => 'Article nécessitant une approbation',

@@ -11,6 +11,7 @@
 			<h3>{{ lang('POST_A') }}</h3>
 			<fieldset class="fields1">
 				{% if ERROR %}<p class="error">{{ ERROR }}</p>{% endif %}
+				{% if S_HAS_DRAFT_EDIT %}<p class="kb-notice">{{ lang('KB_VIEWING_DRAFT_EDIT') }}</p>{% endif %}
 				{% if S_EDIT_POST %}
 					{% if S_CAN_DELETE %}
 						<dl>

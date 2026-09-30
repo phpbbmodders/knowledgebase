@@ -375,6 +375,28 @@ class posting
 
 			$article_text = $this->decode_message($article_text, $row['bbcode_uid']);
 
+			// A draft-of-an-edit is entirely separate from a real pending
+			// revision - private scratch space for an in-progress edit of
+			// an already-submitted article, never visible to a moderator
+			// and never interfering with any real pending revision that
+			// already exists. Only applies on a fresh load (not a submit
+			// or preview, which already carry the form's own current
+			// values) and never for a STATUS_DRAFT article itself, which
+			// already IS the draft.
+			$has_draft_edit = false;
+			if ($article_status !== functions_kb::STATUS_DRAFT && !$submit && !$preview)
+			{
+				$draft_edit = $this->kb->get_article_draft_edit($art_id);
+				if ($draft_edit)
+				{
+					$has_draft_edit = true;
+					$article_title = (string) $draft_edit['article_title'];
+					$article_description = (string) $draft_edit['article_description'];
+					$redirect_url = (string) $draft_edit['redirect_url'];
+					$article_text = $this->decode_message((string) $draft_edit['article_body'], $draft_edit['bbcode_uid']);
+				}
+			}
+
 			if (!$edit_allowed)
 			{
 				trigger_error('RULES_KB_MOD_EDIT_CANNOT');
@@ -621,7 +643,35 @@ class posting
 						$sql_data['display_order'] = 0;
 					}
 
-					if ($article_status === functions_kb::STATUS_ACTIVE)
+					if ($savedraft && $article_status !== functions_kb::STATUS_DRAFT)
+					{
+						// A private draft of a further edit to an already-
+						// submitted article - kept entirely separate from any
+						// real pending revision (which may already exist for
+						// an Active article) until actually submitted, and
+						// scoped to the same core content fields the existing
+						// revision system itself covers. Category moves and
+						// cross-listing/custom-field/attachment changes made
+						// while drafting are deliberately not stashed - only
+						// a real submit applies those.
+						$this->kb->save_article_draft_edit($art_id, [
+							'article_title'       => $article_title,
+							'article_description' => $article_description,
+							'article_body'        => $article_text,
+							'bbcode_uid'          => $bbcode_uid,
+							'bbcode_bitfield'     => $bbcode_bitfield,
+							'redirect_url'        => $redirect_url,
+						], (int) $this->user->data['user_id']);
+
+						$msg = $this->language->lang('KB_DRAFT_SAVED');
+						$redirect = $this->helper->route('phpbbmodders_knowledgebase_my_articles');
+						$root = $this->helper->route('phpbbmodders_knowledgebase_category', ['id' => $cat_id]);
+
+						$msg .= '<br><br>' . sprintf($this->language->lang('RETURN_CAT'), '<a href="' . $root . '">', '</a>');
+						meta_refresh(2, $redirect);
+						trigger_error($msg);
+					}
+					else if ($article_status === functions_kb::STATUS_ACTIVE)
 					{
 						// Refuse rather than silently overwrite if the pending
 						// revision changed since this edit was opened -
@@ -659,6 +709,9 @@ class posting
 							$article_text, $bbcode_uid
 						);
 						$this->kb->post_changelog_entry($art_id, $article_title, $changelog_message);
+
+						// Superseded by the real pending revision just queued.
+						$this->kb->delete_article_draft_edit($art_id);
 
 						$msg = $this->language->lang('ARTICLE_REVISION_SUBMITTED');
 					}
@@ -763,6 +816,9 @@ class posting
 								$article_text, $bbcode_uid
 							);
 							$this->kb->post_changelog_entry($art_id, $article_title, $changelog_message);
+
+							// Superseded by the real edit just applied.
+							$this->kb->delete_article_draft_edit($art_id);
 						}
 
 						if ($savedraft)
@@ -1010,11 +1066,13 @@ class posting
 				'S_CAN_CHOOSE_SUBMIT_AS' => $mode != 'edit' && $can_add_noapprove,
 				'S_SUBMIT_AS_APPROVED'   => $submit_as_approved,
 
-				// A draft only ever makes sense pre-submission - either a
-				// brand new article, or continuing to edit one that's
-				// already saved as a draft. Editing anything already
-				// submitted (New/Reviewed/Active/Inactive) never offers it.
-				'S_CAN_SAVE_DRAFT' => $mode != 'edit' || $article_status === functions_kb::STATUS_DRAFT,
+				// Always available: a brand new article, continuing to edit
+				// one that's already saved as a draft, or a private draft
+				// of a further edit to an already-submitted article (kept
+				// entirely separate from any real pending revision until
+				// it's actually submitted).
+				'S_CAN_SAVE_DRAFT' => true,
+				'S_HAS_DRAFT_EDIT' => $has_draft_edit ?? false,
 
 				'S_FORM_ENCTYPE' => ($this->config['kb_allow_attachments']) ? ' enctype="multipart/form-data"' : '',
 
