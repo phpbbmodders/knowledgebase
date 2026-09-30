@@ -80,7 +80,7 @@ $lang = array_merge($lang, [
 'TOPIC_PREFIX_EXPLAIN'                       => 'The text displayed before the topic name.<br>You can use html entities e.g. &amp;bull; &bull;&nbsp;&nbsp;&nbsp;&amp;laquo; &laquo;&nbsp;&nbsp;&nbsp;&amp;raquo; &raquo;',
 
 //Manage category
-'ACP_LIBRARY_MANAGE_EXPLAIN'                 => 'Each category can have an unlimited number of subcategories. Here you can add, edit, move, search places and move from one category to another. If the number of entries in the category does not coincide with the real, you can synchronize the category.',
+'ACP_LIBRARY_MANAGE_EXPLAIN'                 => 'Each category can have an unlimited number of subcategories. From here you can add, edit, move, or delete a category, and select one below to manage its subcategories. If a category\'s article count looks wrong, use the refresh icon to recalculate it from the articles it actually contains.',
 'CATEGORY_LIST'                              => 'Categories list',
 'SELECT_CATEGORY'                            => 'Select a category',
 'SELECTION_CATEGORY'                         => 'Select a category',

@@ -929,6 +929,80 @@ class acp_controller
 	}
 
 	/**
+	 * Bulk-resolves the user_colour/group_colour for a page of article
+	 * rows, one query per type instead of one per row.
+	 *
+	 * @param array $rows kb_articles rows (author_id, author_type)
+	 * @return array<string, string> keyed 'u<id>'/'g<id>' => colour hex
+	 */
+	protected function get_article_author_colours(array $rows): array
+	{
+		$user_ids = $group_ids = [];
+		foreach ($rows as $row)
+		{
+			if ((int) $row['author_type'] === functions_kb::AUTHOR_TYPE_GROUP)
+			{
+				$group_ids[] = (int) $row['author_id'];
+			}
+			else
+			{
+				$user_ids[] = (int) $row['author_id'];
+			}
+		}
+
+		$colours = [];
+		if (!empty($user_ids))
+		{
+			$sql = 'SELECT user_id, user_colour
+				FROM ' . USERS_TABLE . '
+				WHERE ' . $this->db->sql_in_set('user_id', array_unique($user_ids));
+			$result = $this->db->sql_query($sql);
+			while ($user_row = $this->db->sql_fetchrow($result))
+			{
+				$colours['u' . $user_row['user_id']] = $user_row['user_colour'];
+			}
+			$this->db->sql_freeresult($result);
+		}
+		if (!empty($group_ids))
+		{
+			$sql = 'SELECT group_id, group_colour
+				FROM ' . GROUPS_TABLE . '
+				WHERE ' . $this->db->sql_in_set('group_id', array_unique($group_ids));
+			$result = $this->db->sql_query($sql);
+			while ($group_row = $this->db->sql_fetchrow($result))
+			{
+				$colours['g' . $group_row['group_id']] = $group_row['group_colour'];
+			}
+			$this->db->sql_freeresult($result);
+		}
+
+		return $colours;
+	}
+
+	/**
+	 * @param array                $row      a kb_articles row (author_id,
+	 *                                       author_type, author)
+	 * @param array<string, string> $colours  from get_article_author_colours()
+	 * @return string a coloured link to the author's profile (user) or
+	 *                group page (group), matching how co-authors are
+	 *                already linked on the article's own front-end page
+	 */
+	protected function get_article_author_display(array $row, array $colours): string
+	{
+		$author_id = (int) $row['author_id'];
+
+		if ((int) $row['author_type'] === functions_kb::AUTHOR_TYPE_GROUP)
+		{
+			$url = append_sid("{$this->phpbb_root_path}memberlist.{$this->php_ext}", 'mode=group&g=' . $author_id);
+			$colour = $colours['g' . $author_id] ?? '';
+
+			return '<a href="' . $url . '"' . ($colour ? ' style="color: #' . $colour . ';"' : '') . '>' . $row['author'] . '</a>';
+		}
+
+		return get_username_string('full', $author_id, $row['author'], $colours['u' . $author_id] ?? '');
+	}
+
+	/**
 	 * Article management functions
 	 *
 	 * @return void
@@ -995,7 +1069,12 @@ class acp_controller
 			FROM ' . $this->articles_table . $sql_where . '
 			ORDER BY ' . $order_by . ' ' . $sql_sort;
 		$result = $this->db->sql_query_limit($sql, $per_page, $start);
-		while ($row = $this->db->sql_fetchrow($result))
+		$rows = $this->db->sql_fetchrowset($result);
+		$this->db->sql_freeresult($result);
+
+		$author_colours = $this->get_article_author_colours($rows);
+
+		foreach ($rows as $row)
 		{
 			$category_data = $this->kb->get_cat_info($row['article_category_id']);
 			$this->template->assign_block_vars('articles', [
@@ -1007,7 +1086,7 @@ class acp_controller
 					'U_CATEGORY'       => $this->helper->route('phpbbmodders_knowledgebase_index', ['i' => '-phpbbmodders-knowledgebase-acp-manage_module', 'mode' => 'manage', 'parent_id' => $row['article_category_id']]),
 					'U_ARTICLE'        => $this->helper->route('phpbbmodders_knowledgebase_article', ['k' => $row['article_id']]),
 					'U_ARTICLE_EDIT'   => $this->helper->route('phpbbmodders_knowledgebase_posting', ['mode' => 'edit', 'id' => $row['article_category_id'], 'k' => $row['article_id']]),
-					'AUTHOR'           => $row['author'],
+					'AUTHOR'           => $this->get_article_author_display($row, $author_colours),
 					'TIME'             => $this->user->format_date($row['article_date']),
 					'EDIT_TIME'        => ($row['edit_date']) ? $this->user->format_date($row['edit_date']) : 0,
 					'U_MOVE'           => $this->u_action . '&amp;action=move&amp;aid=' . $row['article_id'],
@@ -1018,7 +1097,6 @@ class acp_controller
 				]
 			);
 		}
-		$this->db->sql_freeresult($result);
 
 		$pagination_url = $this->u_action . '&amp;' . $u_sort_param . '&amp;' . $keywords_param . $cat_param;
 		if ($article_count)
