@@ -108,6 +108,12 @@
 			<td class="kb-index-author">{{ art_row.ARTICLE_AUTHOR }}{% if art_row.CO_AUTHORS %}, {{ art_row.CO_AUTHORS }}{% endif %}<br>{{ art_row.ARTICLE_DATE }}</td>
 			<td class="kb-index-author">
 				<ul class="post-buttons">
+					{% if art_row.STATUS != 2 %}
+						<li><a href="{{ art_row.U_ARTICLE }}"
+							title="{% if art_row.STATUS == 3 %}{{ lang('KB_STATUS_INACTIVE') }}{% else %}{{ lang('NEED_APPROVE') }}{% endif %}"
+							class="button button-icon-only"><i
+								class="icon fa-{% if art_row.STATUS == 3 %}eye-slash{% else %}check{% endif %} fa-fw orange"
+								aria-hidden="true"></i></a></li>{% endif %}
 					{% if S_CAN_MOVE %}
 						<li><a href="{{ art_row.U_MOVE_UP }}" title="{{ lang('KB_MOVE_UP') }}"
 							class="button button-icon-only"><i class="icon fa-arrow-up fa-fw green"
@@ -122,12 +128,6 @@
 					{% if art_row.S_CAN_EDIT %}
 						<li><a href="{{ art_row.U_EDIT_ART }}" title="{{ lang('EDIT') }}"
 							class="button button-icon-only"><i class="icon fa-pencil fa-fw blue"
-								aria-hidden="true"></i></a></li>{% endif %}
-					{% if art_row.STATUS != 2 %}
-						<li><a href="{{ art_row.U_ARTICLE }}"
-							title="{% if art_row.STATUS == 3 %}{{ lang('KB_STATUS_INACTIVE') }}{% else %}{{ lang('NEED_APPROVE') }}{% endif %}"
-							class="button button-icon-only"><i
-								class="icon fa-{% if art_row.STATUS == 3 %}eye-slash{% else %}check{% endif %} fa-fw orange"
 								aria-hidden="true"></i></a></li>{% endif %}
 				</ul>
 			</td>
