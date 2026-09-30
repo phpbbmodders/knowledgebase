@@ -305,6 +305,11 @@ class article
 			'S_STATUS_INACTIVE'   => $status === functions_kb::STATUS_INACTIVE,
 			'S_STATUS_DRAFT'      => $status === functions_kb::STATUS_DRAFT,
 			'S_HAS_REVISION'      => in_array($status, [functions_kb::STATUS_ACTIVE, functions_kb::STATUS_INACTIVE], true) && $this->kb->article_has_pending_revision($art_id),
+			// Only the author/co-authors ever reach this branch for a
+			// draft-of-an-edit to matter - anyone else viewing the page
+			// couldn't act on it anyway, and a draft article itself can
+			// never have one (see posting.php).
+			'S_HAS_DRAFT_EDIT'    => $is_own_article && $status !== functions_kb::STATUS_DRAFT && $this->kb->article_has_draft_edit($art_id),
 		]);
 
 		if ($mode != 'print' && $row['approved'])

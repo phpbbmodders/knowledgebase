@@ -247,10 +247,17 @@ class index
 			$art_id = (int) $art_row['article_id'];
 			$status = (int) $art_row['status'];
 
+			// A draft-of-an-edit only ever exists for an article that
+			// isn't itself a draft (see posting.php) - checking it only
+			// in that case saves a query per already-draft row, which
+			// could never have one.
+			$has_draft_edit = $status !== functions_kb::STATUS_DRAFT && $this->kb->article_has_draft_edit($art_id);
+
 			$this->template->assign_block_vars('art_row', [
 				'ID'              => $art_id,
 				'ARTICLE_TITLE'   => $art_row['article_title'],
 				'U_ARTICLE'       => $this->helper->route('phpbbmodders_knowledgebase_article', ['k' => $art_id]),
+				'U_EDIT'          => $this->helper->route('phpbbmodders_knowledgebase_posting', ['mode' => 'edit', 'id' => (int) $art_row['article_category_id'], 'k' => $art_id]),
 				'ARTICLE_DATE'    => $this->user->format_date($art_row['article_date']),
 				'EDIT_DATE'       => $art_row['edit_date'] ? $this->user->format_date($art_row['edit_date']) : '',
 				'S_STATUS_NEW'      => $status === functions_kb::STATUS_NEW,
@@ -259,6 +266,7 @@ class index
 				'S_STATUS_INACTIVE' => $status === functions_kb::STATUS_INACTIVE,
 				'S_STATUS_DRAFT'    => $status === functions_kb::STATUS_DRAFT,
 				'S_HAS_REVISION'    => in_array($status, [functions_kb::STATUS_ACTIVE, functions_kb::STATUS_INACTIVE], true) && $this->kb->article_has_pending_revision($art_id),
+				'S_HAS_DRAFT_EDIT'  => $has_draft_edit,
 			]);
 		}
 		$this->db->sql_freeresult($result);
