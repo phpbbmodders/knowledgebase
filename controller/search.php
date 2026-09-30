@@ -366,7 +366,7 @@ class search
 					'U_VIEW'    => $this->helper->route('phpbbmodders_knowledgebase_article', ['k' => $article_id]),
 					'CATEGORY'  => $category['category_name'],
 					'U_CAT'     => $this->helper->route('phpbbmodders_knowledgebase_category', ['id' => $category_id]),
-					'USER_FULL' => ((int) $row['author_type'] === 1) ? $row['author'] : get_username_string('full', $row['user_id'], $row['username'], $row['user_colour']),
+					'USER_FULL' => $this->kb->get_author_display($row),
 					'ID'        => $article_id,
 				]);
 			}

@@ -222,7 +222,12 @@ class approve
 			WHERE 1=1 ' . $sql_where . '
 			ORDER BY article_date DESC';
 		$result = $this->db->sql_query_limit($sql, $per_page, $start);
-		while ($art_row = $this->db->sql_fetchrow($result))
+		$art_rows = $this->db->sql_fetchrowset($result);
+		$this->db->sql_freeresult($result);
+
+		$author_colours = $this->kb->get_author_colours_bulk($art_rows);
+
+		foreach ($art_rows as $art_row)
 		{
 			$art_id = (int) $art_row['article_id'];
 			$status = (int) $art_row['status'];
@@ -239,7 +244,7 @@ class approve
 				'ARTICLE_TITLE'          => $art_row['article_title'],
 				'U_ARTICLE'              => $this->helper->route('phpbbmodders_knowledgebase_article', ['k' => $art_id]),
 				'CATEGORY'               => $category_info['category_name'] ?? '',
-				'ARTICLE_AUTHOR'         => $art_row['author'],
+				'ARTICLE_AUTHOR'         => $this->kb->get_author_display($art_row, $author_colours),
 				'ARTICLE_DATE'           => $this->user->format_date($art_row['article_date']),
 				'S_ACTION'               => $this->helper->route('phpbbmodders_knowledgebase_approve', ['id' => $art_id]),
 				'S_STATUS_NEW'           => $status === functions_kb::STATUS_NEW,
@@ -262,7 +267,6 @@ class approve
 				'U_TOPIC'                => $art_row['topic_id'] ? append_sid("{$this->phpbb_root_path}viewtopic." . $this->php_ext, 'f=' . $this->config['kb_forum_id'] . '&amp;t=' . $art_row['topic_id']) : '',
 			]);
 		}
-		$this->db->sql_freeresult($result);
 
 		$this->template->assign_vars([
 			'TOTAL_ITEMS'            => $this->language->lang('TOTAL_ITEMS', $article_count),
@@ -399,7 +403,7 @@ class approve
 		$revision = $has_revision ? $this->kb->get_article_revision($art_id) : null;
 
 		$this->template->assign_vars([
-			'ARTICLE_AUTHOR'        => $kb_article_info['author'],
+			'ARTICLE_AUTHOR'        => $this->kb->get_author_display($kb_article_info),
 			'ARTICLE_TITLE'         => $kb_article_info['article_title'],
 			'ARTICLE_DESCRIPTION'   => $kb_article_info['article_description'],
 			'ARTICLE_CATEGORY'      => $kb_category_info['category_name'],

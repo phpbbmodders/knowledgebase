@@ -274,7 +274,7 @@ class article
 		$rank = phpbb_get_user_rank($this->user->data, false);
 
 		$this->template->assign_vars([
-			'ARTICLE_AUTHOR'      => ((int) $row['author_type'] === 1) ? $row['author'] : get_username_string('full', $row['author_id'], $row['username'], $row['user_colour']),
+			'ARTICLE_AUTHOR'      => $this->kb->get_author_display($row),
 			'ARTICLE_DESCRIPTION' => $row['article_description'],
 			'ARTICLE_DATE'        => $this->user->format_date($row['article_date']),
 			'EDIT_DATE'           => $row['edit_date'] ? $this->user->format_date($row['edit_date']) : '',

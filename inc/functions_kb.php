@@ -1070,6 +1070,116 @@ class functions_kb
 	}
 
 	/**
+	 * Bulk-resolves user_colour/group_colour for a page of rows that
+	 * each carry an author_id/author_type - one query per type instead
+	 * of one per row. Feed the result to get_author_display() below.
+	 *
+	 * @param array $rows any rows with author_id/author_type columns
+	 *                    (kb_articles rows, or article_co_authors-style
+	 *                    entries)
+	 * @return array<string, string> keyed 'u<id>'/'g<id>' => colour hex
+	 */
+	public function get_author_colours_bulk(array $rows): array
+	{
+		$user_ids = $group_ids = [];
+		foreach ($rows as $row)
+		{
+			if ((int) $row['author_type'] === self::AUTHOR_TYPE_GROUP)
+			{
+				$group_ids[] = (int) $row['author_id'];
+			}
+			else
+			{
+				$user_ids[] = (int) $row['author_id'];
+			}
+		}
+
+		$colours = [];
+		if (!empty($user_ids))
+		{
+			$sql = 'SELECT user_id, user_colour
+				FROM ' . USERS_TABLE . '
+				WHERE ' . $this->db->sql_in_set('user_id', array_unique($user_ids));
+			$result = $this->db->sql_query($sql);
+			while ($user_row = $this->db->sql_fetchrow($result))
+			{
+				$colours['u' . $user_row['user_id']] = $user_row['user_colour'];
+			}
+			$this->db->sql_freeresult($result);
+		}
+		if (!empty($group_ids))
+		{
+			$sql = 'SELECT group_id, group_colour
+				FROM ' . GROUPS_TABLE . '
+				WHERE ' . $this->db->sql_in_set('group_id', array_unique($group_ids));
+			$result = $this->db->sql_query($sql);
+			while ($group_row = $this->db->sql_fetchrow($result))
+			{
+				$colours['g' . $group_row['group_id']] = $group_row['group_colour'];
+			}
+			$this->db->sql_freeresult($result);
+		}
+
+		return $colours;
+	}
+
+	/**
+	 * A row's primary author as a coloured link to their profile (a
+	 * user) or their group's memberlist page (a group-authored
+	 * article, e.g. one posted under a KB team's name) - the same
+	 * link/colour convention get_co_authors_display_bulk() above
+	 * already uses for a group listed as a co-author.
+	 *
+	 * @param array                 $row     author_id/author_type/author,
+	 *                                       plus username/user_colour if
+	 *                                       already joined (used in
+	 *                                       preference to a fresh query)
+	 * @param array<string, string> $colours from get_author_colours_bulk(),
+	 *                                       or [] to resolve a lone group
+	 *                                       row with one query as needed
+	 * @return string
+	 */
+	public function get_author_display(array $row, array $colours = []): string
+	{
+		$author_id = (int) $row['author_id'];
+
+		if ((int) $row['author_type'] === self::AUTHOR_TYPE_GROUP)
+		{
+			if (array_key_exists('g' . $author_id, $colours))
+			{
+				$url = append_sid("{$this->phpbb_root_path}memberlist.{$this->php_ext}", 'mode=group&g=' . $author_id);
+				$colour = $colours['g' . $author_id];
+
+				return '<a href="' . $url . '"' . ($colour ? ' style="color: #' . $colour . ';"' : '') . '>' . $row['author'] . '</a>';
+			}
+
+			// No pre-resolved colour (a single row, not a bulk-fetched
+			// page) - look this one group up on its own.
+			$sql = 'SELECT group_name, group_colour
+				FROM ' . GROUPS_TABLE . '
+				WHERE group_id = ' . $author_id;
+			$result = $this->db->sql_query($sql);
+			$group_row = $this->db->sql_fetchrow($result);
+			$this->db->sql_freeresult($result);
+
+			if (!$group_row)
+			{
+				return $row['author'];
+			}
+
+			$url = append_sid("{$this->phpbb_root_path}memberlist.{$this->php_ext}", 'mode=group&g=' . $author_id);
+			$colour = $group_row['group_colour'];
+
+			return '<a href="' . $url . '"' . ($colour ? ' style="color: #' . $colour . ';"' : '') . '>' . $this->group_helper->get_name($group_row['group_name']) . '</a>';
+		}
+
+		$colour = $colours['u' . $author_id] ?? ($row['user_colour'] ?? '');
+		$name = $row['username'] ?? $row['author'];
+
+		return get_username_string('full', $author_id, $name, $colour);
+	}
+
+	/**
 	 * Every enabled custom field.
 	 *
 	 * @return array

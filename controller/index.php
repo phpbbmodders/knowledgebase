@@ -150,7 +150,7 @@ class index
 				'ARTICLE_TITLE'   => $art_row['article_title'] ?? '',
 				'U_ARTICLE'       => (isset($art_row['article_id'])) ? $this->helper->route('phpbbmodders_knowledgebase_article', ['k' => $art_row['article_id']]) : '',
 				'ARTICLE_TIME'    => ($art_count) ? $this->user->format_date($art_row['article_date']) : '',
-				'ARTICLE_AUTHOR'  => (isset($art_row['author_id'])) ? get_username_string('full', $art_row['author_id'], $art_row['author'], $art_row['user_colour']) : '',
+				'ARTICLE_AUTHOR'  => (isset($art_row['author_id'])) ? $this->kb->get_author_display($art_row) : '',
 				'NEED_APPROVE'    => !($art_row['approved'] ?? false),
 			]);
 		}
