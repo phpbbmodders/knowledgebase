@@ -39,8 +39,8 @@ $lang = array_merge($lang, [
 	'ACP_LIBRARY_SEARCH'                  => 'Search',
 	'ACP_LIBRARY_ATTACHMENTS'             => 'Attachment files',
 	'ACP_LIBRARY_ATTACHMENTS_ORPHAN'      => 'Attachment orphean files',
-	'ACP_LIBRARY_LOGS'                    => 'Log action',
-	'ACP_LIBRARY_ATTACHMENTS_EXTRA_FILES' => 'Extra files',
-	'ACP_LIBRARY_ATTACHMENTS_LOST_FILES'  => 'Lost files',
+	'ACP_LIBRARY_LOGS'                    => 'KB Logs',
+	'ACP_LIBRARY_ATTACHMENTS_EXTRA_FILES' => 'Orphaned Uploads',
+	'ACP_LIBRARY_ATTACHMENTS_LOST_FILES'  => 'Broken Attachments',
 	'ACP_LIBRARY_PERMISSIONS_MASK'        => 'Permissions trace',
 ]);
