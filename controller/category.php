@@ -311,6 +311,7 @@ class category
 					'CAT_NAME'        => $cat_row['category_name'],
 					'CAT_DESCRIPTION' => $cat_row['category_details'],
 					'U_CAT'           => $this->helper->route('phpbbmodders_knowledgebase_category', ['id' => $cat_row['category_id']]),
+					'S_SUBCAT'        => true,
 					'ARTICLES'        => $art_count,
 					'SUBCATS'         => $this->kb->get_cat_list($exclude_cats),
 					'ARTICLE_TITLE'   => $art_row['article_title'] ?? '',

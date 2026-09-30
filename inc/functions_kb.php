@@ -284,7 +284,16 @@ class functions_kb
 				$res = $this->db->sql_query($sql);
 				$art_row = $this->db->sql_fetchrow($res);
 				$this->db->sql_freeresult($res);
-				$cat_list .= $padding . '<a href="' . $this->helper->route('phpbbmodders_knowledgebase_category', ['id' => $row['category_id']]) . '">' . $row['category_name'] . '</a> (' . $this->language->lang('ARTICLES') . ': ' . $art_row['articles'] . ')<br>';
+				// Same icon/class convention phpBB core uses for a
+				// subforum link under its parent on the board index
+				// (forumlist_body.html) - fa-file-o, icon-blue, icon-md -
+				// so a subcategory reads as the same kind of thing a
+				// visitor already recognises, not an extension-specific
+				// look. No unread/read state to reflect (categories don't
+				// track that), so always the "read" variant.
+				$cat_list .= $padding . '<a href="' . $this->helper->route('phpbbmodders_knowledgebase_category', ['id' => $row['category_id']]) . '" class="subforum read">'
+					. '<i class="icon fa-file-o fa-fw icon-blue icon-md" aria-hidden="true"></i>' . $row['category_name'] . '</a> ('
+					. $this->language->lang('ARTICLES') . ': ' . $art_row['articles'] . ')<br>';
 			}
 		}
 		$this->db->sql_freeresult($result);
