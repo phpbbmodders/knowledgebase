@@ -19,6 +19,48 @@ dd.action {
 	padding-bottom: 0;
 }
 
+/*
+ * Core's .postbody assumes a fixed-width .postprofile sidebar (22%,
+ * i.e. roughly 180-200px at this breakpoint) to size its own 76%/
+ * float:left against. This extension's author block (.kb-meta) is
+ * a different width (260px, below - wide enough for a line of
+ * several co-authors), so the two don't add up to core's assumed
+ * split, and .postbody no longer fits beside .kb-meta at that
+ * width - it gets shoved below .kb-meta entirely, leaving a gap
+ * above the title and squeezing .kb_codebox's width:100% down to
+ * 76% of the card. The title already gets its own clearance from
+ * core (.has-profile .postbody h3), so the rest of the article can
+ * go full width.
+ */
+.kb-meta ~ .postbody {
+	width: 100%;
+	float: none;
+}
+
+/*
+ * .post-buttons is core's own position:absolute;right:0 (see
+ * .has-profile .post-buttons in buttons.css), placing it flush
+ * against .postbody's right edge - which, now that .postbody is
+ * full width, is the same edge .kb-meta's text runs up against,
+ * so the two overlap. Reserve .kb-meta's own width (below) plus a
+ * little extra so the buttons clear it with a visible gap, not
+ * flush against it.
+ */
+.kb-meta ~ .postbody .post-buttons {
+	right: 272px;
+}
+
+/*
+ * Core reserves a flat 180px here (.has-profile .postbody h3) for
+ * its own fixed-width .postprofile. .kb-meta needs more than that -
+ * an article can have several co-authors on one comma-separated
+ * line - so match the title's own clearance to .kb-meta's actual
+ * width instead of core's assumption.
+ */
+.kb-meta ~ .postbody h3 {
+	margin-right: 260px;
+}
+
 .topics li {
 	padding-left: 3px;
 }
@@ -218,6 +260,7 @@ dd.action {
 .kb-meta {
 	float: right;
 	text-align: left;
+	width: 260px;
 }
 
 .kb-notice {
