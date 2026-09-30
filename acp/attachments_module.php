@@ -50,6 +50,13 @@ class attachments_module
 				// Load the display options handle in the admin controller
 				$admin_controller->main();
 			break;
+			case 'extensions':
+				$this->page_title = $language->lang('KNOWLEDGE_BASE') . ' &bull; ' . $language->lang('ACP_LIBRARY_MANAGE_EXTENSIONS');
+				// Its own dedicated page/template, not a section of the
+				// shared attachments one above.
+				$this->tpl_name = 'acp_knowledgebase_extensions';
+				$admin_controller->extensions();
+			break;
 			case 'orphan':
 				$this->page_title = $language->lang('KNOWLEDGE_BASE') . ' &bull; ' . $language->lang('ACP_ORPHAN_ATTACHMENTS');
 				$admin_controller->orphan();

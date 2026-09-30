@@ -247,46 +247,6 @@ class acp_controller
 		$identifier = $max_filesize['si_identifier'];
 		$max_filesize = $max_filesize['value'];
 
-		// Create extension list
-		$all_ext = [];
-		$sql = 'SELECT e.extension, g.group_name
-			FROM ' . EXTENSIONS_TABLE . ' e, ' . EXTENSION_GROUPS_TABLE . ' g
-			WHERE e.group_id = g.group_id';
-		$this->db->sql_query($sql);
-		$result = $this->db->sql_query($sql);
-		while ($row = $this->db->sql_fetchrow($result))
-		{
-			$all_ext[$row['group_name']][] = $row['extension'];
-		}
-		$this->db->sql_freeresult($result);
-
-		$extensions = json_decode($this->config_text->get('kb_extensions'), true);
-
-		foreach ($all_ext as $group_name => $ext)
-		{
-			$extensions[$group_name] = empty($extensions[$group_name]) ? [] : $extensions[$group_name];
-			$disabled_ext = array_diff($ext, $extensions[$group_name]);
-			$assigned_ext = array_diff($ext, $disabled_ext);
-
-			$s_options = $disabled_extensions = '';
-			foreach ($disabled_ext as $disabled)
-			{
-				$disabled_extensions .= '<option value="' . $disabled . '">' . $disabled . '</option>';
-			}
-			foreach ($assigned_ext as $assigned)
-			{
-				$s_options .= '<option value="' . $assigned . '" selected="selected">' . $assigned . '</option>';
-			}
-
-			$this->template->assign_block_vars('row', [
-				'GROUP'                => $group_name,
-				'EXTENSIONS_GROUP'     => $this->language->is_set('EXT_GROUP_' . $group_name) ? $this->language->lang('EXT_GROUP_' . $group_name) : $group_name,
-				'S_OPTIONS'            => $s_options,
-				'DIASABLED_EXTENSIONS' => $disabled_extensions,
-				'ASSIGNED_EXTENSIONS'  => implode(', ', $assigned_ext),
-			]);
-		}
-
 		$team_groups = $this->kb->get_kb_team_groups();
 		$sql = 'SELECT group_id, group_name
 			FROM ' . GROUPS_TABLE . '
@@ -337,11 +297,6 @@ class acp_controller
 	 */
 	protected function set_settings(): void
 	{
-		// Create extension array
-		$extension_list = $this->request->variable('extensions', ['' => ['']]);
-		$disabled_list = $this->request->variable('diasabled_extensions', ['' => ['']]);
-		$extension_list = array_merge_recursive($extension_list, $disabled_list);
-
 		// Validate font icon field characters
 		$kb_font_icon = $this->request->variable('kb_font_icon', '');
 		if (!empty($kb_font_icon) && !preg_match('/^[a-z0-9-]+$/', $kb_font_icon))
@@ -370,12 +325,182 @@ class acp_controller
 		$this->config->set('kb_allow_thumbnail', $this->request->variable('thumbnail', 0));
 		$this->config->set('kb_max_attachments', $this->request->variable('max_attachments', 2));
 		$this->config->set('kb_max_filesize', $max_filesize, 0);
-		$this->config_text->set('kb_extensions', json_encode($extension_list));
 
 		$team_groups = array_map('intval', $this->request->variable('team_groups', [0]));
 		$this->config_text->set('kb_team_groups', json_encode($team_groups));
 	}
 	/** END - Settings management functions */
+
+	/**
+	 * "Manage Extensions": which of phpBB's core attachment extensions
+	 * are allowed for KB uploads - modeled on core's own "Manage
+	 * attachment extensions" ACP page (Posting > Attachments): the same
+	 * add-a-new-extension form, plus a per-extension on/off toggle in
+	 * place of core's own group-reassign/delete columns, since the KB
+	 * only ever needs to say yes/no to an existing extension, not move
+	 * it to a different group or remove it from the board entirely.
+	 * Renaming a group, or deleting an extension outright, stays in
+	 * core's own ACP.
+	 *
+	 * @return void
+	 */
+	public function extensions(): void
+	{
+		$form_key = 'kb_extensions';
+		add_form_key($form_key);
+
+		if ($this->request->is_set_post('submit'))
+		{
+			if (!check_form_key($form_key))
+			{
+				trigger_error($this->language->lang('FORM_INVALID') . adm_back_link($this->u_action), E_USER_WARNING);
+			}
+
+			$this->set_extensions();
+
+			$this->log->add('admin', $this->user->data['user_id'], $this->user->data['user_ip'], 'LOG_LIBRARY_CONFIG', time());
+			meta_refresh(2, $this->u_action);
+			trigger_error($this->language->lang('CONFIG_UPDATED') . adm_back_link($this->u_action));
+		}
+
+		$add_extension = '';
+		if ($this->request->is_set_post('add_extension_submit'))
+		{
+			if (!check_form_key($form_key))
+			{
+				trigger_error($this->language->lang('FORM_INVALID') . adm_back_link($this->u_action), E_USER_WARNING);
+			}
+
+			$add_extension = $this->add_extension();
+		}
+
+		$enabled_by_group = json_decode($this->config_text->get('kb_extensions'), true) ?: [];
+
+		$sql = 'SELECT e.extension, g.group_name
+			FROM ' . EXTENSIONS_TABLE . ' e, ' . EXTENSION_GROUPS_TABLE . ' g
+			WHERE e.group_id = g.group_id
+			ORDER BY g.group_name, e.extension';
+		$result = $this->db->sql_query($sql);
+		while ($row = $this->db->sql_fetchrow($result))
+		{
+			$this->template->assign_block_vars('extension', [
+				'EXTENSION'  => $row['extension'],
+				'GROUP_NAME' => $this->language->is_set('EXT_GROUP_' . $row['group_name']) ? $this->language->lang('EXT_GROUP_' . $row['group_name']) : $row['group_name'],
+				// A just-added extension isn't in $enabled_by_group yet
+				// (it starts unchecked, same as core's own new extensions
+				// - add_extension() doesn't guess whether it should be
+				// allowed for KB uploads, the admin still has to say so).
+				'S_ENABLED'  => in_array($row['extension'], $enabled_by_group[$row['group_name']] ?? [], true),
+			]);
+		}
+		$this->db->sql_freeresult($result);
+
+		$this->template->assign_vars([
+			'S_ACTION'              => $this->u_action,
+			'ADD_EXTENSION'         => $add_extension,
+			'GROUP_SELECT_OPTIONS'  => $this->get_extension_group_select_options(0),
+		]);
+	}
+
+	/**
+	 * Adds a new extension to the board's own EXTENSIONS_TABLE - the
+	 * same table/action core's own "Manage attachment extensions" page
+	 * writes to, so an extension added here is immediately available
+	 * on core's page too (and vice versa), not a KB-only copy.
+	 *
+	 * @return string the extension name typed in, redisplayed on error
+	 *                so the admin doesn't have to retype it
+	 */
+	protected function add_extension(): string
+	{
+		$add_extension = strtolower($this->request->variable('add_extension', ''));
+		$add_extension_group = $this->request->variable('add_group_select', 0);
+
+		if ($add_extension === '')
+		{
+			return $add_extension;
+		}
+
+		$sql = 'SELECT extension_id
+			FROM ' . EXTENSIONS_TABLE . "
+			WHERE extension = '" . $this->db->sql_escape($add_extension) . "'";
+		$result = $this->db->sql_query($sql);
+		$exists = (bool) $this->db->sql_fetchrow($result);
+		$this->db->sql_freeresult($result);
+
+		if ($exists)
+		{
+			trigger_error(sprintf($this->language->lang('EXTENSION_EXIST'), $add_extension) . adm_back_link($this->u_action), E_USER_WARNING);
+		}
+
+		$sql_ary = [
+			'group_id' => $add_extension_group,
+			'extension' => $add_extension,
+		];
+		$this->db->sql_query('INSERT INTO ' . EXTENSIONS_TABLE . ' ' . $this->db->sql_build_array('INSERT', $sql_ary));
+
+		$this->log->add('admin', $this->user->data['user_id'], $this->user->data['user_ip'], 'LOG_ATTACH_EXT_ADD', false, [$add_extension]);
+
+		return '';
+	}
+
+	/**
+	 * Same group list/ordering as core's own group_select() - "Not
+	 * assigned" (group_id 0) always last, everything else alphabetical.
+	 *
+	 * @param int $selected_group_id
+	 * @return string
+	 */
+	protected function get_extension_group_select_options(int $selected_group_id): string
+	{
+		$sql = 'SELECT group_id, group_name
+			FROM ' . EXTENSION_GROUPS_TABLE . '
+			ORDER BY group_name';
+		$result = $this->db->sql_query($sql);
+
+		$options = '';
+		while ($row = $this->db->sql_fetchrow($result))
+		{
+			$group_name = $this->language->is_set('EXT_GROUP_' . $row['group_name']) ? $this->language->lang('EXT_GROUP_' . $row['group_name']) : $row['group_name'];
+			$options .= '<option value="' . (int) $row['group_id'] . '"' . ((int) $row['group_id'] === $selected_group_id ? ' selected="selected"' : '') . '>' . $group_name . '</option>';
+		}
+		$this->db->sql_freeresult($result);
+
+		$options .= '<option value="0"' . ($selected_group_id === 0 ? ' selected="selected"' : '') . '>' . $this->language->lang('NOT_ASSIGNED') . '</option>';
+
+		return $options;
+	}
+
+	/**
+	 * @return void
+	 */
+	protected function set_extensions(): void
+	{
+		// A flat list of every extension the admin left checked, across
+		// every group - grouping only matters for how this gets stored
+		// below (generate_filter_string() needs it grouped, to label
+		// each group in the upload dialog's file-type filter).
+		$enabled = $this->request->variable('enabled_extensions', ['']);
+
+		$all_ext = [];
+		$sql = 'SELECT e.extension, g.group_name
+			FROM ' . EXTENSIONS_TABLE . ' e, ' . EXTENSION_GROUPS_TABLE . ' g
+			WHERE e.group_id = g.group_id';
+		$result = $this->db->sql_query($sql);
+		while ($row = $this->db->sql_fetchrow($result))
+		{
+			$all_ext[$row['group_name']][] = $row['extension'];
+		}
+		$this->db->sql_freeresult($result);
+
+		$extension_list = [];
+		foreach ($all_ext as $group_name => $ext_in_group)
+		{
+			$extension_list[$group_name] = array_values(array_intersect($ext_in_group, $enabled));
+		}
+
+		$this->config_text->set('kb_extensions', json_encode($extension_list));
+	}
 
 
 	/** Attachments management functions
