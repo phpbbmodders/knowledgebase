@@ -30,7 +30,7 @@
 	<thead>
 	<tr>
 		<th>{{ lang('ARTICLE') }}</th>
-		<th class="kb-index-views">{{ lang('KB_PENDING_REVISION') }}</th>
+		<th class="kb-index-views">{{ lang('KB_IN_PROGRESS') }}</th>
 		<th class="kb-index-author">{{ lang('ARTICLE_DATE') }}</th>
 		<th class="kb-index-author">{{ lang('KB_STATUS') }}</th>
 	</tr>
@@ -39,7 +39,10 @@
 	{% for art_row in loops.art_row %}
 		<tr>
 			<td><a href="{{ art_row.U_ARTICLE }}">{{ art_row.ARTICLE_TITLE }}</a></td>
-			<td class="kb-index-views">{% if art_row.S_HAS_REVISION %}{{ lang('KB_STATUS_REVISION') }}{% endif %}</td>
+			<td class="kb-index-views">
+				{% if art_row.S_HAS_REVISION %}{{ lang('KB_STATUS_REVISION') }}<br>{% endif %}
+				{% if art_row.S_HAS_DRAFT_EDIT %}<a href="{{ art_row.U_EDIT }}">{{ lang('KB_DRAFT_EDIT_PENDING') }}</a>{% endif %}
+			</td>
 			<td class="kb-index-author">{{ art_row.ARTICLE_DATE }}{% if art_row.EDIT_DATE %}<br>{{ art_row.EDIT_DATE }}{% endif %}</td>
 			<td class="kb-index-author">
 				{% if art_row.S_STATUS_NEW %}<span class="kb-status-badge kb-status-new">{{ lang('KB_STATUS_NEW') }}</span>

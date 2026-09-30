@@ -1505,6 +1505,15 @@ class functions_kb
 	}
 
 	/**
+	 * @param int $article_id
+	 * @return bool
+	 */
+	public function article_has_draft_edit(int $article_id): bool
+	{
+		return (bool) $this->get_article_draft_edit($article_id);
+	}
+
+	/**
 	 * A private draft of a further edit to an already-submitted article -
 	 * entirely separate from a real pending revision (kb_article_revisions),
 	 * which may already exist for the same article at the same time.
