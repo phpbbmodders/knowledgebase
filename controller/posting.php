@@ -375,6 +375,26 @@ class posting
 
 			$article_text = $this->decode_message($article_text, $row['bbcode_uid']);
 
+			// Reopening the edit form for an Active article with a pending
+			// revision must continue editing that revision, not silently
+			// start over from the still-live (old) published content -
+			// the revision *is* the author's current work, just already
+			// submitted. Only applies on a fresh load (not a submit or
+			// preview, which already carry the form's own current values).
+			$has_revision = false;
+			if ($article_status === functions_kb::STATUS_ACTIVE && !$submit && !$preview)
+			{
+				$revision = $this->kb->get_article_revision($art_id);
+				if ($revision)
+				{
+					$has_revision = true;
+					$article_title = (string) $revision['article_title'];
+					$article_description = (string) $revision['article_description'];
+					$redirect_url = (string) $revision['redirect_url'];
+					$article_text = $this->decode_message((string) $revision['article_body'], $revision['bbcode_uid']);
+				}
+			}
+
 			// A draft-of-an-edit is entirely separate from a real pending
 			// revision - private scratch space for an in-progress edit of
 			// an already-submitted article, never visible to a moderator
@@ -382,7 +402,9 @@ class posting
 			// already exists. Only applies on a fresh load (not a submit
 			// or preview, which already carry the form's own current
 			// values) and never for a STATUS_DRAFT article itself, which
-			// already IS the draft.
+			// already IS the draft. Takes precedence over the pending
+			// revision loaded above, since it's more recent work - the
+			// author started it after already submitting that revision.
 			$has_draft_edit = false;
 			if ($article_status !== functions_kb::STATUS_DRAFT && !$submit && !$preview)
 			{
@@ -1073,6 +1095,11 @@ class posting
 				// it's actually submitted).
 				'S_CAN_SAVE_DRAFT' => true,
 				'S_HAS_DRAFT_EDIT' => $has_draft_edit ?? false,
+				// Only when the revision is actually what's loaded into the
+				// form - a draft-of-an-edit (above) takes precedence, so if
+				// both exist this stays false and the draft-edit notice
+				// shows instead.
+				'S_EDITING_REVISION' => ($has_revision ?? false) && !($has_draft_edit ?? false),
 
 				'S_FORM_ENCTYPE' => ($this->config['kb_allow_attachments']) ? ' enctype="multipart/form-data"' : '',
 

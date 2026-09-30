@@ -125,6 +125,7 @@ $lang = array_merge($lang, [
 	'KB_IN_PROGRESS'                        => 'In Progress',
 	'KB_SAVE_DRAFT'                         => 'Save Draft',
 	'KB_VIEWING_DRAFT_EDIT'                 => 'You are viewing your saved draft of this edit, not the currently published version.',
+	'KB_VIEWING_REVISION'                   => 'You are viewing your pending revision, awaiting approval - not the currently published version. Saving here replaces that revision.',
 	'KB_SUBMIT_AS'                          => 'Submit as',
 	'KB_SUBMIT_AS_APPROVED'                 => 'Approved article',
 	'KB_SUBMIT_AS_PENDING'                  => 'Article requiring approval',
