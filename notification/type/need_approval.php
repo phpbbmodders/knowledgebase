@@ -192,7 +192,8 @@ class need_approval extends \phpbb\notification\type\base
 
 		$sql = 'SELECT user_id
 			FROM ' . $this->kb_users_table . '
-			WHERE auth_setting = 0
+			WHERE auth_option_id = ' . (int) $auth_option_id . '
+				AND auth_setting = 0
 				' . $sql_where;
 		$result = $this->db->sql_query($sql);
 		while ($row = $this->db->sql_fetchrow($result))
