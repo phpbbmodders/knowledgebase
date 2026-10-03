@@ -6,6 +6,18 @@ phpbbmodders_knowledgebase_kb_alias:
     path: /kb
     defaults: { _controller: phpbbmodders.knowledgebase.controller.index:kb_alias }
 
+# Mirrors every /knowledgebase/{segment} route below at /kb/{segment}
+# too, without needing a matching entry added here each time a new one
+# is - every real route takes its actual parameters via the query
+# string, not the path itself, so a single catch-all on the path's
+# second segment plus a verbatim query-string passthrough covers all
+# of them.
+phpbbmodders_knowledgebase_kb_alias_path:
+    path: /kb/{segment}
+    defaults: { _controller: phpbbmodders.knowledgebase.controller.index:kb_alias_path }
+    requirements:
+        segment: '[a-z_]+'
+
 phpbbmodders_knowledgebase_category:
     path: /knowledgebase/category
     defaults: { _controller: phpbbmodders.knowledgebase.controller.category:cat }

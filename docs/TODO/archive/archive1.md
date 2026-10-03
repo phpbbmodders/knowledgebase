@@ -1,3 +1,13 @@
+# Archived Reviews
+
+Historical validation reports, retained with their original scope and recommendations.
+
+<a id="ai-validation-review-2026-09-26"></a>
+
+## AI extension validation - 2026-09-26
+
+Archived: 10/02/2026. Validation date: 09/26/2026. Historical findings from the pre-remediation snapshot. Later commits changed the reviewed search escaping, prefix handling, filename fallback, permissions, topic tracking, and package metadata; the old Deny recommendation is not a current-tree verdict. The two deliberately deferred design suggestions remain active in docs/TODO.md. This archive operation is not a new validation pass and does not declare every historical finding resolved.
+
 In [c]controller/search.php[/c]:
 
 [code]
