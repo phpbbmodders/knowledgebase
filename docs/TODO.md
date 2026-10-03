@@ -5,14 +5,11 @@ under [`docs/TODO/`](TODO/).
 
 ## Active
 
-- Legacy upgrade safety: before migration `version_1_0_3` narrows the
-  search-match unique index, reply-specific rows can collide. Migration
-  `version_2_0_2` cleans up the obsolete schema later, but cannot repair
-  an earlier failed migration. A safe upgrade path still needs legacy
-  fixtures and database validation without rewriting applied migrations.
 - Review follow-up validation: execute the repaired fulltext search and
-  index lifecycle against MySQL and PostgreSQL. Current regression tests
-  check generated SQL; they do not execute it against those engines.
+  index lifecycle, including the `version_2_0_13` index repair, against
+  MySQL and PostgreSQL. SQLite legacy-schema tests verify the repair
+  preserves articles and search matches. Fulltext regression tests for
+  the other engines check generated SQL, not database execution.
 - [phpbb.com KB parity gaps](TODO/todo-phpbb-com-kb-parity.md) - five
   feature-completeness differences from the original phpbb.com
   Knowledge Base, found via a second-opinion screenshot comparison
