@@ -6,6 +6,7 @@ require_once dirname(__DIR__) . '/migrations/version_1_0_0.php';
 require_once dirname(__DIR__) . '/migrations/version_1_0_3.php';
 require_once dirname(__DIR__) . '/migrations/version_2_0_2.php';
 require_once dirname(__DIR__) . '/migrations/version_2_0_13.php';
+require_once dirname(__DIR__) . '/migrations/version_2_0_15.php';
 if (!defined('CONFIG_TABLE')) define('CONFIG_TABLE', 'phpbb_config');
 
 class kb_legacy_search_migration_test extends \PHPUnit\Framework\TestCase
@@ -19,7 +20,7 @@ class kb_legacy_search_migration_test extends \PHPUnit\Framework\TestCase
 		$this->db = new \phpbb\db\driver\sqlite3();
 		$this->assertTrue($this->db->sql_connect(':memory:', '', '', ''));
 		$this->tools = new \phpbb\db\tools\sqlite3($this->db);
-		$this->config = new \phpbb\config\config(['kb_version' => '2.0.12']);
+		$this->config = new \phpbb\config\config(['kb_version' => '2.0.14']);
 	}
 
 	protected function tearDown(): void
@@ -61,11 +62,12 @@ class kb_legacy_search_migration_test extends \PHPUnit\Framework\TestCase
 		$this->assertSame(['article_id', 'word_id', 'title_match'], $this->columns($table . '_un_mtch'));
 		$this->assertFalse($this->tools->sql_column_exists($table, 'reply_id'));
 
-		$repair = $this->migration(version_2_0_13::class);
+		$repair = $this->migration(version_2_0_15::class);
 		$this->tools->perform_schema_changes($repair->update_schema());
 		$this->assertSame(['article_id', 'word_id', 'title_match', 'descr_match'], $this->columns($table . '_un_mtch'));
-		$this->assertSame(['\phpbbmodders\knowledgebase\migrations\version_2_0_12'], version_2_0_13::depends_on());
-		$this->assertSame([['config.update', ['kb_version', '2.0.13']]], $repair->update_data());
+		$this->assertSame(['\phpbbmodders\knowledgebase\migrations\version_2_0_14'], version_2_0_15::depends_on());
+		$this->assertSame([['config.update', ['kb_version', '2.0.15']]], $repair->update_data());
+		$this->assertArrayHasKey('phpbb_kb_article_draft_edits', $this->migration(version_2_0_13::class)->update_schema()['add_tables']);
 		$this->db->sql_query('INSERT INTO ' . $table . ' (article_id, word_id, title_match, descr_match) VALUES (1, 1, 0, 1)');
 		$this->tools->perform_schema_changes($repair->update_schema());
 		$result = $this->db->sql_query('SELECT article_id, word_id, title_match, descr_match FROM ' . $table . ' ORDER BY descr_match');
@@ -87,7 +89,7 @@ class kb_legacy_search_migration_test extends \PHPUnit\Framework\TestCase
 		$this->db->sql_query('ALTER TABLE ' . $table . ' ADD COLUMN descr_match INTEGER NOT NULL DEFAULT 0');
 		$this->db->sql_query('CREATE TABLE unrelated (id INTEGER)');
 		$this->db->sql_query('CREATE UNIQUE INDEX un_mtch ON unrelated (id)');
-		$this->tools->perform_schema_changes($this->migration(version_2_0_13::class)->update_schema());
+		$this->tools->perform_schema_changes($this->migration(version_2_0_15::class)->update_schema());
 		$this->assertSame(['id'], $this->columns('un_mtch'));
 		$this->assertSame(['article_id', 'word_id', 'title_match', 'descr_match'], $this->columns($table . '_un_mtch'));
 	}

@@ -6,7 +6,7 @@ under [`docs/TODO/`](TODO/).
 ## Active
 
 - Review follow-up validation: execute the repaired fulltext search and
-  index lifecycle, including the `version_2_0_13` index repair, against
+  index lifecycle, including the `version_2_0_15` index repair, against
   MySQL and PostgreSQL. SQLite legacy-schema tests verify the repair
   preserves articles and search matches. Fulltext regression tests for
   the other engines check generated SQL, not database execution.
