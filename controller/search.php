@@ -320,7 +320,7 @@ class search
 						AND a.approved = 1';
 			if ($author && $keywords)
 			{
-				$sql .= ' AND author_id = ' . $author_id;
+				$sql .= ' AND ' . $this->db->sql_in_set('a.author_id', $author_id_ary, false, true);
 			}
 			$sql .= ' ORDER BY ' . $sql_sort;
 			$result = $this->db->sql_query($sql);

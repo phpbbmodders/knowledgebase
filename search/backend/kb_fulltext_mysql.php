@@ -430,7 +430,7 @@ class kb_fulltext_mysql extends kb_base implements kb_search_backend_interface
 		if (count($author_ary) && $author_name)
 		{
 			// first one matches post of registered users, second one guests and deleted users
-			$sql_author = ' AND (' . $this->db->sql_in_set('p.author_id', array_diff($author_ary, [ANONYMOUS]), false, true) . ' OR p.author = ' . $author_name . ')';
+			$sql_author = ' AND (' . $this->db->sql_in_set('p.author_id', array_diff($author_ary, [ANONYMOUS]), false, true) . " OR p.author = '" . $this->db->sql_escape($author_name) . "')";
 		}
 		else if (count($author_ary))
 		{
@@ -448,10 +448,10 @@ class kb_fulltext_mysql extends kb_base implements kb_search_backend_interface
 		$sql_where_options .= ($sort_days) ? ' AND p.article_date >= ' . (time() - ($sort_days * 86400)) : '';
 		$sql_where_options .= ' AND p.approved = 1 ';
 
-		$sql = 'SELECT $sql_select FROM ' . $this->articles_table . ' p
-			WHERE MATCH ($sql_match) AGAINST (' . $this->db->sql_escape(htmlspecialchars_decode($this->search_query, ENT_COMPAT)) . ' IN BOOLEAN MODE)
-				$sql_where_options
-			ORDER BY $sql_sort';
+		$sql = 'SELECT ' . $sql_select . ' FROM ' . $this->articles_table . ' p
+			WHERE MATCH (' . $sql_match . ") AGAINST ('" . $this->db->sql_escape(htmlspecialchars_decode($this->search_query, ENT_COMPAT)) . "' IN BOOLEAN MODE)" . '
+				' . $sql_where_options . '
+			ORDER BY ' . $sql_sort;
 		$this->db->sql_return_on_error(true);
 		$result = $this->db->sql_query_limit($sql, $this->config['search_block_size'], $start);
 
