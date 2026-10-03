@@ -376,16 +376,16 @@ class acp_controller
 
 		$enabled_by_group = json_decode($this->config_text->get('kb_extensions'), true) ?: [];
 
-		$sql = 'SELECT e.extension, g.group_name
-			FROM ' . EXTENSIONS_TABLE . ' e, ' . EXTENSION_GROUPS_TABLE . ' g
-			WHERE e.group_id = g.group_id
+		$sql = "SELECT e.extension, COALESCE(g.group_name, 'NOT_ASSIGNED') AS group_name
+			FROM " . EXTENSIONS_TABLE . ' e
+			LEFT JOIN ' . EXTENSION_GROUPS_TABLE . ' g ON (e.group_id = g.group_id)
 			ORDER BY g.group_name, e.extension';
 		$result = $this->db->sql_query($sql);
 		while ($row = $this->db->sql_fetchrow($result))
 		{
 			$this->template->assign_block_vars('extension', [
 				'EXTENSION'  => $row['extension'],
-				'GROUP_NAME' => $this->language->is_set('EXT_GROUP_' . $row['group_name']) ? $this->language->lang('EXT_GROUP_' . $row['group_name']) : $row['group_name'],
+				'GROUP_NAME' => $row['group_name'] === 'NOT_ASSIGNED' ? $this->language->lang('NOT_ASSIGNED') : ($this->language->is_set('EXT_GROUP_' . $row['group_name']) ? $this->language->lang('EXT_GROUP_' . $row['group_name']) : $row['group_name']),
 				// A just-added extension isn't in $enabled_by_group yet
 				// (it starts unchecked, same as core's own new extensions
 				// - add_extension() doesn't guess whether it should be
@@ -399,6 +399,7 @@ class acp_controller
 			'S_ACTION'              => $this->u_action,
 			'ADD_EXTENSION'         => $add_extension,
 			'GROUP_SELECT_OPTIONS'  => $this->get_extension_group_select_options(0),
+			'S_CAN_ADD_EXTENSION'   => (bool) $this->auth->acl_get('a_attach'),
 		]);
 	}
 
@@ -413,6 +414,11 @@ class acp_controller
 	 */
 	protected function add_extension(): string
 	{
+		if (!$this->auth->acl_get('a_attach'))
+		{
+			trigger_error($this->language->lang('NOT_AUTHORISED') . adm_back_link($this->u_action), E_USER_WARNING);
+		}
+
 		$add_extension = strtolower($this->request->variable('add_extension', ''));
 		$add_extension_group = $this->request->variable('add_group_select', 0);
 
@@ -433,11 +439,26 @@ class acp_controller
 			trigger_error(sprintf($this->language->lang('EXTENSION_EXIST'), $add_extension) . adm_back_link($this->u_action), E_USER_WARNING);
 		}
 
+		if ($add_extension_group !== 0)
+		{
+			$sql = 'SELECT group_id FROM ' . EXTENSION_GROUPS_TABLE . '
+				WHERE group_id = ' . (int) $add_extension_group;
+			$result = $this->db->sql_query($sql);
+			$group_exists = (bool) $this->db->sql_fetchrow($result);
+			$this->db->sql_freeresult($result);
+			if (!$group_exists)
+			{
+				trigger_error($this->language->lang('FORM_INVALID') . adm_back_link($this->u_action), E_USER_WARNING);
+			}
+		}
+
 		$sql_ary = [
 			'group_id' => $add_extension_group,
 			'extension' => $add_extension,
 		];
 		$this->db->sql_query('INSERT INTO ' . EXTENSIONS_TABLE . ' ' . $this->db->sql_build_array('INSERT', $sql_ary));
+		$this->cache->destroy('_extensions');
+		$this->cache->destroy('_kb_extension');
 
 		$this->log->add('admin', $this->user->data['user_id'], $this->user->data['user_ip'], 'LOG_ATTACH_EXT_ADD', false, [$add_extension]);
 
@@ -483,9 +504,9 @@ class acp_controller
 		$enabled = $this->request->variable('enabled_extensions', ['']);
 
 		$all_ext = [];
-		$sql = 'SELECT e.extension, g.group_name
-			FROM ' . EXTENSIONS_TABLE . ' e, ' . EXTENSION_GROUPS_TABLE . ' g
-			WHERE e.group_id = g.group_id';
+		$sql = "SELECT e.extension, COALESCE(g.group_name, 'NOT_ASSIGNED') AS group_name
+			FROM " . EXTENSIONS_TABLE . ' e
+			LEFT JOIN ' . EXTENSION_GROUPS_TABLE . ' g ON (e.group_id = g.group_id)';
 		$result = $this->db->sql_query($sql);
 		while ($row = $this->db->sql_fetchrow($result))
 		{

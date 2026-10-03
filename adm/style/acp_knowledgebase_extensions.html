@@ -3,6 +3,7 @@
 <h1>{{ lang('ACP_LIBRARY_MANAGE_EXTENSIONS') }}</h1>
 <p>{{ lang('KB_MANAGE_EXTENSIONS_EXPLAIN') }}</p>
 
+{% if S_CAN_ADD_EXTENSION %}
 <form id="add_extension" method="post" action="{{ S_ACTION }}">
 	<fieldset>
 		<legend>{{ lang('ADD_EXTENSION') }}</legend>
@@ -21,6 +22,7 @@
 		{{ S_FORM_TOKEN }}
 	</fieldset>
 </form>
+{% endif %}
 
 <form id="kb_extensions" method="post" action="{{ S_ACTION }}">
 	<fieldset class="tabulated">
