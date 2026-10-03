@@ -16,13 +16,14 @@
 <h1>{{ lang('TITLE') }}</h1>
 <p>{{ lang('TITLE_EXPLAIN') }}</p>
 {% if S_PRUNE_ATTACHMENTS %}
-	<form method="post" action="{{ U_ACTION }}">
+	<form method="post" action="{{ S_ACTION }}">
 		<fieldset style="text-align: center;">
 			<input class="button2" type="submit" value="{{ lang('YES') }}" name="submit"/>
+			{{ S_FORM_TOKEN }}
 		</fieldset>
 	</form>
 {% elseif S_ATTACHMENTS %}
-	<form id="attachments" method="post" action="{{ U_ACTION }}">
+	<form id="attachments" method="post" action="{{ S_ACTION }}">
 		<fieldset class="tabulated">
 			<legend>{{ lang('TITLE') }}</legend>
 			<div class="pagination top-pagination">
@@ -105,7 +106,7 @@
 		</fieldset>
 	</form>
 {% elseif S_ORPHAN %}
-	<form id="orphan" method="post" action="{{ U_ACTION }}">
+	<form id="orphan" method="post" action="{{ S_ACTION }}">
 		<fieldset class="tabulated">
 			<legend>{{ lang('TITLE') }}</legend>
 			<table class="table1 zebra-table fixed-width-table">

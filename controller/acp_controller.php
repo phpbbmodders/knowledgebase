@@ -727,10 +727,12 @@ class acp_controller
 	 */
 	public function orphan(): void
 	{
+		add_form_key('kb_acp_orphan');
 		$submit = $this->request->is_set_post('submit');
 
 		if ($submit)
 		{
+			$this->require_form_key('kb_acp_orphan');
 			$delete_files = ($this->request->is_set_post('delete')) ? array_keys($this->request->variable('delete', ['' => 0])) : [];
 			$add_files = ($this->request->is_set_post('add')) ? array_keys($this->request->variable('add', ['' => 0])) : [];
 			$post_ids = $this->request->variable('post_id', ['' => 0]);
@@ -865,7 +867,7 @@ class acp_controller
 	 */
 	public function extra_files(): void
 	{
-		$submit = $this->request->variable('submit', false);
+		$submit = $this->validate_batch_request('kb_acp_extra_files');
 
 		$batch_size = 500;
 		$list = '';
@@ -957,7 +959,7 @@ class acp_controller
 			}
 			else
 			{
-				meta_refresh(10, $this->u_action . '&amp;submit=1');
+				meta_refresh(10, $this->u_action . '&amp;submit=1&amp;continue=1&amp;hash=' . generate_link_hash('kb_acp_extra_files'));
 				trigger_error($this->language->lang('PRUNE_ATTACHMENTS_PROGRESS') . '<br>' . $list);
 			}
 		}
@@ -1000,7 +1002,7 @@ class acp_controller
 	 */
 	public function lost_files(): void
 	{
-		$submit = $this->request->variable('submit', false);
+		$submit = $this->validate_batch_request('kb_acp_lost_files');
 		$step = $this->request->variable('step', 0);
 		$batch_size = 500;
 		$begin = $batch_size * $step;
@@ -1043,7 +1045,7 @@ class acp_controller
 			}
 
 			// Next step
-			meta_refresh(2, $this->u_action . '&amp;step=' . ++$step . '&amp;submit=1');
+			meta_refresh(2, $this->u_action . '&amp;step=' . ++$step . '&amp;submit=1&amp;continue=1&amp;hash=' . generate_link_hash('kb_acp_lost_files'));
 			trigger_error($this->language->lang('RESYNC_ATTACHMENTS_PROGRESS'));
 		}
 
@@ -1305,6 +1307,7 @@ class acp_controller
 	 */
 	public function show_fields(): void
 	{
+		add_form_key('kb_acp_fields');
 		foreach ($this->kb->get_all_fields() as $field)
 		{
 			$this->template->assign_block_vars('fields', [
@@ -1313,7 +1316,7 @@ class acp_controller
 				'FIELD_KEY'       => $field['field_key'],
 				'FIELD_TYPE_NAME' => $this->field_factory->get($field['field_type'])->get_type_name(),
 				'S_ENABLED'       => (bool) $field['enabled'],
-				'U_TOGGLE'        => $this->u_action . '&amp;action=toggle_field&amp;field_id=' . $field['field_id'],
+				'U_TOGGLE'        => $this->u_action . '&amp;action=toggle_field&amp;field_id=' . $field['field_id'] . '&amp;hash=' . generate_link_hash('kb_field_toggle_' . $field['field_id']),
 				'U_EDIT_VALUES'   => $this->u_action . '&amp;action=edit_values&amp;field_id=' . $field['field_id'],
 			]);
 		}
@@ -1343,6 +1346,7 @@ class acp_controller
 			return;
 		}
 
+		$this->require_form_key('kb_acp_fields');
 		$field_key = $this->request->variable('field_key', '');
 		$field_name = utf8_normalize_nfc($this->request->variable('field_name', '', true));
 		$field_type = $this->request->variable('field_type', '');
@@ -1380,6 +1384,10 @@ class acp_controller
 	 */
 	public function toggle_field(int $field_id): void
 	{
+		if (!check_link_hash($this->request->variable('hash', ''), 'kb_field_toggle_' . $field_id))
+		{
+			trigger_error($this->language->lang('FORM_INVALID') . adm_back_link($this->u_action), E_USER_WARNING);
+		}
 		$field = $this->kb->get_field($field_id);
 		if (!$field)
 		{
@@ -1399,6 +1407,11 @@ class acp_controller
 	 */
 	public function edit_field_values(int $field_id): void
 	{
+		add_form_key('kb_acp_fields');
+		if ($this->request->is_set_post('submit'))
+		{
+			$this->require_form_key('kb_acp_fields');
+		}
 		$field = $this->kb->get_field($field_id);
 		if (!$field)
 		{
@@ -3207,6 +3220,14 @@ class acp_controller
 
 				case 'create':
 				case 'delete':
+					if ($this->request->is_set_post('action') || $this->request->is_set_post('continue'))
+					{
+						$this->require_form_key('kb_acp_search');
+					}
+					elseif (empty($state) || $state[self::STATE_ACTION] !== $action || !check_link_hash($this->request->variable('hash', ''), 'kb_acp_search_' . $action))
+					{
+						trigger_error($this->language->lang('FORM_INVALID') . adm_back_link($this->u_action), E_USER_WARNING);
+					}
 					$this->index_action($id, $mode, $action, $state);
 				break;
 
@@ -3219,6 +3240,7 @@ class acp_controller
 			// If clicked to cancel the indexing progress (acp_search_index_inprogress form)
 			if ($this->request->is_set_post('cancel'))
 			{
+				$this->require_form_key('kb_acp_search');
 				$state = [];
 				$this->save_state($state);
 			}
@@ -3253,7 +3275,7 @@ class acp_controller
 		}
 
 		$this->template->assign_vars([
-			'U_ACTION'        => $this->u_action,
+			'U_INDEX_ACTION'  => $this->u_action,
 			'UA_PROGRESS_BAR' => addslashes($this->u_action . '&amp;action=progress_bar'),
 		]);
 	}
@@ -3266,7 +3288,7 @@ class acp_controller
 	private function index_inprogress(string $action): void
 	{
 		$this->template->assign_vars([
-			'U_ACTION'           => $this->u_action . '&amp;action=' . $action . '&amp;hash=' . generate_link_hash('kb_acp_search'),
+			'U_CONTINUE_INDEXING' => $this->u_action . '&amp;action=' . $action,
 			'UA_PROGRESS_BAR'    => addslashes($this->u_action . '&amp;action=progress_bar'),
 			'L_CONTINUE'         => ($action === 'create') ? $this->language->lang('CONTINUE_INDEXING') : $this->language->lang('CONTINUE_DELETING_INDEX'),
 			'L_CONTINUE_EXPLAIN' => ($action === 'create') ? $this->language->lang('CONTINUE_INDEXING_EXPLAIN') : $this->language->lang('CONTINUE_DELETING_INDEX_EXPLAIN'),
@@ -3286,11 +3308,6 @@ class acp_controller
 	{
 		// For some this may be of help...
 		ini_set('memory_limit', '128M');
-
-//		if (!check_link_hash($this->request->variable('hash', ''), 'kb_acp_search'))
-//		{
-//			trigger_error($this->language->lang('FORM_INVALID') . adm_back_link($this->u_action), E_USER_WARNING);
-//		}
 
 		// Entering here for the first time
 		if (empty($state))
@@ -3325,7 +3342,7 @@ class acp_controller
 			{
 				$this->save_state($state); // update $post_counter in $state in the database
 
-				$u_action = append_sid($this->u_action, 'i=' . $id . '&mode=' . $mode . '&action=' . $action);
+				$u_action = append_sid($this->u_action, 'i=' . $id . '&mode=' . $mode . '&action=' . $action . '&hash=' . generate_link_hash('kb_acp_search_' . $action));
 				meta_refresh(1, $u_action);
 
 				$message_redirect = $this->language->lang(($action == 'create') ? 'SEARCH_INDEX_CREATE_REDIRECT' : 'SEARCH_INDEX_DELETE_REDIRECT', (int) $status['row_count'], $status['post_counter']);
@@ -3410,5 +3427,34 @@ class acp_controller
 	public function set_page_url(string $u_action): void
 	{
 		$this->u_action = $u_action;
+	}
+
+	/** Reject an invalid POST token before any state changes. */
+	private function require_form_key(string $key): void
+	{
+		if (!check_form_key($key))
+		{
+			trigger_error($this->language->lang('FORM_INVALID') . adm_back_link($this->u_action), E_USER_WARNING);
+		}
+	}
+
+	/** Accept a token-protected form submission or a hashed batch continuation. */
+	private function validate_batch_request(string $key): bool
+	{
+		add_form_key($key);
+		if ($this->request->is_set_post('submit'))
+		{
+			$this->require_form_key($key);
+			return true;
+		}
+		if ($this->request->variable('submit', false))
+		{
+			if (!$this->request->variable('continue', false) || !check_link_hash($this->request->variable('hash', ''), $key))
+			{
+				trigger_error($this->language->lang('FORM_INVALID') . adm_back_link($this->u_action), E_USER_WARNING);
+			}
+			return true;
+		}
+		return false;
 	}
 }

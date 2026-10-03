@@ -2,7 +2,16 @@
 namespace phpbbmodders\knowledgebase\controller;
 
 function add_form_key($key) {}
-function check_form_key($key) { return false; }
+function check_form_key($key) { return !empty($GLOBALS['kb_test_valid_forms'][$key]); }
+function generate_link_hash($key) { return $key . '_valid'; }
+function check_link_hash($hash, $key) { return $hash === generate_link_hash($key); }
+class kb_test_refresh_stop extends \Error {}
+function meta_refresh($time, $url)
+{
+	$GLOBALS['kb_test_refresh_url'] = $url;
+	if (!empty($GLOBALS['kb_test_stop_on_refresh'])) throw new kb_test_refresh_stop();
+}
+function append_sid($url, $params) { return $url . '&amp;' . $params; }
 function adm_back_link($url) { return ''; }
 function trigger_error($message, $level = E_USER_NOTICE) { throw new \RuntimeException($message); }
 
@@ -40,6 +49,7 @@ class kb_extensions_test extends \PHPUnit\Framework\TestCase
 
 	protected function setUp(): void
 	{
+		$GLOBALS['kb_test_valid_forms'] = [];
 		$this->pdo = new \PDO('sqlite::memory:');
 		$this->pdo->exec('CREATE TABLE extensions (extension_id INTEGER PRIMARY KEY, extension TEXT, group_id INTEGER)');
 		$this->pdo->exec('CREATE TABLE extension_groups (group_id INTEGER PRIMARY KEY, group_name TEXT)');
