@@ -1889,16 +1889,19 @@ class functions_kb
 				WHERE ' . $this->db->sql_in_set('attach_id', $ids);
 			$this->db->sql_query($sql);
 		}
-		$articles_count--;
-		if ($articles_count >= 0)
+		if ((int) $info['status'] !== self::STATUS_DRAFT)
 		{
-			$sql = 'UPDATE ' . $this->categories_table . '
-				SET number_articles = ' . $articles_count . '
-				WHERE category_id = ' . (int) $category_id;
-			$this->db->sql_query($sql);
+			$articles_count--;
+			if ($articles_count >= 0)
+			{
+				$sql = 'UPDATE ' . $this->categories_table . '
+					SET number_articles = ' . $articles_count . '
+					WHERE category_id = ' . (int) $category_id;
+				$this->db->sql_query($sql);
+			}
+			$this->config->increment('kb_num_articles', -1);
 		}
 		$this->cache->destroy('sql', $this->categories_table);
-		$this->config->increment('kb_num_articles', -1);
 
 		delete_topics('topic_id', [$info['topic_id']], true, true, true);
 		$this->log->add('admin', $this->user->data['user_id'], $this->user->data['user_ip'], 'LOG_LIBRARY_DEL_ARTICLE', time(), [$article_title, $cat_info['category_name']]);
@@ -1940,6 +1943,7 @@ class functions_kb
 	 */
 	public function kb_move_article($k, $article_title, $cat_id, $id, $order): void
 	{
+		$info = $this->get_kb_article_info($k);
 		// Change category id in the table of articles
 		$sql = 'UPDATE ' . $this->articles_table . '
 			SET article_category_id = ' . (int) $id . ', display_order = 0
@@ -1959,11 +1963,11 @@ class functions_kb
 		// recalculate the number of articles in source category
 		$cat_info = $this->get_cat_info($cat_id);
 		$articles_count = $cat_info['number_articles'];
-		$articles_count--;
+		$articles_count -= (int) ((int) $info['status'] !== self::STATUS_DRAFT);
 		// ... and a new category
 		$to_cat_info = $this->get_cat_info($id);
 		$to_articles_count = $to_cat_info['number_articles'];
-		$to_articles_count++;
+		$to_articles_count += (int) ((int) $info['status'] !== self::STATUS_DRAFT);
 		// change in DB
 		$sql = 'UPDATE ' . $this->categories_table . ' SET number_articles = ' . $articles_count . ' WHERE category_id = ' . (int) $cat_id;
 		$this->db->sql_query($sql);

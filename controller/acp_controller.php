@@ -1132,7 +1132,6 @@ class acp_controller
 		$result = $this->db->sql_query($sql);
 		$row = $this->db->sql_fetchrow($result);
 		$article_count = $row['article_count'];
-		$this->config->set('kb_num_articles', $article_count);
 		$this->db->sql_freeresult($result);
 
 		if (empty($per_page))
@@ -3081,7 +3080,8 @@ class acp_controller
 		if (empty($this->config['kb_num_articles']))
 		{
 			$sql = 'SELECT COUNT(article_id) as article_count
-			FROM ' . $this->articles_table;
+			FROM ' . $this->articles_table . '
+			WHERE status <> ' . functions_kb::STATUS_DRAFT;
 			$result = $this->db->sql_query($sql);
 			$row = $this->db->sql_fetchrow($result);
 			$this->config->set('kb_num_articles', $row['article_count']);
@@ -3224,7 +3224,7 @@ class acp_controller
 					{
 						$this->require_form_key('kb_acp_search');
 					}
-					elseif (empty($state) || $state[self::STATE_ACTION] !== $action || !check_link_hash($this->request->variable('hash', ''), 'kb_acp_search_' . $action))
+					else if (empty($state) || $state[self::STATE_ACTION] !== $action || !check_link_hash($this->request->variable('hash', ''), 'kb_acp_search_' . $action))
 					{
 						trigger_error($this->language->lang('FORM_INVALID') . adm_back_link($this->u_action), E_USER_WARNING);
 					}
