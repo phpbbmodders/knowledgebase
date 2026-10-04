@@ -70,13 +70,22 @@ The working board and its database were not reset or modified.
   tables, configuration, ACL options, ACP modules, and migration records while
   preserving board users. Fixture seeding required an explicit empty
   `category_parents` value; this was corrected in seed-forum.
-- PostgreSQL 16.15: fresh installation failed in
+- PostgreSQL 16.15: the initial fresh installation failed in
   `version_1_0_0::remove_knowlege_base_ext()`. The legacy module cleanup uses
   double-quoted string values, which PostgreSQL interprets as identifiers.
   The database confirmed schema completion but incomplete migration data and
-  no `kb_version`. Later lifecycle stages were not run. The installer returned
+  no `kb_version`. The installer returned
   exit code zero despite reporting this SQL error, so exit status alone is not
-  sufficient evidence of success. The historical migration was left unchanged.
+  sufficient evidence of success. William authorized a narrowly scoped
+  exception to the historical-migration rule: only the seven SQL string
+  values were changed to single-quoted literals, preserving cleanup behavior
+  and schema. After that correction, fresh installation at 2.0.14, upgrade to
+  2.0.15, disable/re-enable, purge, and clean reinstall at 2.0.15 passed.
+  Row-by-row assertions confirmed article, revision, private draft-edit, and
+  native search-match preservation. Purge removed KB-owned tables,
+  configuration, ACL options, ACP modules, and migration records while
+  preserving core users. Two regression tests cover SQL literal quoting and
+  repeatable cleanup that retains unrelated data.
 
 Browser checks on the disposable SQLite board confirmed:
 

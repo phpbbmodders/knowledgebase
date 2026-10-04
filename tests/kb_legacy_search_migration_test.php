@@ -41,6 +41,43 @@ class kb_legacy_search_migration_test extends \PHPUnit\Framework\TestCase
 		return $columns;
 	}
 
+	public function test_legacy_module_cleanup_uses_sql_string_literals()
+	{
+		$db = $this->createMock(\phpbb\db\driver\driver_interface::class);
+		$queries = [];
+		$db->expects($this->exactly(3))->method('sql_query')->willReturnCallback(function ($sql) use (&$queries) {
+			$queries[] = $sql;
+			return true;
+		});
+		$migration = new version_1_0_0($this->config, $db, $this->tools, '', 'php', 'fixture_');
+		$migration->remove_knowlege_base_ext();
+		$this->assertStringContainsString('DELETE FROM fixture_modules', $queries[2]);
+		foreach (['KNOWLEGE_BASE', 'ACP_KNOWLEGE_BASE_CONFIGURE', 'ACP_LIBRARY_MANAGE', 'ACP_LIBRARY_ARTICLES', 'ACP_LIBRARY_PERMISSIONS', 'ACP_LIBRARY_SEARCH', 'ACP_LIBRARY_LOGS'] as $name)
+		{
+			$this->assertStringContainsString("'" . $name . "'", $queries[2]);
+			$this->assertStringNotContainsString('"' . $name . '"', $queries[2]);
+		}
+	}
+
+	public function test_legacy_cleanup_preserves_unrelated_data_and_is_repeatable()
+	{
+		$this->db->sql_query('CREATE TABLE phpbb_ext (ext_name TEXT)');
+		$this->db->sql_query('CREATE TABLE phpbb_config (config_name TEXT)');
+		$this->db->sql_query('CREATE TABLE phpbb_modules (module_langname TEXT)');
+		$this->db->sql_query("INSERT INTO phpbb_ext VALUES ('Sheer/knowlegebase'), ('other/extension')");
+		$this->db->sql_query("INSERT INTO phpbb_config VALUES ('knowlege_base_version'), ('other_setting')");
+		$this->db->sql_query("INSERT INTO phpbb_modules VALUES ('KNOWLEGE_BASE'), ('ACP_LIBRARY_LOGS'), ('OTHER_MODULE')");
+		$migration = $this->migration(version_1_0_0::class);
+		$migration->remove_knowlege_base_ext();
+		$migration->remove_knowlege_base_ext();
+		foreach (['ext' => ['ext_name', 'other/extension'], 'config' => ['config_name', 'other_setting'], 'modules' => ['module_langname', 'OTHER_MODULE']] as $table => [$column, $expected])
+		{
+			$result = $this->db->sql_query('SELECT ' . $column . ' FROM phpbb_' . $table);
+			$this->assertSame([[$column => $expected]], $this->db->sql_fetchrowset($result));
+			$this->db->sql_freeresult($result);
+		}
+	}
+
 	public function test_shipped_legacy_schema_upgrades_without_losing_matches()
 	{
 		$initial = $this->migration(version_1_0_0::class)->update_schema();
