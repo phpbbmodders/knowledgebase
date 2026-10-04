@@ -5,11 +5,6 @@ under [`docs/TODO/`](TODO/).
 
 ## Active
 
-- Review follow-up validation: execute the repaired fulltext search and
-  index lifecycle, including the `version_2_0_15` index repair, against
-  MySQL and PostgreSQL. SQLite legacy-schema tests verify the repair
-  preserves articles and search matches. Fulltext regression tests for
-  the other engines check generated SQL, not database execution.
 - [phpbb.com KB parity gaps](TODO/todo-phpbb-com-kb-parity.md) - five
   feature-completeness differences from the original phpbb.com
   Knowledge Base, found via a second-opinion screenshot comparison
@@ -62,5 +57,8 @@ under [`docs/TODO/`](TODO/).
   writes it, so this remains unaddressed by choice for now.
 
 ## Archived Reviews
+
+Completed [database search validation](TODO/archive/archive1.md#database-search-validation)
+is recorded separately from the historical reviews below.
 
 The [September 26 AI validation](TODO/archive/archive1.md#ai-validation-review-2026-09-26) describes the pre-remediation snapshot. Its original findings are preserved, but the old Deny recommendation is not a current-tree verdict. The two deferred design suggestions above remain active; archiving is not a fresh validation pass.

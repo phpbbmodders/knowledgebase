@@ -401,6 +401,7 @@ class kb_fulltext_postgres extends kb_base implements kb_search_backend_interfac
 
 			if (!$result_count)
 			{
+				$this->db->sql_transaction('commit');
 				return false;
 			}
 		}
@@ -519,6 +520,7 @@ class kb_fulltext_postgres extends kb_base implements kb_search_backend_interfac
 
 			if (!$result_count)
 			{
+				$this->db->sql_transaction('commit');
 				return false;
 			}
 		}
@@ -641,6 +643,7 @@ class kb_fulltext_postgres extends kb_base implements kb_search_backend_interfac
 			$this->db->sql_query($sql_query);
 		}
 
+		$this->stats = [];
 		$this->db->sql_query('TRUNCATE TABLE ' . $this->search_results_table);
 
 		return null;
@@ -691,7 +694,8 @@ class kb_fulltext_postgres extends kb_base implements kb_search_backend_interfac
 			$this->db->sql_query($sql_query);
 		}
 
-		$this->db->sql_query('TRUNCATE TABLE ' . SEARCH_RESULTS_TABLE);
+		$this->stats = [];
+		$this->db->sql_query('TRUNCATE TABLE ' . $this->search_results_table);
 
 		return null;
 	}
@@ -766,7 +770,7 @@ class kb_fulltext_postgres extends kb_base implements kb_search_backend_interfac
 		}
 		$this->db->sql_freeresult($result);
 
-		$this->stats['total_posts'] = $this->config['num_posts'];
+		$this->stats['total_posts'] = empty($this->stats) ? 0 : $this->db->get_estimated_row_count($this->articles_table);
 	}
 
 	/**
