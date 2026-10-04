@@ -5,6 +5,16 @@ under [`docs/TODO/`](TODO/).
 
 ## Active
 
+- PostgreSQL fresh installation is blocked by double-quoted string values in
+  `migrations/version_1_0_0.php::remove_knowlege_base_ext()`. Confirmed on
+  PostgreSQL 16.15 with phpBB 3.3.19 on 10/03/2026. Choose an explicit legacy
+  migration maintenance/replacement approach before changing a migration
+  that may already be applied; a later migration cannot repair an install
+  that fails before reaching it. See [runtime validation](testing.md#lifecycle-and-browser-validation---10032026).
+- Complete browser submission/deletion, attachment, CSRF rejection, and actual
+  notification-delivery checks. Current browser coverage is limited to
+  navigation, form rendering, and selected guest/reader/author/moderator
+  permissions; see [testing notes](testing.md).
 - [phpbb.com KB parity gaps](TODO/todo-phpbb-com-kb-parity.md) - five
   feature-completeness differences from the original phpbb.com
   Knowledge Base, found via a second-opinion screenshot comparison
