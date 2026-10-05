@@ -30,6 +30,7 @@
 	<thead>
 	<tr>
 		<th>{{ lang('ARTICLE') }}</th>
+		<th class="kb-index-author">{{ lang('ARTICLE_AUTHOR') }}</th>
 		<th class="kb-index-views">{{ lang('KB_IN_PROGRESS') }}</th>
 		<th class="kb-index-author">{{ lang('ARTICLE_DATE') }}</th>
 		<th class="kb-index-author">{{ lang('KB_STATUS') }}</th>
@@ -39,6 +40,7 @@
 	{% for art_row in loops.art_row %}
 		<tr>
 			<td><a href="{{ art_row.U_ARTICLE }}">{{ art_row.ARTICLE_TITLE }}</a></td>
+			<td class="kb-index-author">{{ art_row.ARTICLE_AUTHOR }}{% if art_row.CO_AUTHORS %}, {{ art_row.CO_AUTHORS }}{% endif %}</td>
 			<td class="kb-index-views">
 				{% if art_row.S_HAS_REVISION %}{{ lang('KB_STATUS_REVISION') }}<br>{% endif %}
 				{% if art_row.S_HAS_DRAFT_EDIT %}<a href="{{ art_row.U_EDIT }}">{{ lang('KB_DRAFT_EDIT_PENDING') }}</a>{% endif %}
@@ -56,7 +58,7 @@
 	{% endfor %}
 	{% if not loops.art_row|length %}
 		<tr>
-			<td colspan="4">{{ lang('NO_ARTICLES') }}</td>
+			<td colspan="5">{{ lang('NO_ARTICLES') }}</td>
 		</tr>
 	{% endif %}
 	</tbody>

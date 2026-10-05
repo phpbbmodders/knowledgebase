@@ -42,11 +42,12 @@ under [`docs/TODO/`](TODO/).
   the article page and the category listing, both linked and with
   groups in their colour, and the category listing's per-row author/
   co-author lookups are now batched into one query each per page load
-  instead of one pair per row. One small thing remains intentionally
-  undone - see the file's "Still not done, on purpose" note under item
-  1: "Your articles" was never showing an author column at all before
-  this feature existed, so it wasn't given one now either (its
-  underlying query was still fixed to include co-authored articles).
+  instead of one pair per row. "Your articles" now has an Author column
+  showing the primary author and co-authors (added 10/05/2026, after
+  co-authored articles turned out to appear there unlabeled). One small
+  thing remains intentionally undone - see the file's "Still not done, on
+  purpose" note: the board-index category-card view shows only a
+  one-article teaser per category.
 - Two known, deliberately-deferred `[valinfo]` findings from
   [archived September 26 AI validation](TODO/archive/archive1.md#ai-validation-review-2026-09-26)
   (neither is a bug, both are design suggestions): `migrations/version_1_0_2.php`
