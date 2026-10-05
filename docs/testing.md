@@ -172,7 +172,53 @@ Later the same day, on the seeded SQLite board at `localhost:8092`:
   thumbnail with `t=1` and the original without it. Deleting the article removed
   the attachment row and both image files.
 
-Not covered: browser checks on a MySQL or PostgreSQL board (the browser work was
-SQLite only), e-mail notification delivery, and larger datasets. An attempt to
-check e-mail with a local mail catcher was started but not completed, so no
-result is recorded.
+### MySQL and PostgreSQL browser checks - 10/05/2026
+
+Claude repeated the browser checks on a MySQL 8.0 board and a PostgreSQL 16
+board. Each was installed with phpBB's CLI installer into a disposable
+container, had the extension enabled and the fixture seed run, and was then
+served through the `localhost:8092` nginx and PHP-FPM site by pointing its
+`config.php` at that database. The seeded SQLite board was put back afterward.
+
+On both boards, as `kb_author1`, `kb_moderator` and `admin`:
+
+- Saving a draft left the counts unchanged. Submitting raised the category and
+  global counts by one and created a need-approval notification for the
+  moderator.
+- The moderator assigned an article to the team, marked it reviewed and approved
+  it, and rejected another. The author received the approval and rejection
+  notifications and private messages, and the need-approval notifications were
+  cleared. On MySQL this failed until the fix in pull request 20 (below);
+  PostgreSQL was only run with that fix in place.
+- A 1200x800 PNG uploaded through the posting form produced a 400x267 thumbnail.
+  The reader and a second author could download the original and the
+  thumbnail once the article was approved, and a guest got 403.
+- Deleting an approved article lowered both counts by one and removed its
+  attachment row and image files.
+- Switching the search backend to the board's fulltext backend and building the
+  index from the ACP worked (MySQL: four FULLTEXT indexes on
+  `phpbb_kb_articles`; PostgreSQL: four GIN indexes). Keyword, author and
+  keyword-plus-author searches returned the right articles, an author who did
+  not match returned none, and there were no SQL errors. The switch only worked
+  after the fix in pull request 21 (below).
+- All 17 forged ACP requests were rejected. The custom-field add form and the
+  add-extension form with real tokens were accepted, and an extension added
+  without a group showed as "Not assigned" (the `LEFT JOIN` and `COALESCE`
+  queries).
+
+Two defects turned up that the SQLite checks and the tests did not catch:
+
+- Approving or rejecting a pending article failed on MySQL with `Truncated
+  incorrect DOUBLE value: 'MySQL check article' [1292]`, after the article had
+  already been changed. `delete_need_approval_notification()` passed the
+  article's author id, title and category id to the notification manager as item
+  ids. Fixed in pull request 20.
+- The ACP search backend switch always failed at its confirm step with "The
+  submitted form was invalid", because the confirm page did not carry the form
+  token. This is not specific to either database; the check had been in the
+  original code. Fixed in pull request 21.
+
+Not covered: e-mail notification delivery, the pending-state attachment access
+cases on MySQL and PostgreSQL (checked on SQLite), deleting a draft on MySQL and
+PostgreSQL, and larger datasets. An attempt to check e-mail with a local mail
+catcher was started but not completed, so no result is recorded.
