@@ -253,3 +253,50 @@ same three file names, so the fix applies to them too, but their text was not
 checked.
 
 Not covered: larger datasets and delivery through a real mail server.
+
+## Markdown articles - 10/05/2026
+
+An article can now be written in Markdown instead of BBCode, chosen per article
+with a "Use Markdown" checkbox on the posting form. It is stored with an `article_markdown`
+flag on `kb_articles`, `kb_article_revisions` and `kb_article_draft_edits`
+(migration `version_2_0_16`), parsed and rendered by a Knowledge Base only
+instance of phpBB's s9e formatter with the LiteDown and PipeTables plugins, so
+forum posts are never parsed as Markdown. Differences from the Pages extension's
+method: header ids are left off, because a heading such as "Search" would get
+`id="search"` and collide with the page's own search form.
+
+Claude checked it in a browser on the seeded SQLite board at `localhost:8092`:
+
+- The checkbox is off by default, and ticking it hides the BBCode toolbar.
+- Preview, submit and the article page render a heading, bold text, a list and a
+  table. BBCode typed inside Markdown still works, and a raw `<script>` tag is
+  shown as text.
+- The edit form gives back the Markdown the author typed, with the box ticked,
+  not the stored XML.
+- A draft of an edit and a pending revision keep their own format. The review
+  page renders both the live text and the revision as Markdown, and approving
+  the revision keeps the flag on the article.
+- Unticking the box and submitting stores a BBCode revision. Once approved,
+  `**not bold**` and `# not a heading` show as literal text and `[b]` works.
+- Search finds a Markdown article by a word in its body, in both the short and
+  full result views, with a clean snippet and no markup showing.
+- An existing BBCode article is unchanged.
+
+On a fresh MySQL 8.0 board and a fresh PostgreSQL 16 board, built from the same
+code, the new migration ran as part of enabling the extension (KB 2.0.16, the
+flag on all three tables). On each, a Markdown article was previewed, submitted,
+rendered correctly, and loaded back into the edit form as Markdown, and a draft
+edit kept the flag.
+
+The new tests (`kb_article_text_test.php`, `kb_markdown_migration_test.php`,
+`kb_posting_markdown_test.php`) cover the helper's decisions with mocked
+formatter services, the migration on SQLite, and the posting controller's
+routing between the two formats. The real formatter itself was exercised only
+through the browser checks above. The full suite passes against disposable
+MySQL and PostgreSQL containers: 88 tests, 404 assertions.
+
+Not covered: approving a Markdown revision and searching a Markdown article on
+MySQL and PostgreSQL boards, the changelog topic's quoted diff for a Markdown
+article (it quotes the Markdown source as plain text), print view, and the
+wording of the new text in the French, Russian and Czech language files, which
+has not been reviewed by a native speaker.

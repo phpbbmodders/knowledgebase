@@ -23,6 +23,7 @@ use phpbb\user;
 use RuntimeException;
 use phpbbmodders\knowledgebase\inc\functions_kb;
 use phpbbmodders\knowledgebase\search\kb_search_backend_factory;
+use phpbbmodders\knowledgebase\textformatter\article_text;
 
 class search
 {
@@ -56,6 +57,9 @@ class search
 	/** @var functions_kb */
 	protected functions_kb $kb;
 
+	/** @var article_text */
+	protected article_text $article_text;
+
 	/** @var kb_search_backend_factory */
 	protected kb_search_backend_factory $search_factory;
 
@@ -84,6 +88,7 @@ class search
 	 * @param user                      $user
 	 * @param pagination                $pagination
 	 * @param functions_kb              $kb
+	 * @param article_text              $article_text
 	 * @param kb_search_backend_factory $search_factory
 	 * @param string                    $phpbb_root_path
 	 * @param string                    $php_ext
@@ -92,7 +97,7 @@ class search
 	 */
 	public function __construct(
 		driver_interface $db, config $config, helper $helper, language $language, auth $auth, request_interface $request,
-		template $template, user $user, pagination $pagination, functions_kb $kb, kb_search_backend_factory $search_factory,
+		template $template, user $user, pagination $pagination, functions_kb $kb, article_text $article_text, kb_search_backend_factory $search_factory,
 		string $phpbb_root_path, string $php_ext, string $articles_table, string $categories_table
 	)
 	{
@@ -106,6 +111,7 @@ class search
 		$this->user = $user;
 		$this->pagination = $pagination;
 		$this->kb = $kb;
+		$this->article_text = $article_text;
 		$this->search_factory = $search_factory;
 		$this->phpbb_root_path = $phpbb_root_path;
 		$this->php_ext = $php_ext;
@@ -345,9 +351,7 @@ class search
 					}
 					if ($return_chars == -1 || utf8_strlen($text_only_message) < ($return_chars + 3))
 					{
-						$row['bbcode_bitfield'] = false;
-						$parse_flags = ($row['bbcode_bitfield'] ? OPTION_FLAG_BBCODE : 0) | OPTION_FLAG_SMILIES;
-						$row['article_body'] = generate_text_for_display($message, $row['bbcode_uid'], $row['bbcode_bitfield'], $parse_flags, false);
+						$row['article_body'] = $this->article_text->display($message, $row['bbcode_uid'], !empty($row['article_markdown']), false);
 					}
 
 					if ($hilit)

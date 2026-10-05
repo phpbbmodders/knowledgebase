@@ -29,6 +29,7 @@ use RuntimeException;
 use phpbbmodders\knowledgebase\inc\field\kb_field_type_factory;
 use phpbbmodders\knowledgebase\inc\functions_kb;
 use phpbbmodders\knowledgebase\search\kb_search_backend_factory;
+use phpbbmodders\knowledgebase\textformatter\article_text;
 
 class posting
 {
@@ -77,6 +78,9 @@ class posting
 	/** @var functions_kb */
 	protected functions_kb $kb;
 
+	/** @var article_text */
+	protected article_text $article_text;
+
 	/** @var kb_search_backend_factory */
 	protected kb_search_backend_factory $search_factory;
 
@@ -122,6 +126,7 @@ class posting
 	 * @param plupload                  $plupload
 	 * @param notification_manager      $notification_manager
 	 * @param functions_kb              $kb
+	 * @param article_text              $article_text
 	 * @param kb_search_backend_factory $search_factory
 	 * @param kb_field_type_factory     $field_factory
 	 * @param string                    $phpbb_root_path
@@ -134,7 +139,7 @@ class posting
 	public function __construct(
 		driver_interface $db, config $config, helper $helper, manager $ext_manager, language $language, auth $auth,
 		request_interface $request, template $template, user $user, cache $cache, log $log, factory $files_factory,
-		plupload $plupload, notification_manager $notification_manager, functions_kb $kb,
+		plupload $plupload, notification_manager $notification_manager, functions_kb $kb, article_text $article_text,
 		kb_search_backend_factory $search_factory, kb_field_type_factory $field_factory,
 		string $phpbb_root_path, string $php_ext, string $logs_table, string $articles_table,
 		string $categories_table, string $attachments_table
@@ -155,6 +160,7 @@ class posting
 		$this->plupload = $plupload;
 		$this->notification_manager = $notification_manager;
 		$this->kb = $kb;
+		$this->article_text = $article_text;
 		$this->search_factory = $search_factory;
 		$this->field_factory = $field_factory;
 		$this->phpbb_root_path = $phpbb_root_path;
@@ -228,6 +234,11 @@ class posting
 		$article_category_id = $cat_id;
 
 		add_form_key('kb_posting');
+
+		// Whether the article body is Markdown (otherwise BBCode). Set from the
+		// article, its pending revision or its draft edit when one is loaded,
+		// and from the form once the form has been submitted.
+		$article_markdown = $original_article_markdown = false;
 
 		$row = '';
 		$delete_allowed = $edit_allowed = $article_author_id = false;
@@ -372,8 +383,9 @@ class posting
 			// further down, once $row no longer holds it.
 			$original_article_body = (string) $row['article_body'];
 			$original_bbcode_uid = (string) $row['bbcode_uid'];
+			$article_markdown = $original_article_markdown = !empty($row['article_markdown']);
 
-			$article_text = $this->decode_message($article_text, $row['bbcode_uid']);
+			$article_text = $this->decode_article_text($article_text, (string) $row['bbcode_uid'], $article_markdown);
 
 			// Reopening the edit form for an Active article with a pending
 			// revision must continue editing that revision, not silently
@@ -391,7 +403,8 @@ class posting
 					$article_title = (string) $revision['article_title'];
 					$article_description = (string) $revision['article_description'];
 					$redirect_url = (string) $revision['redirect_url'];
-					$article_text = $this->decode_message((string) $revision['article_body'], $revision['bbcode_uid']);
+					$article_markdown = !empty($revision['article_markdown']);
+					$article_text = $this->decode_article_text((string) $revision['article_body'], (string) $revision['bbcode_uid'], $article_markdown);
 				}
 			}
 
@@ -415,7 +428,8 @@ class posting
 					$article_title = (string) $draft_edit['article_title'];
 					$article_description = (string) $draft_edit['article_description'];
 					$redirect_url = (string) $draft_edit['redirect_url'];
-					$article_text = $this->decode_message((string) $draft_edit['article_body'], $draft_edit['bbcode_uid']);
+					$article_markdown = !empty($draft_edit['article_markdown']);
+					$article_text = $this->decode_article_text((string) $draft_edit['article_body'], (string) $draft_edit['bbcode_uid'], $article_markdown);
 				}
 			}
 
@@ -475,6 +489,13 @@ class posting
 		$article_text = (isset($article_text)) ? $this->request->variable('message', $article_text, true) : $this->request->variable('message', '', true);
 		$article_description = (isset($article_description)) ? $this->request->variable('descr', $article_description, true) : $this->request->variable('descr', '', true);
 		$redirect_url = (isset($redirect_url)) ? $this->request->variable('redirect_url', $redirect_url, true) : $this->request->variable('redirect_url', '', true);
+
+		// An unticked checkbox is not sent at all, so the form carries a marker
+		// to tell "unticked" apart from "this request is not a form post".
+		if ($this->request->is_set_post('article_markdown_form'))
+		{
+			$article_markdown = $this->request->variable('article_markdown', false);
+		}
 
 		$articles_count = 0;
 		$category_name = '';
@@ -543,7 +564,7 @@ class posting
 				{
 					// to enable bbcode, urls and smilies parsing, be enabled it when using
 					// generate_text_for_storage function
-					generate_text_for_storage($article_text, $bbcode_uid, $bbcode_bitfield, $options, true, true, true);
+					$this->article_text->store($article_text, $article_markdown, $bbcode_uid, $bbcode_bitfield, $options);
 				}
 				else
 				{
@@ -611,6 +632,7 @@ class posting
 					'author_type'         => $author_type,
 					'bbcode_uid'          => substr(md5(rand()), 0, 8),
 					'article_body'        => $article_text,
+					'article_markdown'    => (int) ($article_markdown && !$is_redirect),
 					'is_redirect'         => $is_redirect ? 1 : 0,
 					'redirect_url'        => $is_redirect ? $redirect_url : '',
 					'views'               => 0,
@@ -682,6 +704,7 @@ class posting
 							'article_body'        => $article_text,
 							'bbcode_uid'          => $bbcode_uid,
 							'bbcode_bitfield'     => $bbcode_bitfield,
+							'article_markdown'    => (int) ($article_markdown && !$is_redirect),
 							'redirect_url'        => $redirect_url,
 						], (int) $this->user->data['user_id']);
 
@@ -714,6 +737,7 @@ class posting
 							'article_body'        => $article_text,
 							'bbcode_uid'          => $bbcode_uid,
 							'bbcode_bitfield'     => $bbcode_bitfield,
+							'article_markdown'    => (int) ($article_markdown && !$is_redirect),
 							'redirect_url'        => $redirect_url,
 						], (int) $this->user->data['user_id']);
 
@@ -727,8 +751,8 @@ class posting
 
 						$changelog_message = $this->append_changelog_body_diff(
 							$this->language->lang('KB_CHANGELOG_REVISION_SUBMITTED', $this->user->data['username']),
-							$original_article_body, $original_bbcode_uid,
-							$article_text, $bbcode_uid
+							$original_article_body, $original_bbcode_uid, $original_article_markdown,
+							$article_text, $bbcode_uid, $article_markdown && !$is_redirect
 						);
 						$this->kb->post_changelog_entry($art_id, $article_title, $changelog_message);
 
@@ -834,8 +858,8 @@ class posting
 
 							$changelog_message = $this->append_changelog_body_diff(
 								$this->language->lang('KB_CHANGELOG_EDITED', $this->user->data['username']),
-								$original_article_body, $original_bbcode_uid,
-								$article_text, $bbcode_uid
+								$original_article_body, $original_bbcode_uid, $original_article_markdown,
+								$article_text, $bbcode_uid, $article_markdown && !$is_redirect
 							);
 							$this->kb->post_changelog_entry($art_id, $article_title, $changelog_message);
 
@@ -1040,9 +1064,9 @@ class posting
 
 			if (!$is_redirect)
 			{
-				generate_text_for_storage($preview_text, $uid, $bitfield, $options, true, true, true);
+				$this->article_text->store($preview_text, $article_markdown, $uid, $bitfield, $options);
 
-				$preview_text = generate_text_for_display($preview_text, $uid, $bitfield, $options);
+				$preview_text = $this->article_text->display($preview_text, $uid, $article_markdown);
 
 				// Parse attachments
 				if (count($attachment_data))
@@ -1065,6 +1089,7 @@ class posting
 				'TOPIC_TITLE'       => $article_title,
 				'SUBJECT'           => $article_title,
 				'MESSAGE'           => $article_text,
+				'S_ARTICLE_MARKDOWN' => $article_markdown,
 				'S_IS_REDIRECT'     => $is_redirect,
 				'REDIRECT_URL'      => $redirect_url,
 				'ERROR'             => (count($error)) ? implode('<br>', $error) : '',
@@ -1175,23 +1200,27 @@ class posting
 	 * didn't touch the body (a title/description-only edit stays a
 	 * plain notice, not a no-op diff of two identical quotes).
 	 *
-	 * Both bodies are decode_message()'d first - the stored form of
-	 * each carries its own bbcode_uid-tagged markers, which only mean
-	 * something paired with that specific uid. Stripped down to plain
-	 * portable BBCode source, they're safe to embed in this new post,
-	 * which gets its own fresh uid when it's saved.
+	 * Both bodies are decoded first (decode_article_text()) - the stored
+	 * form of each carries its own bbcode_uid-tagged markers, which only
+	 * mean something paired with that specific uid. Stripped down to the
+	 * plain source the author typed, they're safe to embed in this new
+	 * post, which gets its own fresh uid when it's saved. The changelog
+	 * topic is always a BBCode post, so a Markdown article's source is
+	 * quoted as plain text.
 	 *
 	 * @param string $base_message
 	 * @param string $old_body
 	 * @param string $old_bbcode_uid
+	 * @param bool   $old_markdown
 	 * @param string $new_body
 	 * @param string $new_bbcode_uid
+	 * @param bool   $new_markdown
 	 * @return string
 	 */
-	private function append_changelog_body_diff(string $base_message, string $old_body, string $old_bbcode_uid, string $new_body, string $new_bbcode_uid): string
+	private function append_changelog_body_diff(string $base_message, string $old_body, string $old_bbcode_uid, bool $old_markdown, string $new_body, string $new_bbcode_uid, bool $new_markdown): string
 	{
-		$old_body = (string) $this->decode_message($old_body, $old_bbcode_uid);
-		$new_body = (string) $this->decode_message($new_body, $new_bbcode_uid);
+		$old_body = $this->decode_article_text($old_body, $old_bbcode_uid, $old_markdown);
+		$new_body = $this->decode_article_text($new_body, $new_bbcode_uid, $new_markdown);
 
 		if ($old_body === $new_body)
 		{
@@ -1201,6 +1230,20 @@ class posting
 		return $base_message . "\n\n"
 			. '[quote="' . $this->language->lang('KB_CHANGELOG_ORIGINAL_TEXT') . '"]' . $old_body . '[/quote]' . "\n"
 			. '[quote="' . $this->language->lang('KB_CHANGELOG_NEW_TEXT') . '"]' . $new_body . '[/quote]';
+	}
+
+	/**
+	 * Stored article text back into what the author typed, ready for the
+	 * edit form's textarea.
+	 *
+	 * @param string $stored
+	 * @param string $bbcode_uid
+	 * @param bool   $markdown   Whether the article is a Markdown article
+	 * @return string
+	 */
+	private function decode_article_text(string $stored, string $bbcode_uid, bool $markdown): string
+	{
+		return $markdown ? $this->article_text->for_edit($stored) : (string) $this->decode_message($stored, $bbcode_uid);
 	}
 
 	/**
