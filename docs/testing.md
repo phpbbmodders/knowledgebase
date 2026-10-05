@@ -248,5 +248,8 @@ mail appeared after that route was requested, not at the moment of the action.
   link. A new test checks that every notification type's e-mail template file
   exists.
 
-Not covered: larger datasets, other languages (only English e-mail templates
-ship), and delivery through a real mail server.
+Only the English mail was read. The Czech, French and Russian folders ship the
+same three file names, so the fix applies to them too, but their text was not
+checked.
+
+Not covered: larger datasets and delivery through a real mail server.

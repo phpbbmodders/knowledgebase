@@ -15,8 +15,13 @@ class kb_notification_email_templates_test extends \PHPUnit\Framework\TestCase
 		$template = $notification->get_email_template();
 
 		$this->assertStringStartsWith('@phpbbmodders_knowledgebase/', $template);
-		$file = dirname(__DIR__) . '/language/en/email/' . substr($template, strlen('@phpbbmodders_knowledgebase/')) . '.txt';
-		$this->assertFileExists($file, 'Missing e-mail template for ' . $class);
+		$name = substr($template, strlen('@phpbbmodders_knowledgebase/')) . '.txt';
+		$folders = glob(dirname(__DIR__) . '/language/*/email', GLOB_ONLYDIR);
+		$this->assertNotEmpty($folders);
+		foreach ($folders as $folder)
+		{
+			$this->assertFileExists($folder . '/' . $name, 'Missing e-mail template for ' . $class . ' in ' . basename(dirname($folder)));
+		}
 	}
 
 	public function notification_types()
