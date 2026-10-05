@@ -39,7 +39,11 @@ under [`docs/TODO/`](TODO/).
   historical already-released migration, and editing a released
   migration in place is itself the riskier move, so this needs an
   actual migration-replacement/maintenance-path decision, not a quick
-  patch. Separately, `kb_version` is stored in phpBB config with no
+  patch. (Two other released migrations were since edited in place at
+  the owner's direction - `1_0_0`'s PostgreSQL string quoting and
+  `1_0_3`'s duplicate `drop_columns` key - so there is precedent, but
+  those were bugs; this one is a performance suggestion, so it stays
+  deferred unless the owner asks for it.) Separately, `kb_version` is stored in phpBB config with no
   migration ever removing it; the suggestion is to make package
   metadata/migration dependencies authoritative instead and clean up
   the config value in a later migration - migration `2_0_11` still
