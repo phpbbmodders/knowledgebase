@@ -1687,6 +1687,42 @@ class functions_kb
 	}
 
 	/**
+	 * The usergroup authors are told to contact with questions about their
+	 * articles (the "contact group" setting), or null when none is set or the
+	 * chosen group no longer exists.
+	 *
+	 * @return array{id: int, name: string, colour: string, url: string}|null The group's id, display
+	 *                                         name, colour (six hex digits, or empty) and a link to its member list
+	 */
+	public function get_contact_group(): ?array
+	{
+		$group_id = (int) ($this->config['kb_contact_group'] ?? 0);
+		if ($group_id <= 0)
+		{
+			return null;
+		}
+
+		$sql = 'SELECT group_id, group_name, group_colour
+			FROM ' . GROUPS_TABLE . '
+			WHERE group_id = ' . $group_id;
+		$result = $this->db->sql_query($sql);
+		$row = $this->db->sql_fetchrow($result);
+		$this->db->sql_freeresult($result);
+
+		if (!$row)
+		{
+			return null;
+		}
+
+		return [
+			'id'     => (int) $row['group_id'],
+			'name'   => $this->group_helper->get_name($row['group_name']),
+			'colour' => preg_match('/^[0-9a-f]{6}$/i', (string) $row['group_colour']) ? (string) $row['group_colour'] : '',
+			'url'    => append_sid($this->phpbb_root_path . 'memberlist.' . $this->php_ext, 'mode=group&amp;g=' . $group_id),
+		];
+	}
+
+	/**
 	 * KB team group_id => display name, for the assign-to-team dropdown.
 	 * Uses group_helper::get_name() (same as acp_controller.php) so
 	 * special/translated group names resolve exactly as they do

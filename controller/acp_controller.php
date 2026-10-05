@@ -248,17 +248,21 @@ class acp_controller
 		$max_filesize = $max_filesize['value'];
 
 		$team_groups = $this->kb->get_kb_team_groups();
+		$contact_group_id = (int) $this->config['kb_contact_group'];
+		$contact_group_options = '<option value="0"' . ($contact_group_id ? '' : ' selected="selected"') . '>' . $this->language->lang('KB_NONE_DISABLED') . '</option>';
 		$sql = 'SELECT group_id, group_name
 			FROM ' . GROUPS_TABLE . '
 			ORDER BY group_name';
 		$result = $this->db->sql_query($sql);
 		while ($row = $this->db->sql_fetchrow($result))
 		{
+			$group_name = $this->group_helper->get_name($row['group_name']);
 			$this->template->assign_block_vars('team_group', [
 				'GROUP_ID'   => $row['group_id'],
-				'GROUP_NAME' => $this->group_helper->get_name($row['group_name']),
+				'GROUP_NAME' => $group_name,
 				'S_CHECKED'  => in_array((int) $row['group_id'], $team_groups, true),
 			]);
+			$contact_group_options .= '<option value="' . (int) $row['group_id'] . '"' . ((int) $row['group_id'] === $contact_group_id ? ' selected="selected"' : '') . '>' . htmlspecialchars($group_name, ENT_COMPAT, 'UTF-8') . '</option>';
 		}
 		$this->db->sql_freeresult($result);
 
@@ -280,6 +284,7 @@ class acp_controller
 			// possible once any forum had been selected.
 			'S_FORUM_POST'             => '<option value="0"' . (!$this->config['kb_forum_id'] ? ' selected="selected"' : '') . '>' . $this->language->lang('KB_NONE_DISABLED') . '</option>' . make_forum_select($this->config['kb_forum_id'], 0, true, true, false),
 			'S_CHANGELOG_FORUM_POST'   => '<option value="0"' . (!$this->config['kb_changelog_forum_id'] ? ' selected="selected"' : '') . '>' . $this->language->lang('KB_NONE_DISABLED') . '</option>' . make_forum_select($this->config['kb_changelog_forum_id'], 0, true, true, false),
+			'S_CONTACT_GROUP_OPTIONS'  => $contact_group_options,
 			'S_FORUM_PREFIX'           => $this->config_text->get('kb_forum_prefix'),
 			'S_TOPIC_PREFIX'           => $this->config_text->get('kb_topic_prefix'),
 			'S_FORCIBLY'               => $this->config['kb_sort_type'] == 0,
@@ -328,6 +333,32 @@ class acp_controller
 
 		$team_groups = array_map('intval', $this->request->variable('team_groups', [0]));
 		$this->config_text->set('kb_team_groups', json_encode($team_groups));
+
+		$this->config->set('kb_contact_group', $this->valid_contact_group($this->request->variable('contact_group', 0)));
+	}
+
+	/**
+	 * A submitted contact group id, or 0 (none) when it is not an existing
+	 * usergroup.
+	 *
+	 * @param int $group_id
+	 * @return int
+	 */
+	protected function valid_contact_group(int $group_id): int
+	{
+		if ($group_id <= 0)
+		{
+			return 0;
+		}
+
+		$sql = 'SELECT group_id
+			FROM ' . GROUPS_TABLE . '
+			WHERE group_id = ' . $group_id;
+		$result = $this->db->sql_query($sql);
+		$exists = (bool) $this->db->sql_fetchrow($result);
+		$this->db->sql_freeresult($result);
+
+		return $exists ? $group_id : 0;
 	}
 	/** END - Settings management functions */
 

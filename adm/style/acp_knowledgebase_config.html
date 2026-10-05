@@ -187,6 +187,11 @@
 				</dd>
 			{% endfor %}
 		</dl>
+		<dl>
+			<dt><label for="contact_group">{{ lang('KB_CONTACT_GROUP') }}{{ lang('COLON') }}</label><br>
+				<span>{{ lang('KB_CONTACT_GROUP_EXPLAIN') }}</span></dt>
+			<dd><select name="contact_group" id="contact_group">{{ S_CONTACT_GROUP_OPTIONS }}</select></dd>
+		</dl>
 	</fieldset>
 	<fieldset class="submit-buttons">
 		<legend>{{ lang('SUBMIT') }}</legend>
