@@ -88,6 +88,13 @@
 								value="{{ REDIRECT_URL }}" class="inputbox autowidth"/></dd>
 					</dl>
 				{% else %}
+					<dl style="clear: left;">
+						<dt><label for="article_markdown">{{ lang('KB_USE_MARKDOWN') }}{{ lang('COLON') }}</label><br>
+							<span>{{ lang('KB_USE_MARKDOWN_EXPLAIN') }}</span></dt>
+						<dd><label><input type="checkbox" name="article_markdown" id="article_markdown" value="1"{% if S_ARTICLE_MARKDOWN %} checked="checked"{% endif %}/> {{ lang('YES') }}</label>
+							<input type="hidden" name="article_markdown_form" value="1"/></dd>
+					</dl>
+					{% INCLUDEJS '@phpbbmodders_knowledgebase/js/markdown_toggle.js' %}
 					{% INCLUDE 'posting_buttons.html' %}
 					<div id="smiley-box" class="smiley-box">
 						{% if loops.smiley|length %}

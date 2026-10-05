@@ -47,6 +47,7 @@ services:
             - '@template'
             - '@user'
             - '@phpbbmodders.knowledgebase.inc'
+            - '@phpbbmodders.knowledgebase.article_text'
             - '@phpbbmodders.knowledgebase.field.factory'
             - '%core.root_path%'
             - '%core.php_ext%'
@@ -71,6 +72,7 @@ services:
             - '@plupload'
             - '@notification_manager'
             - '@phpbbmodders.knowledgebase.inc'
+            - '@phpbbmodders.knowledgebase.article_text'
             - '@phpbbmodders.knowledgebase.search.backend_factory'
             - '@phpbbmodders.knowledgebase.field.factory'
             - '%core.root_path%'
@@ -96,6 +98,7 @@ services:
             - '@notification_manager'
             - '@pagination'
             - '@phpbbmodders.knowledgebase.inc'
+            - '@phpbbmodders.knowledgebase.article_text'
             - '@phpbbmodders.knowledgebase.search.backend_factory'
             - '%core.root_path%'
             - '%core.php_ext%'
@@ -114,6 +117,7 @@ services:
             - '@user'
             - '@pagination'
             - '@phpbbmodders.knowledgebase.inc'
+            - '@phpbbmodders.knowledgebase.article_text'
             - '@phpbbmodders.knowledgebase.search.backend_factory'
             - '%core.root_path%'
             - '%core.php_ext%'
@@ -132,6 +136,47 @@ services:
             - '%core.php_ext%'
         tags:
             - { name: event.listener }
+
+    phpbbmodders.knowledgebase.text_formatter.factory:
+        class: phpbbmodders\knowledgebase\textformatter\factory
+        arguments:
+            - '@text_formatter.data_access'
+            - '@cache.driver'
+            - '@dispatcher'
+            - '@config'
+            - '@text_formatter.s9e.link_helper'
+            - '@log'
+            - '%text_formatter.cache.dir%'
+            - '_phpbbmodders_knowledgebase_text_formatter_parser'
+            - '_phpbbmodders_knowledgebase_text_formatter_renderer'
+
+    phpbbmodders.knowledgebase.text_formatter.parser:
+        class: phpbb\textformatter\s9e\parser
+        arguments:
+            - '@cache.driver'
+            - '_phpbbmodders_knowledgebase_text_formatter_parser'
+            - '@phpbbmodders.knowledgebase.text_formatter.factory'
+            - '@dispatcher'
+
+    phpbbmodders.knowledgebase.text_formatter.renderer:
+        class: phpbb\textformatter\s9e\renderer
+        arguments:
+            - '@cache.driver'
+            - '%text_formatter.cache.dir%'
+            - '_phpbbmodders_knowledgebase_text_formatter_renderer'
+            - '@phpbbmodders.knowledgebase.text_formatter.factory'
+            - '@dispatcher'
+        calls:
+            - [configure_quote_helper, ['@text_formatter.s9e.quote_helper']]
+            - [configure_smilies_path, ['@config', '@path_helper']]
+            - [configure_user, ['@user', '@config', '@auth']]
+
+    phpbbmodders.knowledgebase.article_text:
+        class: phpbbmodders\knowledgebase\textformatter\article_text
+        arguments:
+            - '@service_container'
+            - '@config'
+            - '@text_formatter.utils'
 
     phpbbmodders.knowledgebase.inc:
         class: phpbbmodders\knowledgebase\inc\functions_kb

@@ -26,6 +26,7 @@ use phpbb\user;
 use RuntimeException;
 use phpbbmodders\knowledgebase\inc\functions_kb;
 use phpbbmodders\knowledgebase\search\kb_search_backend_factory;
+use phpbbmodders\knowledgebase\textformatter\article_text;
 
 class approve
 {
@@ -68,6 +69,9 @@ class approve
 	/** @var functions_kb */
 	protected functions_kb $kb;
 
+	/** @var article_text */
+	protected article_text $article_text;
+
 	/** @var kb_search_backend_factory */
 	protected kb_search_backend_factory $search_factory;
 
@@ -96,6 +100,7 @@ class approve
 	 * @param manager                   $notification_manager
 	 * @param pagination                $pagination
 	 * @param functions_kb              $kb
+	 * @param article_text              $article_text
 	 * @param kb_search_backend_factory $search_factory
 	 * @param string                    $phpbb_root_path
 	 * @param string                    $php_ext
@@ -104,7 +109,7 @@ class approve
 	public function __construct(
 		driver_interface $db, config $config, helper $helper, language $language, auth $auth,
 		request_interface $request, template $template, user $user, cache $cache, log $log,
-		manager $notification_manager, pagination $pagination, functions_kb $kb, kb_search_backend_factory $search_factory,
+		manager $notification_manager, pagination $pagination, functions_kb $kb, article_text $article_text, kb_search_backend_factory $search_factory,
 		string $phpbb_root_path, string $php_ext, string $articles_table
 	)
 	{
@@ -121,6 +126,7 @@ class approve
 		$this->notification_manager = $notification_manager;
 		$this->pagination = $pagination;
 		$this->kb = $kb;
+		$this->article_text = $article_text;
 		$this->search_factory = $search_factory;
 		$this->phpbb_root_path = $phpbb_root_path;
 		$this->php_ext = $php_ext;
@@ -435,10 +441,10 @@ class approve
 			// not just the currently-live title/description above - and
 			// what it's replacing, so the two can be compared on this
 			// page directly instead of needing the changelog topic.
-			'CURRENT_TEXT'          => $has_revision ? generate_text_for_display($kb_article_info['article_body'], $kb_article_info['bbcode_uid'], false, 3, true) : '',
+			'CURRENT_TEXT'          => $has_revision ? $this->article_text->display($kb_article_info['article_body'], $kb_article_info['bbcode_uid'], !empty($kb_article_info['article_markdown'])) : '',
 			'REVISION_TITLE'        => $revision ? $revision['article_title'] : '',
 			'REVISION_DESCRIPTION'  => $revision ? $revision['article_description'] : '',
-			'REVISION_TEXT'         => $revision ? generate_text_for_display($revision['article_body'], $revision['bbcode_uid'], false, 3, true) : '',
+			'REVISION_TEXT'         => $revision ? $this->article_text->display($revision['article_body'], $revision['bbcode_uid'], !empty($revision['article_markdown'])) : '',
 			'S_IS_MODERATOR'        => $is_moderator,
 			'S_IS_ASSIGNED'         => (bool) $kb_article_info['assigned_team_id'],
 			'S_CAN_REVIEW'          => $status === functions_kb::STATUS_NEW && $effective_team_id &&
@@ -675,6 +681,7 @@ class approve
 			'article_description' => $revision['article_description'],
 			'article_body'        => $revision['article_body'],
 			'bbcode_uid'          => $revision['bbcode_uid'],
+			'article_markdown'    => (int) !empty($revision['article_markdown']),
 			'redirect_url'        => $revision['redirect_url'] ?? '',
 			'edit_date'           => time(),
 		];

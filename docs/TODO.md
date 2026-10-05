@@ -5,14 +5,6 @@ under [`docs/TODO/`](TODO/).
 
 ## Active
 
-- Check e-mail notification delivery. Submission/deletion, attachment,
-  thumbnail, custom-field form, search, CSRF rejection and in-board
-  notification checks passed in a browser on SQLite, MySQL and PostgreSQL
-  boards on 10/05/2026; see [testing notes](testing.md).
-- Markdown support, using the same method as the official phpBB Pages
-  extension. Not started; needs a scoping conversation before any code
-  (where it applies - article body, description - and how it interacts with
-  BBCode).
 - Flat article index (the `kb_flat_index` setting, handled today in
   `controller/index.php` and `controller/category.php`): it needs to work
   across all of the extension's pages, with no mixing of the forum-style
@@ -55,5 +47,7 @@ Completed [database search validation](TODO/archive/archive1.md#database-search-
 is recorded separately from the historical reviews below.
 
 The [multi-author, edit-conflict locking, moderator-author messaging, and related gaps](TODO/archive/archive1.md#authorship-and-revisions-todo) plan is complete and was archived on 10/05/2026. One note stays open by choice there: the board-index category-card view shows only a one-article teaser per category.
+
+The [Claude full codebase review of 09/30/2026](TODO/archive/archive1.md#claude-code-review-2026-09-30) is archived: all 12 findings were resolved (pull request #17), and the checks that followed are in the [testing notes](testing.md).
 
 The [September 26 AI validation](TODO/archive/archive1.md#ai-validation-review-2026-09-26) describes the pre-remediation snapshot. Its original findings are preserved, but the old Deny recommendation is not a current-tree verdict. The two deferred design suggestions above remain active; archiving is not a fresh validation pass.

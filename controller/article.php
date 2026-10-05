@@ -21,6 +21,7 @@ use phpbb\template\template;
 use phpbb\user;
 use phpbbmodders\knowledgebase\inc\field\kb_field_type_factory;
 use phpbbmodders\knowledgebase\inc\functions_kb;
+use phpbbmodders\knowledgebase\textformatter\article_text;
 
 class article
 {
@@ -51,6 +52,9 @@ class article
 	/** @var functions_kb */
 	protected functions_kb $kb;
 
+	/** @var article_text */
+	protected article_text $article_text;
+
 	/** @var kb_field_type_factory */
 	protected kb_field_type_factory $field_factory;
 
@@ -78,6 +82,7 @@ class article
 	 * @param template          $template
 	 * @param user              $user
 	 * @param functions_kb          $kb
+	 * @param article_text          $article_text
 	 * @param kb_field_type_factory $field_factory
 	 * @param string                $phpbb_root_path
 	 * @param string                $php_ext
@@ -86,7 +91,7 @@ class article
 	 */
 	public function __construct(
 		driver_interface $db, config $config, helper $helper, language $language, auth $auth,
-		request_interface $request, template $template, user $user, functions_kb $kb,
+		request_interface $request, template $template, user $user, functions_kb $kb, article_text $article_text,
 		kb_field_type_factory $field_factory,
 		string $phpbb_root_path, string $php_ext, string $articles_table, string $attachments_table
 	)
@@ -100,6 +105,7 @@ class article
 		$this->template = $template;
 		$this->user = $user;
 		$this->kb = $kb;
+		$this->article_text = $article_text;
 		$this->field_factory = $field_factory;
 		$this->phpbb_root_path = $phpbb_root_path;
 		$this->php_ext = $php_ext;
@@ -250,7 +256,7 @@ class article
 		}
 		$views = $row['views'];
 		$article = $row['article_id'];
-		$text = generate_text_for_display($row['article_body'], $row['bbcode_uid'], false, 3, true);
+		$text = $this->article_text->display($row['article_body'], $row['bbcode_uid'], !empty($row['article_markdown']));
 
 		$sql = 'SELECT *
 			FROM ' . $this->attachments_table . '
