@@ -5,11 +5,10 @@ under [`docs/TODO/`](TODO/).
 
 ## Active
 
-- Repeat the browser checks on MySQL and PostgreSQL boards, submit the
-  custom-field add form in a browser, and check e-mail notification
-  delivery. Submission/deletion, attachment, CSRF rejection and in-board
-  notification checks passed on the SQLite board on 10/05/2026; see
-  [testing notes](testing.md).
+- Repeat the browser checks on MySQL and PostgreSQL boards, and check e-mail
+  notification delivery. Submission/deletion, attachment, thumbnail,
+  custom-field form, CSRF rejection and in-board notification checks passed on
+  the SQLite board on 10/05/2026; see [testing notes](testing.md).
 - [phpbb.com KB parity gaps](TODO/todo-phpbb-com-kb-parity.md) - five
   feature-completeness differences from the original phpbb.com
   Knowledge Base, found via a second-opinion screenshot comparison
