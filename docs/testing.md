@@ -206,6 +206,15 @@ On both boards, as `kb_author1`, `kb_moderator` and `admin`:
   without a group showed as "Not assigned" (the `LEFT JOIN` and `COALESCE`
   queries).
 
+Attachment access and draft deletion were checked on both boards in a second
+pass. For an article with an attachment, the owner got 200 while it was a draft
+and every other role (moderator, reader, second author, guest) got 403; once the
+author submitted it, only the moderator got 200 and the others stayed at 403.
+Saving a draft left the category and global counts unchanged, and deleting a
+draft left them unchanged too. The non-owner roles were checked over real login
+sessions with `curl`; the owner's download and all the form actions were done in
+the browser.
+
 Two defects turned up that the SQLite checks and the tests did not catch:
 
 - Approving or rejecting a pending article failed on MySQL with `Truncated
@@ -218,7 +227,6 @@ Two defects turned up that the SQLite checks and the tests did not catch:
   token. This is not specific to either database; the check had been in the
   original code. Fixed in pull request 21.
 
-Not covered: e-mail notification delivery, the pending-state attachment access
-cases on MySQL and PostgreSQL (checked on SQLite), deleting a draft on MySQL and
-PostgreSQL, and larger datasets. An attempt to check e-mail with a local mail
-catcher was started but not completed, so no result is recorded.
+Not covered: e-mail notification delivery and larger datasets. An attempt to
+check e-mail with a local mail catcher was started but not completed, so no
+result is recorded.
