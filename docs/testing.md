@@ -102,3 +102,65 @@ not submission/deletion round trips, uploads, CSRF rejection through the
 browser, or actual notification delivery. Browser coverage was not repeated
 on MySQL or PostgreSQL. The localhost-only fixture server and memory-backed
 database containers were stopped after testing.
+
+## Browser and PostgreSQL Validation - 10/05/2026
+
+Claude ran these checks on the seeded SQLite board at `localhost:8092` (nginx
+and PHP-FPM, PHP 8.4.26, phpBB 3.3.19, Knowledge Base 2.0.15 from the pull
+request #17 branch) and on a throwaway board installed on PostgreSQL
+(`postgres:16-alpine` container). The seeded board was restored from a backup
+afterward and the PostgreSQL container was removed.
+
+Browser checks, using the `kb_author1`, `kb_moderator` and `admin` fixture
+accounts:
+
+- Saving a draft left the category and global article counts unchanged.
+  Submitting it showed "added successfully, but require prior approval",
+  raised both counts by one, and created a need-approval notification for
+  `kb_moderator`.
+- The moderator assigned the article to the team, marked it reviewed, approved
+  it with a reason, and rejected another article. The author's notification
+  list showed both the approval and the rejection, and the moderator's showed
+  the pending article. With `kb_require_author_pm` turned on, a rejection also
+  created private messages.
+- Deleting a draft left the counts unchanged. Deleting an approved article
+  lowered both counts by one and removed its attachment row and stored file; a
+  later download returned 404.
+- A PNG uploaded through the posting form's plupload control was linked to the
+  saved draft. Downloads: as the owner, 200 in the browser. Other roles were
+  checked over real login sessions with `curl`: while a draft, the moderator,
+  reader, second author and guest all got 403; while pending, only the
+  moderator got 200; once approved, the reader and second author got 200 and
+  the guest 403 (guests have no Knowledge Base access in this fixture).
+- 17 forged same-origin requests from an administrator session (no form token,
+  or a bad link hash) against the settings, extensions, attachments, orphan,
+  extra-files, lost-files, field, search-settings, search-index and reorder
+  actions were all rejected with "The submitted form was invalid". Control
+  requests with real tokens and links were accepted, and an extension added
+  without a group appeared as "Not assigned".
+
+phpBB treats a form submitted in the same second it was created as not
+human-made (`check_form_key()` in `includes/functions.php`), so scripted
+submissions need a pause of more than one second after the page loads. This is
+core behavior, not a Knowledge Base fault.
+
+PostgreSQL board, driven with phpBB's CLI:
+
+- A fresh core install, then enabling the extension, reached `kb_version`
+  2.0.15 with 17 Knowledge Base tables, 13 ACP modules and 24 migration rows,
+  with no installer errors.
+- Disable and re-enable kept the seeded rows (one category, two articles, one
+  search match, one private draft edit). Purge removed every Knowledge Base
+  table, config entry, ACL option, module and migration record while keeping the
+  board's users, and a clean reinstall followed.
+- Upgrade from 2.0.14 to 2.0.15 (with `version_2_0_15.php` held back, then
+  restored): the Knowledge Base `un_mtch` index changed from three columns to
+  the four-column version, the existing match row and article were kept, a
+  second match differing only by `descr_match` was accepted, and an exact
+  duplicate was rejected. phpBB core's own search index of the same name was
+  left alone.
+
+Not covered: browser checks on a MySQL or PostgreSQL board (the browser work was
+SQLite only), submitting the custom-field add form in a browser (only a forged
+request to it was tried), e-mail notification delivery, image thumbnails, and
+larger datasets.

@@ -20,7 +20,7 @@ checked in a browser are marked as such.
 
 ### P1 - Destructive ACP actions do not validate CSRF tokens
 
-**Status: resolved in d7b0c6c.** Form-token and link-hash checks added to the ACP actions; regression tests in `tests/kb_acp_csrf_test.php`. Rejection of a forged request has not been checked in a browser.
+**Status: resolved in d7b0c6c.** Form-token and link-hash checks added to the ACP actions; regression tests in `tests/kb_acp_csrf_test.php`. In a browser check on 10/05/2026, 17 forged requests from an administrator session were rejected and genuine requests were accepted (see [testing.md](testing.md)).
 
 Locations: `acp/fields_module.php:42-57`,
 `controller/acp_controller.php:707-805`,
@@ -53,7 +53,7 @@ Carry a validated token or hash through each batched/meta-refresh continuation.
 
 ### P1 - The custom-field add form posts to an undefined action variable
 
-**Status: resolved in d7b0c6c.** The template now uses `U_ACTION`, which the controller assigns. Not checked in a browser.
+**Status: resolved in d7b0c6c.** The template now uses `U_ACTION`, which the controller assigns. A forged add-field request was rejected in a browser check on 10/05/2026; submitting the form itself in a browser has not been done.
 
 Locations: `controller/acp_controller.php:1306-1311` and
 `adm/style/acp_knowledgebase_fields.html:4-4`
@@ -133,7 +133,7 @@ qualified column name.
 
 ### P1 - Edit and delete incorrectly require article-add permission
 
-**Status: resolved in ebcb42c.** The add-permission gate in `controller/posting.php` now applies only to add mode. Tests: `tests/kb_posting_permissions_test.php`. Not checked in a browser.
+**Status: resolved in ebcb42c.** The add-permission gate in `controller/posting.php` now applies only to add mode. Tests: `tests/kb_posting_permissions_test.php`. Editing and deleting were also exercised in a browser on 10/05/2026.
 
 Location: `controller/posting.php:187-204` and
 `controller/posting.php:232-272`
@@ -153,7 +153,7 @@ edit or delete permission.
 
 ### P1 - Attachment downloads do not follow article visibility rules
 
-**Status: resolved in ebcb42c.** `controller/kb_file.php` now applies the same rules as the article page: drafts are visible only to their author, and unapproved articles only to the author, the assigned reviewer, or a moderator; approved articles keep their previous access. Tests: `tests/kb_attachment_permissions_test.php`. Not checked in a browser.
+**Status: resolved in ebcb42c.** `controller/kb_file.php` now applies the same rules as the article page: drafts are visible only to their author, and unapproved articles only to the author, the assigned reviewer, or a moderator; approved articles keep their previous access. Tests: `tests/kb_attachment_permissions_test.php`. Checked on a live board on 10/05/2026 for a draft, a pending and an approved article (see [testing.md](testing.md)).
 
 Locations: `controller/article.php:140-165` and
 `controller/kb_file.php:117-138`
@@ -246,7 +246,7 @@ changes affect display-category behavior.
 
 ### P2 - Permission-deny notification filtering uses unrelated ACL options
 
-**Status: resolved in a05867c.** The deny lookup in the three notification types is limited to the requested `auth_option_id`. Tests: `tests/kb_notification_permissions_test.php`. Actual notification delivery has not been checked.
+**Status: resolved in a05867c.** The deny lookup in the three notification types is limited to the requested `auth_option_id`. Tests: `tests/kb_notification_permissions_test.php`. On 10/05/2026 the need-approval, approval and rejection notifications were delivered and shown in the interface, and private messages were created with the PM setting on.
 
 Locations: `notification/type/need_approval.php:180-202`,
 `notification/type/approve.php:406-428`, and
@@ -331,7 +331,13 @@ against the pre-fix code, each test file that can load there fails; the two
 migration test files cannot load on `main` because the migrations they test do
 not exist there.
 
-Still unverified: browser submission and deletion, attachment downloads in a
-browser, rejection of forged ACP requests, real notification delivery, and
-fresh-install / upgrade lifecycle on a live board. These are tracked under
-"Active" in [TODO.md](TODO.md).
+Browser and PostgreSQL checks were run on 10/05/2026 and are recorded in
+[testing.md](testing.md): submission and deletion, attachment downloads for
+each role, forged ACP requests, in-board notification delivery, and a full
+PostgreSQL install, disable/re-enable, purge, reinstall and 2.0.14 to 2.0.15
+upgrade.
+
+Still unverified: browser checks on MySQL and PostgreSQL boards (the browser
+work was SQLite only), submitting the custom-field add form in a browser, e-mail
+notification delivery, and image thumbnails.
+These are tracked under "Active" in [TODO.md](TODO.md).
