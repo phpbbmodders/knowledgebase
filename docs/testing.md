@@ -160,7 +160,19 @@ PostgreSQL board, driven with phpBB's CLI:
   duplicate was rejected. phpBB core's own search index of the same name was
   left alone.
 
+Later the same day, on the seeded SQLite board at `localhost:8092`:
+
+- **Custom fields.** As `admin` in the browser, the ACP custom-field add form
+  (whose action is the `action=add_field` URL) created a field that then
+  appeared in the list. The field's edit-values form saved a new value.
+- **Settings and thumbnails.** The ACP settings form saved attachments on,
+  thumbnails on, three files per article and a 2 MB limit. A 1200x800 PNG
+  (about 265 KB) uploaded through the posting form produced a 400x267 thumbnail
+  (`thumbnail` set on the attachment row), and the download route served the
+  thumbnail with `t=1` and the original without it. Deleting the article removed
+  the attachment row and both image files.
+
 Not covered: browser checks on a MySQL or PostgreSQL board (the browser work was
-SQLite only), submitting the custom-field add form in a browser (only a forged
-request to it was tried), e-mail notification delivery, image thumbnails, and
-larger datasets.
+SQLite only), e-mail notification delivery, and larger datasets. An attempt to
+check e-mail with a local mail catcher was started but not completed, so no
+result is recorded.

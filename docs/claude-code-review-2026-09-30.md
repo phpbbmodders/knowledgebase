@@ -53,7 +53,7 @@ Carry a validated token or hash through each batched/meta-refresh continuation.
 
 ### P1 - The custom-field add form posts to an undefined action variable
 
-**Status: resolved in d7b0c6c.** The template now uses `U_ACTION`, which the controller assigns. A forged add-field request was rejected in a browser check on 10/05/2026; submitting the form itself in a browser has not been done.
+**Status: resolved in d7b0c6c.** The template now uses `U_ACTION`, which the controller assigns. A forged add-field request was rejected, and the form itself was submitted successfully, in browser checks on 10/05/2026.
 
 Locations: `controller/acp_controller.php:1306-1311` and
 `adm/style/acp_knowledgebase_fields.html:4-4`
@@ -338,6 +338,6 @@ PostgreSQL install, disable/re-enable, purge, reinstall and 2.0.14 to 2.0.15
 upgrade.
 
 Still unverified: browser checks on MySQL and PostgreSQL boards (the browser
-work was SQLite only), submitting the custom-field add form in a browser, e-mail
-notification delivery, and image thumbnails.
-These are tracked under "Active" in [TODO.md](TODO.md).
+work was SQLite only) and e-mail notification delivery. The custom-field add
+form and image thumbnails were checked in a browser later on 10/05/2026. The
+open items are tracked under "Active" in [TODO.md](TODO.md).
