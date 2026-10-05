@@ -227,6 +227,29 @@ Two defects turned up that the SQLite checks and the tests did not catch:
   token. This is not specific to either database; the check had been in the
   original code. Fixed in pull request 21.
 
-Not covered: e-mail notification delivery and larger datasets. An attempt to
-check e-mail with a local mail catcher was started but not completed, so no
-result is recorded.
+### E-mail notification delivery - 10/05/2026
+
+Claude checked e-mail delivery on the seeded SQLite board at `localhost:8092`
+with a local mail catcher (the `axllent/mailpit` Docker image) as the SMTP
+server. E-mail was enabled in the board settings, and `kb_moderator` and
+`kb_author1` were given the e-mail and bell methods for the Knowledge Base
+notification types, as the UCP notification settings page would save. The
+board's mail queue runs from the `/cron/cron.task.core.queue` route, so the
+mail appeared after that route was requested, not at the moment of the action.
+
+- **Article approved** and **article rejected**: each reached the author's
+  address with the right subject, the moderator's name and the article title,
+  and the approval mail included the article link.
+- **Article awaiting approval**: no mail was sent for any of three submissions.
+  The notification type asked for the e-mail template
+  `@phpbbmodders_knowledgebase/need_approve`, but the shipped file is
+  `language/en/email/user_need_approval.txt`. After pointing the type at the
+  real file name, the mail reached the moderator with the article title and
+  link. A new test checks that every notification type's e-mail template file
+  exists.
+
+Only the English mail was read. The Czech, French and Russian folders ship the
+same three file names, so the fix applies to them too, but their text was not
+checked.
+
+Not covered: larger datasets and delivery through a real mail server.

@@ -342,7 +342,7 @@ class need_approval extends \phpbb\notification\type\base
 	 */
 	public function get_email_template(): string
 	{
-		return '@phpbbmodders_knowledgebase/need_approve';
+		return '@phpbbmodders_knowledgebase/user_need_approval';
 	}
 
 	/**
