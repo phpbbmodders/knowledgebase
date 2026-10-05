@@ -247,46 +247,6 @@ class acp_controller
 		$identifier = $max_filesize['si_identifier'];
 		$max_filesize = $max_filesize['value'];
 
-		// Create extension list
-		$all_ext = [];
-		$sql = 'SELECT e.extension, g.group_name
-			FROM ' . EXTENSIONS_TABLE . ' e, ' . EXTENSION_GROUPS_TABLE . ' g
-			WHERE e.group_id = g.group_id';
-		$this->db->sql_query($sql);
-		$result = $this->db->sql_query($sql);
-		while ($row = $this->db->sql_fetchrow($result))
-		{
-			$all_ext[$row['group_name']][] = $row['extension'];
-		}
-		$this->db->sql_freeresult($result);
-
-		$extensions = json_decode($this->config_text->get('kb_extensions'), true);
-
-		foreach ($all_ext as $group_name => $ext)
-		{
-			$extensions[$group_name] = empty($extensions[$group_name]) ? [] : $extensions[$group_name];
-			$disabled_ext = array_diff($ext, $extensions[$group_name]);
-			$assigned_ext = array_diff($ext, $disabled_ext);
-
-			$s_options = $disabled_extensions = '';
-			foreach ($disabled_ext as $disabled)
-			{
-				$disabled_extensions .= '<option value="' . $disabled . '">' . $disabled . '</option>';
-			}
-			foreach ($assigned_ext as $assigned)
-			{
-				$s_options .= '<option value="' . $assigned . '" selected="selected">' . $assigned . '</option>';
-			}
-
-			$this->template->assign_block_vars('row', [
-				'GROUP'                => $group_name,
-				'EXTENSIONS_GROUP'     => $this->language->is_set('EXT_GROUP_' . $group_name) ? $this->language->lang('EXT_GROUP_' . $group_name) : $group_name,
-				'S_OPTIONS'            => $s_options,
-				'DIASABLED_EXTENSIONS' => $disabled_extensions,
-				'ASSIGNED_EXTENSIONS'  => implode(', ', $assigned_ext),
-			]);
-		}
-
 		$team_groups = $this->kb->get_kb_team_groups();
 		$sql = 'SELECT group_id, group_name
 			FROM ' . GROUPS_TABLE . '
@@ -337,11 +297,6 @@ class acp_controller
 	 */
 	protected function set_settings(): void
 	{
-		// Create extension array
-		$extension_list = $this->request->variable('extensions', ['' => ['']]);
-		$disabled_list = $this->request->variable('diasabled_extensions', ['' => ['']]);
-		$extension_list = array_merge_recursive($extension_list, $disabled_list);
-
 		// Validate font icon field characters
 		$kb_font_icon = $this->request->variable('kb_font_icon', '');
 		if (!empty($kb_font_icon) && !preg_match('/^[a-z0-9-]+$/', $kb_font_icon))
@@ -370,12 +325,203 @@ class acp_controller
 		$this->config->set('kb_allow_thumbnail', $this->request->variable('thumbnail', 0));
 		$this->config->set('kb_max_attachments', $this->request->variable('max_attachments', 2));
 		$this->config->set('kb_max_filesize', $max_filesize, 0);
-		$this->config_text->set('kb_extensions', json_encode($extension_list));
 
 		$team_groups = array_map('intval', $this->request->variable('team_groups', [0]));
 		$this->config_text->set('kb_team_groups', json_encode($team_groups));
 	}
 	/** END - Settings management functions */
+
+	/**
+	 * "Manage Extensions": which of phpBB's core attachment extensions
+	 * are allowed for KB uploads - modeled on core's own "Manage
+	 * attachment extensions" ACP page (Posting > Attachments): the same
+	 * add-a-new-extension form, plus a per-extension on/off toggle in
+	 * place of core's own group-reassign/delete columns, since the KB
+	 * only ever needs to say yes/no to an existing extension, not move
+	 * it to a different group or remove it from the board entirely.
+	 * Renaming a group, or deleting an extension outright, stays in
+	 * core's own ACP.
+	 *
+	 * @return void
+	 */
+	public function extensions(): void
+	{
+		$form_key = 'kb_extensions';
+		add_form_key($form_key);
+
+		if ($this->request->is_set_post('submit'))
+		{
+			if (!check_form_key($form_key))
+			{
+				trigger_error($this->language->lang('FORM_INVALID') . adm_back_link($this->u_action), E_USER_WARNING);
+			}
+
+			$this->set_extensions();
+
+			$this->log->add('admin', $this->user->data['user_id'], $this->user->data['user_ip'], 'LOG_LIBRARY_CONFIG', time());
+			meta_refresh(2, $this->u_action);
+			trigger_error($this->language->lang('CONFIG_UPDATED') . adm_back_link($this->u_action));
+		}
+
+		$add_extension = '';
+		if ($this->request->is_set_post('add_extension_submit'))
+		{
+			if (!check_form_key($form_key))
+			{
+				trigger_error($this->language->lang('FORM_INVALID') . adm_back_link($this->u_action), E_USER_WARNING);
+			}
+
+			$add_extension = $this->add_extension();
+		}
+
+		$enabled_by_group = json_decode($this->config_text->get('kb_extensions'), true) ?: [];
+
+		$sql = "SELECT e.extension, COALESCE(g.group_name, 'NOT_ASSIGNED') AS group_name
+			FROM " . EXTENSIONS_TABLE . ' e
+			LEFT JOIN ' . EXTENSION_GROUPS_TABLE . ' g ON (e.group_id = g.group_id)
+			ORDER BY g.group_name, e.extension';
+		$result = $this->db->sql_query($sql);
+		while ($row = $this->db->sql_fetchrow($result))
+		{
+			$this->template->assign_block_vars('extension', [
+				'EXTENSION'  => $row['extension'],
+				'GROUP_NAME' => $row['group_name'] === 'NOT_ASSIGNED' ? $this->language->lang('NOT_ASSIGNED') : ($this->language->is_set('EXT_GROUP_' . $row['group_name']) ? $this->language->lang('EXT_GROUP_' . $row['group_name']) : $row['group_name']),
+				// A just-added extension isn't in $enabled_by_group yet
+				// (it starts unchecked, same as core's own new extensions
+				// - add_extension() doesn't guess whether it should be
+				// allowed for KB uploads, the admin still has to say so).
+				'S_ENABLED'  => in_array($row['extension'], $enabled_by_group[$row['group_name']] ?? [], true),
+			]);
+		}
+		$this->db->sql_freeresult($result);
+
+		$this->template->assign_vars([
+			'S_ACTION'              => $this->u_action,
+			'ADD_EXTENSION'         => $add_extension,
+			'GROUP_SELECT_OPTIONS'  => $this->get_extension_group_select_options(0),
+			'S_CAN_ADD_EXTENSION'   => (bool) $this->auth->acl_get('a_attach'),
+		]);
+	}
+
+	/**
+	 * Adds a new extension to the board's own EXTENSIONS_TABLE - the
+	 * same table/action core's own "Manage attachment extensions" page
+	 * writes to, so an extension added here is immediately available
+	 * on core's page too (and vice versa), not a KB-only copy.
+	 *
+	 * @return string the extension name typed in, redisplayed on error
+	 *                so the admin doesn't have to retype it
+	 */
+	protected function add_extension(): string
+	{
+		if (!$this->auth->acl_get('a_attach'))
+		{
+			trigger_error($this->language->lang('NOT_AUTHORISED') . adm_back_link($this->u_action), E_USER_WARNING);
+		}
+
+		$add_extension = strtolower($this->request->variable('add_extension', ''));
+		$add_extension_group = $this->request->variable('add_group_select', 0);
+
+		if ($add_extension === '')
+		{
+			return $add_extension;
+		}
+
+		$sql = 'SELECT extension_id
+			FROM ' . EXTENSIONS_TABLE . "
+			WHERE extension = '" . $this->db->sql_escape($add_extension) . "'";
+		$result = $this->db->sql_query($sql);
+		$exists = (bool) $this->db->sql_fetchrow($result);
+		$this->db->sql_freeresult($result);
+
+		if ($exists)
+		{
+			trigger_error(sprintf($this->language->lang('EXTENSION_EXIST'), $add_extension) . adm_back_link($this->u_action), E_USER_WARNING);
+		}
+
+		if ($add_extension_group !== 0)
+		{
+			$sql = 'SELECT group_id FROM ' . EXTENSION_GROUPS_TABLE . '
+				WHERE group_id = ' . (int) $add_extension_group;
+			$result = $this->db->sql_query($sql);
+			$group_exists = (bool) $this->db->sql_fetchrow($result);
+			$this->db->sql_freeresult($result);
+			if (!$group_exists)
+			{
+				trigger_error($this->language->lang('FORM_INVALID') . adm_back_link($this->u_action), E_USER_WARNING);
+			}
+		}
+
+		$sql_ary = [
+			'group_id' => $add_extension_group,
+			'extension' => $add_extension,
+		];
+		$this->db->sql_query('INSERT INTO ' . EXTENSIONS_TABLE . ' ' . $this->db->sql_build_array('INSERT', $sql_ary));
+		$this->cache->destroy('_extensions');
+		$this->cache->destroy('_kb_extension');
+
+		$this->log->add('admin', $this->user->data['user_id'], $this->user->data['user_ip'], 'LOG_ATTACH_EXT_ADD', false, [$add_extension]);
+
+		return '';
+	}
+
+	/**
+	 * Same group list/ordering as core's own group_select() - "Not
+	 * assigned" (group_id 0) always last, everything else alphabetical.
+	 *
+	 * @param int $selected_group_id
+	 * @return string
+	 */
+	protected function get_extension_group_select_options(int $selected_group_id): string
+	{
+		$sql = 'SELECT group_id, group_name
+			FROM ' . EXTENSION_GROUPS_TABLE . '
+			ORDER BY group_name';
+		$result = $this->db->sql_query($sql);
+
+		$options = '';
+		while ($row = $this->db->sql_fetchrow($result))
+		{
+			$group_name = $this->language->is_set('EXT_GROUP_' . $row['group_name']) ? $this->language->lang('EXT_GROUP_' . $row['group_name']) : $row['group_name'];
+			$options .= '<option value="' . (int) $row['group_id'] . '"' . ((int) $row['group_id'] === $selected_group_id ? ' selected="selected"' : '') . '>' . $group_name . '</option>';
+		}
+		$this->db->sql_freeresult($result);
+
+		$options .= '<option value="0"' . ($selected_group_id === 0 ? ' selected="selected"' : '') . '>' . $this->language->lang('NOT_ASSIGNED') . '</option>';
+
+		return $options;
+	}
+
+	/**
+	 * @return void
+	 */
+	protected function set_extensions(): void
+	{
+		// A flat list of every extension the admin left checked, across
+		// every group - grouping only matters for how this gets stored
+		// below (generate_filter_string() needs it grouped, to label
+		// each group in the upload dialog's file-type filter).
+		$enabled = $this->request->variable('enabled_extensions', ['']);
+
+		$all_ext = [];
+		$sql = "SELECT e.extension, COALESCE(g.group_name, 'NOT_ASSIGNED') AS group_name
+			FROM " . EXTENSIONS_TABLE . ' e
+			LEFT JOIN ' . EXTENSION_GROUPS_TABLE . ' g ON (e.group_id = g.group_id)';
+		$result = $this->db->sql_query($sql);
+		while ($row = $this->db->sql_fetchrow($result))
+		{
+			$all_ext[$row['group_name']][] = $row['extension'];
+		}
+		$this->db->sql_freeresult($result);
+
+		$extension_list = [];
+		foreach ($all_ext as $group_name => $ext_in_group)
+		{
+			$extension_list[$group_name] = array_values(array_intersect($ext_in_group, $enabled));
+		}
+
+		$this->config_text->set('kb_extensions', json_encode($extension_list));
+	}
 
 
 	/** Attachments management functions
@@ -581,10 +727,12 @@ class acp_controller
 	 */
 	public function orphan(): void
 	{
+		add_form_key('kb_acp_orphan');
 		$submit = $this->request->is_set_post('submit');
 
 		if ($submit)
 		{
+			$this->require_form_key('kb_acp_orphan');
 			$delete_files = ($this->request->is_set_post('delete')) ? array_keys($this->request->variable('delete', ['' => 0])) : [];
 			$add_files = ($this->request->is_set_post('add')) ? array_keys($this->request->variable('add', ['' => 0])) : [];
 			$post_ids = $this->request->variable('post_id', ['' => 0]);
@@ -719,7 +867,7 @@ class acp_controller
 	 */
 	public function extra_files(): void
 	{
-		$submit = $this->request->variable('submit', false);
+		$submit = $this->validate_batch_request('kb_acp_extra_files');
 
 		$batch_size = 500;
 		$list = '';
@@ -811,7 +959,7 @@ class acp_controller
 			}
 			else
 			{
-				meta_refresh(10, $this->u_action . '&amp;submit=1');
+				meta_refresh(10, $this->u_action . '&amp;submit=1&amp;continue=1&amp;hash=' . generate_link_hash('kb_acp_extra_files'));
 				trigger_error($this->language->lang('PRUNE_ATTACHMENTS_PROGRESS') . '<br>' . $list);
 			}
 		}
@@ -854,7 +1002,7 @@ class acp_controller
 	 */
 	public function lost_files(): void
 	{
-		$submit = $this->request->variable('submit', false);
+		$submit = $this->validate_batch_request('kb_acp_lost_files');
 		$step = $this->request->variable('step', 0);
 		$batch_size = 500;
 		$begin = $batch_size * $step;
@@ -897,7 +1045,7 @@ class acp_controller
 			}
 
 			// Next step
-			meta_refresh(2, $this->u_action . '&amp;step=' . ++$step . '&amp;submit=1');
+			meta_refresh(2, $this->u_action . '&amp;step=' . ++$step . '&amp;submit=1&amp;continue=1&amp;hash=' . generate_link_hash('kb_acp_lost_files'));
 			trigger_error($this->language->lang('RESYNC_ATTACHMENTS_PROGRESS'));
 		}
 
@@ -984,7 +1132,6 @@ class acp_controller
 		$result = $this->db->sql_query($sql);
 		$row = $this->db->sql_fetchrow($result);
 		$article_count = $row['article_count'];
-		$this->config->set('kb_num_articles', $article_count);
 		$this->db->sql_freeresult($result);
 
 		if (empty($per_page))
@@ -1159,6 +1306,7 @@ class acp_controller
 	 */
 	public function show_fields(): void
 	{
+		add_form_key('kb_acp_fields');
 		foreach ($this->kb->get_all_fields() as $field)
 		{
 			$this->template->assign_block_vars('fields', [
@@ -1167,7 +1315,7 @@ class acp_controller
 				'FIELD_KEY'       => $field['field_key'],
 				'FIELD_TYPE_NAME' => $this->field_factory->get($field['field_type'])->get_type_name(),
 				'S_ENABLED'       => (bool) $field['enabled'],
-				'U_TOGGLE'        => $this->u_action . '&amp;action=toggle_field&amp;field_id=' . $field['field_id'],
+				'U_TOGGLE'        => $this->u_action . '&amp;action=toggle_field&amp;field_id=' . $field['field_id'] . '&amp;hash=' . generate_link_hash('kb_field_toggle_' . $field['field_id']),
 				'U_EDIT_VALUES'   => $this->u_action . '&amp;action=edit_values&amp;field_id=' . $field['field_id'],
 			]);
 		}
@@ -1197,6 +1345,7 @@ class acp_controller
 			return;
 		}
 
+		$this->require_form_key('kb_acp_fields');
 		$field_key = $this->request->variable('field_key', '');
 		$field_name = utf8_normalize_nfc($this->request->variable('field_name', '', true));
 		$field_type = $this->request->variable('field_type', '');
@@ -1234,6 +1383,10 @@ class acp_controller
 	 */
 	public function toggle_field(int $field_id): void
 	{
+		if (!check_link_hash($this->request->variable('hash', ''), 'kb_field_toggle_' . $field_id))
+		{
+			trigger_error($this->language->lang('FORM_INVALID') . adm_back_link($this->u_action), E_USER_WARNING);
+		}
 		$field = $this->kb->get_field($field_id);
 		if (!$field)
 		{
@@ -1253,6 +1406,11 @@ class acp_controller
 	 */
 	public function edit_field_values(int $field_id): void
 	{
+		add_form_key('kb_acp_fields');
+		if ($this->request->is_set_post('submit'))
+		{
+			$this->require_form_key('kb_acp_fields');
+		}
 		$field = $this->kb->get_field($field_id);
 		if (!$field)
 		{
@@ -2922,7 +3080,8 @@ class acp_controller
 		if (empty($this->config['kb_num_articles']))
 		{
 			$sql = 'SELECT COUNT(article_id) as article_count
-			FROM ' . $this->articles_table;
+			FROM ' . $this->articles_table . '
+			WHERE status <> ' . functions_kb::STATUS_DRAFT;
 			$result = $this->db->sql_query($sql);
 			$row = $this->db->sql_fetchrow($result);
 			$this->config->set('kb_num_articles', $row['article_count']);
@@ -3061,6 +3220,14 @@ class acp_controller
 
 				case 'create':
 				case 'delete':
+					if ($this->request->is_set_post('action') || $this->request->is_set_post('continue'))
+					{
+						$this->require_form_key('kb_acp_search');
+					}
+					else if (empty($state) || $state[self::STATE_ACTION] !== $action || !check_link_hash($this->request->variable('hash', ''), 'kb_acp_search_' . $action))
+					{
+						trigger_error($this->language->lang('FORM_INVALID') . adm_back_link($this->u_action), E_USER_WARNING);
+					}
 					$this->index_action($id, $mode, $action, $state);
 				break;
 
@@ -3073,6 +3240,7 @@ class acp_controller
 			// If clicked to cancel the indexing progress (acp_search_index_inprogress form)
 			if ($this->request->is_set_post('cancel'))
 			{
+				$this->require_form_key('kb_acp_search');
 				$state = [];
 				$this->save_state($state);
 			}
@@ -3107,7 +3275,7 @@ class acp_controller
 		}
 
 		$this->template->assign_vars([
-			'U_ACTION'        => $this->u_action,
+			'U_INDEX_ACTION'  => $this->u_action,
 			'UA_PROGRESS_BAR' => addslashes($this->u_action . '&amp;action=progress_bar'),
 		]);
 	}
@@ -3120,7 +3288,7 @@ class acp_controller
 	private function index_inprogress(string $action): void
 	{
 		$this->template->assign_vars([
-			'U_ACTION'           => $this->u_action . '&amp;action=' . $action . '&amp;hash=' . generate_link_hash('kb_acp_search'),
+			'U_CONTINUE_INDEXING' => $this->u_action . '&amp;action=' . $action,
 			'UA_PROGRESS_BAR'    => addslashes($this->u_action . '&amp;action=progress_bar'),
 			'L_CONTINUE'         => ($action === 'create') ? $this->language->lang('CONTINUE_INDEXING') : $this->language->lang('CONTINUE_DELETING_INDEX'),
 			'L_CONTINUE_EXPLAIN' => ($action === 'create') ? $this->language->lang('CONTINUE_INDEXING_EXPLAIN') : $this->language->lang('CONTINUE_DELETING_INDEX_EXPLAIN'),
@@ -3140,11 +3308,6 @@ class acp_controller
 	{
 		// For some this may be of help...
 		ini_set('memory_limit', '128M');
-
-//		if (!check_link_hash($this->request->variable('hash', ''), 'kb_acp_search'))
-//		{
-//			trigger_error($this->language->lang('FORM_INVALID') . adm_back_link($this->u_action), E_USER_WARNING);
-//		}
 
 		// Entering here for the first time
 		if (empty($state))
@@ -3179,7 +3342,7 @@ class acp_controller
 			{
 				$this->save_state($state); // update $post_counter in $state in the database
 
-				$u_action = append_sid($this->u_action, 'i=' . $id . '&mode=' . $mode . '&action=' . $action);
+				$u_action = append_sid($this->u_action, 'i=' . $id . '&mode=' . $mode . '&action=' . $action . '&hash=' . generate_link_hash('kb_acp_search_' . $action));
 				meta_refresh(1, $u_action);
 
 				$message_redirect = $this->language->lang(($action == 'create') ? 'SEARCH_INDEX_CREATE_REDIRECT' : 'SEARCH_INDEX_DELETE_REDIRECT', (int) $status['row_count'], $status['post_counter']);
@@ -3264,5 +3427,34 @@ class acp_controller
 	public function set_page_url(string $u_action): void
 	{
 		$this->u_action = $u_action;
+	}
+
+	/** Reject an invalid POST token before any state changes. */
+	private function require_form_key(string $key): void
+	{
+		if (!check_form_key($key))
+		{
+			trigger_error($this->language->lang('FORM_INVALID') . adm_back_link($this->u_action), E_USER_WARNING);
+		}
+	}
+
+	/** Accept a token-protected form submission or a hashed batch continuation. */
+	private function validate_batch_request(string $key): bool
+	{
+		add_form_key($key);
+		if ($this->request->is_set_post('submit'))
+		{
+			$this->require_form_key($key);
+			return true;
+		}
+		if ($this->request->variable('submit', false))
+		{
+			if (!$this->request->variable('continue', false) || !check_link_hash($this->request->variable('hash', ''), $key))
+			{
+				trigger_error($this->language->lang('FORM_INVALID') . adm_back_link($this->u_action), E_USER_WARNING);
+			}
+			return true;
+		}
+		return false;
 	}
 }

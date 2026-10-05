@@ -299,4 +299,22 @@ class index
 	{
 		redirect($this->helper->route('phpbbmodders_knowledgebase_index'));
 	}
+
+	/**
+	 * Same /kb alias as kb_alias() above, for every other
+	 * /knowledgebase/{segment} route (article, category, posting,
+	 * search, ...) - /kb/{segment} redirects to the equivalent
+	 * /knowledgebase/{segment}, carrying over whatever query string
+	 * (?k=123, ?id=4, ...) it was actually called with, since that's
+	 * how every one of those routes takes its real parameters.
+	 *
+	 * @param string $segment
+	 * @return void
+	 */
+	public function kb_alias_path(string $segment): void
+	{
+		$query_string = $this->request->server('QUERY_STRING');
+		$index_path = parse_url($this->helper->route('phpbbmodders_knowledgebase_index', [], false), PHP_URL_PATH);
+		redirect($index_path . '/' . $segment . ($query_string !== '' ? '?' . $query_string : ''));
+	}
 }

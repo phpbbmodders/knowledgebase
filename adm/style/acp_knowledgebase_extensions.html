@@ -1,0 +1,60 @@
+{% INCLUDE 'overall_header.html' %}
+
+<h1>{{ lang('ACP_LIBRARY_MANAGE_EXTENSIONS') }}</h1>
+<p>{{ lang('KB_MANAGE_EXTENSIONS_EXPLAIN') }}</p>
+
+{% if S_CAN_ADD_EXTENSION %}
+<form id="add_extension" method="post" action="{{ S_ACTION }}">
+	<fieldset>
+		<legend>{{ lang('ADD_EXTENSION') }}</legend>
+		<dl>
+			<dt><label for="add_extension_field">{{ lang('EXTENSION') }}</label></dt>
+			<dd><input type="text" id="add_extension_field" name="add_extension" size="20" maxlength="100"
+					value="{{ ADD_EXTENSION }}"></dd>
+		</dl>
+		<dl>
+			<dt><label for="add_group_select">{{ lang('EXTENSION_GROUP') }}</label></dt>
+			<dd><select id="add_group_select" name="add_group_select">{{ GROUP_SELECT_OPTIONS }}</select></dd>
+		</dl>
+		<p class="quick">
+			<input class="button2" type="submit" name="add_extension_submit" value="{{ lang('SUBMIT') }}">
+		</p>
+		{{ S_FORM_TOKEN }}
+	</fieldset>
+</form>
+{% endif %}
+
+<form id="kb_extensions" method="post" action="{{ S_ACTION }}">
+	<fieldset class="tabulated">
+		<legend>{{ lang('ACP_LIBRARY_MANAGE_EXTENSIONS') }}</legend>
+		<table class="table1">
+			<col class="row1"/><col class="row1"/><col class="row2"/>
+			<thead>
+			<tr>
+				<th>{{ lang('EXTENSION') }}</th>
+				<th>{{ lang('EXTENSION_GROUP') }}</th>
+				<th>{{ lang('ENABLED') }}</th>
+			</tr>
+			</thead>
+			<tbody>
+			{% for extension in loops.extension %}
+				<tr>
+					<td><strong>{{ extension.EXTENSION }}</strong></td>
+					<td>{{ extension.GROUP_NAME }}</td>
+					<td>
+						<input type="checkbox" name="enabled_extensions[]" value="{{ extension.EXTENSION }}"
+							{% if extension.S_ENABLED %}checked="checked"{% endif %}>
+					</td>
+				</tr>
+			{% endfor %}
+			</tbody>
+		</table>
+	</fieldset>
+
+	<fieldset class="submit-buttons">
+		<input class="button1" type="submit" id="submit" name="submit" value="{{ lang('SUBMIT') }}"/>
+		{{ S_FORM_TOKEN }}
+	</fieldset>
+</form>
+
+{% INCLUDE 'overall_footer.html' %}

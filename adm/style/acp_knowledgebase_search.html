@@ -82,7 +82,7 @@
 	<p>{{ lang('ACP_SEARCH_INDEX_EXPLAIN') }}</p>
 	{% for backend in loops.backend %}
 		{% if backend.S_STATS is not empty %}
-			<form id="acp_search_index_{{ backend.TYPE }}" method="post" action="{{ U_ACTION }}">
+			<form id="acp_search_index_{{ backend.TYPE }}" method="post" action="{{ U_INDEX_ACTION }}">
 			<fieldset class="tabulated">
 			{{ backend.S_HIDDEN_FIELDS }}
 			<legend>{{ lang('INDEX_STATS') }}{{ lang('COLON') }} {{ backend.NAME }} {% if backend.S_ACTIVE %}({{ lang('ACTIVE') }}) {% endif %}</legend>

@@ -5,6 +5,11 @@ under [`docs/TODO/`](TODO/).
 
 ## Active
 
+- Repeat the browser checks on MySQL and PostgreSQL boards, submit the
+  custom-field add form in a browser, and check e-mail notification
+  delivery. Submission/deletion, attachment, CSRF rejection and in-board
+  notification checks passed on the SQLite board on 10/05/2026; see
+  [testing notes](testing.md).
 - [phpbb.com KB parity gaps](TODO/todo-phpbb-com-kb-parity.md) - five
   feature-completeness differences from the original phpbb.com
   Knowledge Base, found via a second-opinion screenshot comparison
@@ -43,7 +48,7 @@ under [`docs/TODO/`](TODO/).
   this feature existed, so it wasn't given one now either (its
   underlying query was still fixed to include co-authored articles).
 - Two known, deliberately-deferred `[valinfo]` findings from
-  [`docs/ai-validation-review-2026-09-26.md`](ai-validation-review-2026-09-26.md)
+  [archived September 26 AI validation](TODO/archive/archive1.md#ai-validation-review-2026-09-26)
   (neither is a bug, both are design suggestions): `migrations/version_1_0_2.php`
   has an N+1 query pattern (a per-category query inside a loop, plus a
   discarded first result) - real on a large install, but it's a
@@ -55,3 +60,10 @@ under [`docs/TODO/`](TODO/).
   metadata/migration dependencies authoritative instead and clean up
   the config value in a later migration - migration `2_0_11` still
   writes it, so this remains unaddressed by choice for now.
+
+## Archived Reviews
+
+Completed [database search validation](TODO/archive/archive1.md#database-search-validation)
+is recorded separately from the historical reviews below.
+
+The [September 26 AI validation](TODO/archive/archive1.md#ai-validation-review-2026-09-26) describes the pre-remediation snapshot. Its original findings are preserved, but the old Deny recommendation is not a current-tree verdict. The two deferred design suggestions above remain active; archiving is not a fresh validation pass.

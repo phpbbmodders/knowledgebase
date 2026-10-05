@@ -1,3 +1,13 @@
+# Archived Reviews
+
+Historical validation reports, retained with their original scope and recommendations.
+
+<a id="ai-validation-review-2026-09-26"></a>
+
+## AI extension validation - 2026-09-26
+
+Archived: 10/02/2026. Validation date: 09/26/2026. Historical findings from the pre-remediation snapshot. Later commits changed the reviewed search escaping, prefix handling, filename fallback, permissions, topic tracking, and package metadata; the old Deny recommendation is not a current-tree verdict. The two deliberately deferred design suggestions remain active in docs/TODO.md. This archive operation is not a new validation pass and does not declare every historical finding resolved.
+
 In [c]controller/search.php[/c]:
 
 [code]
@@ -231,3 +241,27 @@ These lines contain trailing whitespace. This is a formatting issue and does not
 [hr][/hr]
 
 Recommendation: Deny
+
+## Database Search Validation
+
+Completed: 10/03/2026.
+
+Original task: execute the repaired fulltext search and index lifecycle,
+including the `version_2_0_15` index repair, against MySQL and PostgreSQL.
+
+The full regression suite passed with 67 tests and 316 assertions using
+disposable MySQL 8.0.42 and PostgreSQL 16.15 databases. Coverage includes
+index creation/deletion/recreation, immediate index-status refresh,
+Knowledgebase-only result-cache clearing, article statistics, keyword
+and author filters, approval filtering, cross-listed categories, field
+scopes, empty results, pagination beyond the last result, transaction
+cleanup, and repeatable legacy-index repair without deleting matches.
+
+SQLite legacy-schema tests remain part of the suite. See
+[Testing](../../testing.md) for repeatable commands. The integration tests
+skip when their fixture ports are not provided. GitHub CI currently runs
+coding and extension validation checks, not this database suite.
+
+These tests do not establish complete fresh-install/upgrade/purge
+coverage or live browser/notification delivery coverage. No live-board
+database was reset or modified for this validation.

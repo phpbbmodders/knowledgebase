@@ -38,6 +38,7 @@ $lang = array_merge($lang, [
 	'ACP_LIBRARY_PERMISSIONS'             => 'Permissions',
 	'ACP_LIBRARY_SEARCH'                  => 'Search',
 	'ACP_LIBRARY_ATTACHMENTS'             => 'Attachment files',
+	'ACP_LIBRARY_MANAGE_EXTENSIONS'       => 'Manage Extensions',
 	'ACP_LIBRARY_ATTACHMENTS_ORPHAN'      => 'Attachment orphean files',
 	'ACP_LIBRARY_LOGS'                    => 'KB Logs',
 	'ACP_LIBRARY_ATTACHMENTS_EXTRA_FILES' => 'Orphaned Uploads',

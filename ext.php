@@ -13,30 +13,52 @@ namespace phpbbmodders\knowledgebase;
 
 class ext extends \phpbb\extension\base
 {
+	/** Minimum phpBB version - 3.3.19 carries the security fixes from 3.3.17-3.3.19 */
+	public const MIN_PHPBB_VERSION = '3.3.19';
+
+	/** Minimum PHP version */
+	public const MIN_PHP_VERSION = '8.0.0';
+
 	/**
-	 * Check if extension can be enabled
+	 * Check whether the extension can be enabled.
+	 * The current phpBB version should meet or exceed
+	 * the minimum version required by this extension.
 	 *
-	 * @return bool|array True if enableable, false (or an array of error messages) if not.
+	 * @return bool|array True if enableable, an array of error messages if not.
 	 */
 	public function is_enableable()
 	{
-		$phpbb_ver = '3.3.11';
-		$php_ver = '8.0';
-		$config = $this->container->get('config');
-		$enableable = phpbb_version_compare($config['version'], $phpbb_ver, '>=') && version_compare(PHP_VERSION, $php_ver, '>=');
+		$enableable = $this->check_phpbb_version() && $this->check_php_version();
 
 		if (!$enableable)
 		{
-			// Import my extension's language file
 			$language = $this->container->get('language');
 			$language->add_lang('install_failed', 'phpbbmodders/knowledgebase');
 
-			// Return message
-			return [$language->lang('INSTALL_FAILED_VERSION', $phpbb_ver, $config['version'], $php_ver, PHP_VERSION)];
+			return [$language->lang('INSTALL_FAILED_VERSION', self::MIN_PHPBB_VERSION, PHPBB_VERSION, self::MIN_PHP_VERSION, PHP_VERSION)];
 		}
 
-		// Return the boolean result of the test, either true (or false for phpBB 3.2 and 3.1)
 		return true;
+	}
+
+	/**
+	 * Require phpBB 3.3.19
+	 *
+	 * @return bool
+	 */
+	public function check_phpbb_version()
+	{
+		return phpbb_version_compare(PHPBB_VERSION, self::MIN_PHPBB_VERSION, '>=');
+	}
+
+	/**
+	 * Require PHP 8.0
+	 *
+	 * @return bool
+	 */
+	public function check_php_version()
+	{
+		return PHP_VERSION_ID >= 80000;
 	}
 
 	/**

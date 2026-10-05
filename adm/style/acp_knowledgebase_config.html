@@ -175,30 +175,6 @@
 		</dl>
 	</fieldset>
 	<fieldset>
-		<legend>{{ lang('EXTENSION_GROUP') }}</legend>
-		<dl>{{ lang('EXTENSION_GROUP_EXPLAIN') }}</dl>
-		{% for row in loops.row %}
-			<dl>
-				<dt><label for="extensions_group">{{ row.EXTENSIONS_GROUP }}</label></dt>
-				<dd>
-					<div id="ext_{{ row.GROUP }}">{{ row.ASSIGNED_EXTENSIONS }}</div>
-				</dd>
-				<dd>
-					<label for="assigned_extensions"></label>
-					<select name="extensions[{{ row.GROUP }}][]" id="assigned_extensions" class="narrow"
-						onchange="show_extensions(this);" multiple="multiple" size="6"
-						style="width: 25%; margin-right: 25%;">{{ row.S_OPTIONS }}
-					</select>
-					<label>
-						<select name="diasabled_extensions[{{ row.GROUP }}][]" class="narrow" multiple="multiple"
-							size="6" style="width: 25%;">{{ row.DIASABLED_EXTENSIONS }}
-						</select>
-					</label>
-				</dd>
-			</dl>
-		{% endfor %}
-	</fieldset>
-	<fieldset>
 		<legend>{{ lang('KB_TEAMS') }}</legend>
 		<dl>{{ lang('KB_TEAMS_EXPLAIN') }}</dl>
 		<dl>

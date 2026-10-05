@@ -25,6 +25,11 @@ class attachments_info
 					'auth'  => 'ext_phpbbmodders/knowledgebase && acl_a_board && acl_a_manage_kb',
 					'cat'   => ['ACP_KNOWLEDGE_BASE'],
 				],
+				'extensions'  => [
+					'title' => 'ACP_LIBRARY_MANAGE_EXTENSIONS',
+					'auth'  => 'ext_phpbbmodders/knowledgebase && acl_a_board && acl_a_manage_kb',
+					'cat'   => ['ACP_KNOWLEDGE_BASE'],
+				],
 				'orphan'      => [
 					'title' => 'ACP_LIBRARY_ATTACHMENTS_ORPHAN',
 					'auth'  => 'ext_phpbbmodders/knowledgebase && acl_a_board',

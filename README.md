@@ -24,7 +24,9 @@ location ~ ^/ext/phpbbmodders/knowledgebase/files/ {
 
 ## Automated testing
 
-We use automated unit tests to prevent regressions. Check out our build below:
+See [Testing](docs/testing.md) for local regression tests and disposable
+MySQL/PostgreSQL fixtures. The current GitHub workflow runs coding and
+extension validation checks, not these regression tests.
 
 [![Tests](https://github.com/phpbbmodders/knowledgebase/actions/workflows/tests.yml/badge.svg)](https://github.com/phpbbmodders/knowledgebase/actions/workflows/tests.yml)
 
@@ -37,6 +39,7 @@ Ideas not yet built, practical and speculative alike: [`docs/TODO.md`](docs/TODO
 Based on the original [knowledgebase](https://github.com/sutrus/knowledgebase) extension by sutrus (Zdenek Kamenik), itself building on earlier work by Sheer's [Knowledge Base](https://github.com/AlexSheer/phpbb3.2-Knowledge-Base) extension.
 
 - Code review, bug fixes, and documentation assisted by [Claude](https://www.anthropic.com/claude).
+- Code review, bug fixes, and documentation assisted by [Codex](https://openai.com/codex/).
 
 ## License
 

@@ -117,14 +117,31 @@ class kb_file
 		if ($attachment['article_id'])
 		{
 			// Attached to a saved article: same view/approval gate the article itself is behind.
-			$sql = 'SELECT article_category_id, approved
+			$sql = 'SELECT article_category_id, approved, status, author_id, author_type, assigned_team_id
 				FROM ' . $this->articles_table . '
 				WHERE article_id = ' . (int) $attachment['article_id'];
 			$result = $this->db->sql_query($sql);
 			$article = $this->db->sql_fetchrow($result);
 			$this->db->sql_freeresult($result);
 
-			if (!$article || (!$article['approved'] && !($this->auth->acl_get('a_manage_kb') || $this->kb->acl_kb_get_any($this->kb->get_article_categories((int) $attachment['article_id']), 'kb_m_approve'))))
+			if (!$article)
+			{
+				send_status_line(403, 'Forbidden');
+				trigger_error('NOT_AUTHORISED');
+			}
+
+			$article_id = (int) $attachment['article_id'];
+			$is_own_article = $this->kb->is_article_author($article_id, (int) $article['author_id'], (int) $article['author_type']);
+			$status = (int) $article['status'];
+			$effective_team_id = $this->kb->get_effective_team_id((int) $article['assigned_team_id'], (int) $article['article_category_id']);
+			$can_review = $status === functions_kb::STATUS_NEW && $effective_team_id && $this->kb->is_team_member([$effective_team_id]);
+			$can_moderate = $this->auth->acl_get('a_manage_kb') || $this->kb->acl_kb_get_any($this->kb->get_article_categories($article_id), 'kb_m_approve');
+
+			// Drafts remain private even to moderators, matching the article page.
+			$can_view = $status === functions_kb::STATUS_DRAFT
+				? $is_own_article
+				: ($article['approved'] || $is_own_article || $can_review || $can_moderate);
+			if (!$can_view)
 			{
 				send_status_line(403, 'Forbidden');
 				trigger_error('NOT_AUTHORISED');

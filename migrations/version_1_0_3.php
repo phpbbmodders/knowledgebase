@@ -39,8 +39,6 @@ class version_1_0_3 extends \phpbb\db\migration\migration
 				$this->table_prefix . 'kb_src_wrdmtch' => [
 					'reply_id',
 				],
-			],
-			'drop_columns' => [
 				$this->table_prefix . 'kb_articles' => [
 					'bbcode_bitfield',
 				],

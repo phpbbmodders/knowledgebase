@@ -198,7 +198,7 @@ class posting
 				trigger_error('NOT_AUTHORISED');
 			}
 		}
-		else if (!$this->kb->acl_kb_get($cat_id, 'kb_u_add'))
+		else if ($mode !== 'edit' && $mode !== 'delete' && !$this->kb->acl_kb_get($cat_id, 'kb_u_add'))
 		{
 			trigger_error('RULES_KB_ADD_CANNOT');
 		}
@@ -856,15 +856,19 @@ class posting
 
 					if ($moving_category)
 					{
-						$sql = 'UPDATE ' . $this->categories_table . '
-							SET number_articles = number_articles - 1
-							WHERE category_id = ' . $article_category_id;
-						$this->db->sql_query($sql);
+						// Unsubmitted drafts were never included in the category counters.
+						if ($article_status !== functions_kb::STATUS_DRAFT || $submit)
+						{
+							$sql = 'UPDATE ' . $this->categories_table . '
+								SET number_articles = number_articles - 1
+									WHERE category_id = ' . $article_category_id;
+								$this->db->sql_query($sql);
 
-						$sql = 'UPDATE ' . $this->categories_table . '
-							SET number_articles = number_articles + 1
-							WHERE category_id = ' . $to_id;
-						$this->db->sql_query($sql);
+							$sql = 'UPDATE ' . $this->categories_table . '
+								SET number_articles = number_articles + 1
+									WHERE category_id = ' . $to_id;
+								$this->db->sql_query($sql);
+						}
 
 						$sql = 'UPDATE ' . $this->articles_table . ' SET display_order = display_order + 1
 							WHERE article_category_id = ' . $to_id;
@@ -1277,7 +1281,7 @@ class posting
 
 		$this->plupload->set_upload_directories($this->upload_dir, $this->upload_dir . '/plupload');
 
-		$attachment_data = $this->request->variable('attachment_data', [['' => '']], true, \phpbb\request\request_interface::POST);
+		$attachment_data = $this->request->variable('attachment_data', [['' => '']], true, request_interface::POST);
 
 		// First of all adjust comments if changed
 		$actual_comment_list = $this->request->variable('comment_list', [''], true);

@@ -1,7 +1,7 @@
 {% INCLUDE 'overall_header.html' %}
 {% INCLUDECSS 'css/acp_knowledgebase.css' %}
 
-<form action="{{ S_ACTION }}" method="post">
+<form action="{{ U_ACTION }}" method="post">
 	{% if S_FIELD_VALUES %}
 		<h1>{{ lang('ACP_LIBRARY_FIELDS') }} &bull; {{ FIELD_NAME }}</h1>
 		<p>{{ lang('KB_FIELD_VALUES_EXPLAIN') }}</p>

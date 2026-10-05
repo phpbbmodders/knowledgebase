@@ -349,7 +349,7 @@ class kb_fulltext_postgres extends kb_base implements kb_search_backend_interfac
 		if (count($author_ary) && $author_name)
 		{
 			// first one matches post of registered users, second one guests and deleted users
-			$sql_author = ' AND (' . $this->db->sql_in_set('p.author_id', array_diff($author_ary, [ANONYMOUS]), false, true) . ' OR p.author = ' . $author_name . ')';
+			$sql_author = ' AND (' . $this->db->sql_in_set('p.author_id', array_diff($author_ary, [ANONYMOUS]), false, true) . " OR p.author = '" . $this->db->sql_escape($author_name) . "')";
 		}
 		else if (count($author_ary))
 		{
@@ -401,6 +401,7 @@ class kb_fulltext_postgres extends kb_base implements kb_search_backend_interfac
 
 			if (!$result_count)
 			{
+				$this->db->sql_transaction('commit');
 				return false;
 			}
 		}
@@ -519,6 +520,7 @@ class kb_fulltext_postgres extends kb_base implements kb_search_backend_interfac
 
 			if (!$result_count)
 			{
+				$this->db->sql_transaction('commit');
 				return false;
 			}
 		}
@@ -616,22 +618,22 @@ class kb_fulltext_postgres extends kb_base implements kb_search_backend_interfac
 
 		if (!isset($this->stats['article_title']))
 		{
-			$sql_queries[] = 'CREATE INDEX ' . $this->articles_table . '_' . $this->config['fulltext_postgres_ts_name'] . '_post_subject ON ' . POSTS_TABLE . " USING gin (to_tsvector ('" . $this->db->sql_escape($this->config['fulltext_postgres_ts_name']) . "', article_title))";
+			$sql_queries[] = 'CREATE INDEX ' . $this->articles_table . '_' . $this->config['fulltext_postgres_ts_name'] . '_article_title ON ' . $this->articles_table . " USING gin (to_tsvector ('" . $this->db->sql_escape($this->config['fulltext_postgres_ts_name']) . "', article_title))";
 		}
 
 		if (!isset($this->stats['article_description']))
 		{
-			$sql_queries[] = 'CREATE INDEX ' . $this->articles_table . '_' . $this->config['fulltext_postgres_ts_name'] . '_post_content ON ' . POSTS_TABLE . " USING gin (to_tsvector ('" . $this->db->sql_escape($this->config['fulltext_postgres_ts_name']) . "', article_description))";
+			$sql_queries[] = 'CREATE INDEX ' . $this->articles_table . '_' . $this->config['fulltext_postgres_ts_name'] . '_article_description ON ' . $this->articles_table . " USING gin (to_tsvector ('" . $this->db->sql_escape($this->config['fulltext_postgres_ts_name']) . "', article_description))";
 		}
 
 		if (!isset($this->stats['article_body']))
 		{
-			$sql_queries[] = 'CREATE INDEX ' . $this->articles_table . '_' . $this->config['fulltext_postgres_ts_name'] . '_post_content ON ' . POSTS_TABLE . " USING gin (to_tsvector ('" . $this->db->sql_escape($this->config['fulltext_postgres_ts_name']) . "', article_body))";
+			$sql_queries[] = 'CREATE INDEX ' . $this->articles_table . '_' . $this->config['fulltext_postgres_ts_name'] . '_article_body ON ' . $this->articles_table . " USING gin (to_tsvector ('" . $this->db->sql_escape($this->config['fulltext_postgres_ts_name']) . "', article_body))";
 		}
 
 		if (!isset($this->stats['article_content']))
 		{
-			$sql_queries[] = 'CREATE INDEX ' . $this->articles_table . '_' . $this->config['fulltext_postgres_ts_name'] . '_post_subject_content ON ' . POSTS_TABLE . " USING gin (to_tsvector ('" . $this->db->sql_escape($this->config['fulltext_postgres_ts_name']) . "', article_content ))";
+			$sql_queries[] = 'CREATE INDEX ' . $this->articles_table . '_' . $this->config['fulltext_postgres_ts_name'] . '_article_content ON ' . $this->articles_table . " USING gin (to_tsvector ('" . $this->db->sql_escape($this->config['fulltext_postgres_ts_name']) . "', article_title || ' ' || article_body || ' ' || article_description))";
 		}
 
 		$stats = $this->stats;
@@ -641,6 +643,7 @@ class kb_fulltext_postgres extends kb_base implements kb_search_backend_interfac
 			$this->db->sql_query($sql_query);
 		}
 
+		$this->stats = [];
 		$this->db->sql_query('TRUNCATE TABLE ' . $this->search_results_table);
 
 		return null;
@@ -691,7 +694,8 @@ class kb_fulltext_postgres extends kb_base implements kb_search_backend_interfac
 			$this->db->sql_query($sql_query);
 		}
 
-		$this->db->sql_query('TRUNCATE TABLE ' . SEARCH_RESULTS_TABLE);
+		$this->stats = [];
+		$this->db->sql_query('TRUNCATE TABLE ' . $this->search_results_table);
 
 		return null;
 	}
@@ -766,7 +770,7 @@ class kb_fulltext_postgres extends kb_base implements kb_search_backend_interfac
 		}
 		$this->db->sql_freeresult($result);
 
-		$this->stats['total_posts'] = $this->config['num_posts'];
+		$this->stats['total_posts'] = empty($this->stats) ? 0 : $this->db->get_estimated_row_count($this->articles_table);
 	}
 
 	/**

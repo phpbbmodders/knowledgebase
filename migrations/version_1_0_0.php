@@ -317,8 +317,8 @@ class version_1_0_0 extends \phpbb\db\migration\migration
 
 		$sql = 'DELETE FROM ' . $this->table_prefix . 'modules
 			WHERE module_langname IN (
-				"KNOWLEGE_BASE", "ACP_KNOWLEGE_BASE_CONFIGURE", "ACP_LIBRARY_MANAGE", "ACP_LIBRARY_ARTICLES",
-				"ACP_LIBRARY_PERMISSIONS", "ACP_LIBRARY_SEARCH", "ACP_LIBRARY_LOGS"
+				\'KNOWLEGE_BASE\', \'ACP_KNOWLEGE_BASE_CONFIGURE\', \'ACP_LIBRARY_MANAGE\', \'ACP_LIBRARY_ARTICLES\',
+				\'ACP_LIBRARY_PERMISSIONS\', \'ACP_LIBRARY_SEARCH\', \'ACP_LIBRARY_LOGS\'
 			)';
 		$this->db->sql_query($sql);
 	}
