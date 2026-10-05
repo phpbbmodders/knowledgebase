@@ -3174,12 +3174,17 @@ class acp_controller
 				}
 				else
 				{
+					// The confirmed request is checked against the form key at the
+					// top of this method, so the token it was first submitted with
+					// has to travel through the confirm page too.
 					confirm_box(false, $this->language->lang('CONFIRM_SEARCH_BACKEND'), build_hidden_fields([
-						'i'       => $id,
-						'mode'    => $mode,
-						'submit'  => true,
-						'updated' => $updated,
-						'config'  => ['kb_search_type' => $cfg_array['kb_search_type']],
+						'i'             => $id,
+						'mode'          => $mode,
+						'submit'        => true,
+						'updated'       => $updated,
+						'config'        => ['kb_search_type' => $cfg_array['kb_search_type']],
+						'creation_time' => $this->request->variable('creation_time', 0),
+						'form_token'    => $this->request->variable('form_token', ''),
 					]));
 				}
 			}
