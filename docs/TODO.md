@@ -9,6 +9,15 @@ under [`docs/TODO/`](TODO/).
   thumbnail, custom-field form, search, CSRF rejection and in-board
   notification checks passed in a browser on SQLite, MySQL and PostgreSQL
   boards on 10/05/2026; see [testing notes](testing.md).
+- Markdown support, using the same method as the official phpBB Pages
+  extension. Not started; needs a scoping conversation before any code
+  (where it applies - article body, description - and how it interacts with
+  BBCode).
+- Flat article index (the `kb_flat_index` setting, handled today in
+  `controller/index.php` and `controller/category.php`): it needs to work
+  across all of the extension's pages, with no mixing of the forum-style
+  layout and the flat-index style on any page, and the category dropdown
+  available on every flat-index page. Not yet audited page by page.
 - [phpbb.com KB parity gaps](TODO/todo-phpbb-com-kb-parity.md) - five
   feature-completeness differences from the original phpbb.com
   Knowledge Base, found via a second-opinion screenshot comparison
