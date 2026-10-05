@@ -5,11 +5,6 @@ under [`docs/TODO/`](TODO/).
 
 ## Active
 
-- Flat article index (the `kb_flat_index` setting, handled today in
-  `controller/index.php` and `controller/category.php`): it needs to work
-  across all of the extension's pages, with no mixing of the forum-style
-  layout and the flat-index style on any page, and the category dropdown
-  available on every flat-index page. Not yet audited page by page.
 - [phpbb.com KB parity gaps](TODO/todo-phpbb-com-kb-parity.md) - five
   feature-completeness differences from the original phpbb.com
   Knowledge Base, found via a second-opinion screenshot comparison
