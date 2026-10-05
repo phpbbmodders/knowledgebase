@@ -337,8 +337,9 @@ each role, forged ACP requests, in-board notification delivery, and a full
 PostgreSQL install, disable/re-enable, purge, reinstall and 2.0.14 to 2.0.15
 upgrade.
 
-Still unverified: e-mail notification delivery. The custom-field add form and
-image thumbnails were checked in a browser later on 10/05/2026, and the browser
-checks were repeated on MySQL and PostgreSQL boards, where they also turned up
-two defects that were fixed separately (see [testing.md](testing.md)). The open
-item is tracked under "Active" in [TODO.md](TODO.md).
+Later on 10/05/2026 the custom-field add form, image thumbnails and e-mail
+notification delivery were checked, and the browser checks were repeated on
+MySQL and PostgreSQL boards. Those checks turned up three defects that were
+fixed separately (see [testing.md](testing.md)). Nothing from this review is
+still listed as unverified, apart from larger datasets and delivery through a
+real mail server.
