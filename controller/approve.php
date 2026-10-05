@@ -577,7 +577,7 @@ class approve
 
 		$this->log->add('admin', $this->user->data['user_id'], $this->user->data['user_ip'], 'LOG_LIBRARY_APPROVED_ARTICLE', time(), [$kb_article_info['article_title'], $kb_category_info['category_name'], $kb_article_info['author']]);
 
-		$this->delete_need_approval_notification($art_id, $kb_article_info);
+		$this->delete_need_approval_notification($art_id);
 		$this->send_author_notification($art_id, $kb_article_info, 'phpbbmodders.knowledgebase.notification.type.approve', $reason);
 
 		meta_refresh(2, $redirect);
@@ -608,7 +608,7 @@ class approve
 
 		$this->log->add('admin', $this->user->data['user_id'], $this->user->data['user_ip'], 'LOG_LIBRARY_REJECTED_ARTICLE', time(), [$kb_article_info['article_title'], $kb_category_info['category_name'], $kb_article_info['author']]);
 
-		$this->delete_need_approval_notification($art_id, $kb_article_info);
+		$this->delete_need_approval_notification($art_id);
 		$this->send_author_notification($art_id, $kb_article_info, 'phpbbmodders.knowledgebase.notification.type.disapprove', $reason);
 
 		meta_refresh(2, $redirect);
@@ -725,18 +725,17 @@ class approve
 	}
 
 	/**
-	 * @param int   $art_id
-	 * @param array $kb_article_info
+	 * Remove the moderators' "article awaiting approval" notifications for one
+	 * article. The notification manager matches on item ids only, so this must
+	 * be given the article id itself - not the article's data fields, whose
+	 * values (author id, title, category id) would be treated as item ids.
+	 *
+	 * @param int $art_id
 	 * @return void
 	 */
-	protected function delete_need_approval_notification(int $art_id, array $kb_article_info): void
+	protected function delete_need_approval_notification(int $art_id): void
 	{
-		$this->notification_manager->delete_notifications('phpbbmodders.knowledgebase.notification.type.need_approval', [
-			'author_id'           => $kb_article_info['author_id'],
-			'title'               => $kb_article_info['article_title'],
-			'article_category_id' => $kb_article_info['article_category_id'],
-			'item_id'             => $art_id,
-		]);
+		$this->notification_manager->delete_notifications('phpbbmodders.knowledgebase.notification.type.need_approval', $art_id);
 	}
 
 	/**
