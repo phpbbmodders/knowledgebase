@@ -10,9 +10,9 @@ runtime behavior or the current changes.
 
 Verdict (original, at `98af128`): **Changes required.**
 
-Update 10/05/2026: the fixes for findings 1-11 are on the
+Update 10/05/2026: the fixes for findings 1-12 are on the
 `kb-acp-extensions-alias-and-review-followup` branch (pull request #17); the
-commit for each is listed under its heading. Finding 12 is still open. The
+commit for each is listed under its heading. The
 finding text below is the original review and is left unchanged. Items not yet
 checked in a browser are marked as such.
 
@@ -268,7 +268,7 @@ cannot drift apart.
 
 ### P2 - Migration 1.0.3 silently drops one of its schema operations
 
-**Status: open.** `migrations/version_1_0_3.php` still declares `drop_columns` twice and is unchanged on this branch. Partly covered by later migrations: `version_2_0_2` drops `reply_id` from `kb_src_wrdmtch`, and `version_2_0_15` rebuilds the `un_mtch` index without deleting matches (tests: `tests/kb_legacy_search_migration_test.php`). What remains is the upgrade path from a version older than 1.0.3, where rows that differ only by `reply_id` could still collide when 1.0.3 creates its narrower unique index. That case is untested. Editing an already-released migration needs a decision first.
+**Status: resolved.** `migrations/version_1_0_3.php` now declares one `drop_columns` key covering both tables, so `reply_id` is removed by 1.0.3 itself (`version_2_0_2` still drops it for installs that already ran 1.0.3; phpBB skips a column that no longer exists). This edits an already-released migration, done at William's explicit request. The collision scenario in the original text does not apply to the shipped schema: the 1.0.0 `un_mtch` index never included `reply_id`, so the replacement index only widens it. Tests: `tests/kb_legacy_search_migration_test.php` (both new tests fail against the old file).
 
 Location: `migrations/version_1_0_3.php:30-48` and
 `migrations/version_1_0_3.php:65-87`
@@ -325,7 +325,7 @@ and database-specific lifecycle behavior remain unverified at runtime.
 ### Update 10/05/2026
 
 The new regression tests (`tests/*_test.php`) were run in disposable MySQL and
-PostgreSQL containers as described in [testing.md](testing.md): 69 tests, 337
+PostgreSQL containers as described in [testing.md](testing.md): 71 tests, 344
 assertions, with the database-backed cases executed rather than skipped. Run
 against the pre-fix code, each test file that can load there fails; the two
 migration test files cannot load on `main` because the migrations they test do

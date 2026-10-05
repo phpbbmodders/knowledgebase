@@ -39,7 +39,7 @@ Ideas not yet built, practical and speculative alike: [`docs/TODO.md`](docs/TODO
 Based on the original [knowledgebase](https://github.com/sutrus/knowledgebase) extension by sutrus (Zdenek Kamenik), itself building on earlier work by Sheer's [Knowledge Base](https://github.com/AlexSheer/phpbb3.2-Knowledge-Base) extension.
 
 - Code review, bug fixes, and documentation assisted by [Claude](https://www.anthropic.com/claude).
-- Code review, bug fixes, and documentation assisted by [Codex](https://www.anthropic.com/Codex).
+- Code review, bug fixes, and documentation assisted by [Codex](https://openai.com/codex/).
 
 ## License
 

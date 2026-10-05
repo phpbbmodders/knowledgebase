@@ -78,6 +78,30 @@ class kb_legacy_search_migration_test extends \PHPUnit\Framework\TestCase
 		}
 	}
 
+	public function test_version_1_0_3_declares_every_column_drop_under_one_key()
+	{
+		$drops = $this->migration(version_1_0_3::class)->update_schema()['drop_columns'];
+		$this->assertSame(['reply_id'], $drops['phpbb_kb_src_wrdmtch']);
+		$this->assertSame(['bbcode_bitfield'], $drops['phpbb_kb_articles']);
+	}
+
+	public function test_version_1_0_3_alone_removes_reply_id_and_keeps_matches()
+	{
+		$table = 'phpbb_kb_src_wrdmtch';
+		$initial = $this->migration(version_1_0_0::class)->update_schema();
+		$this->tools->sql_create_table($table, $initial['add_tables'][$table]);
+		$this->db->sql_query('CREATE TABLE phpbb_kb_articles (article_id INTEGER, bbcode_bitfield TEXT, article_title TEXT)');
+		$this->db->sql_query('INSERT INTO ' . $table . ' (article_id, reply_id, word_id, title_match) VALUES (1, 5, 1, 0)');
+
+		$this->tools->perform_schema_changes($this->migration(version_1_0_3::class)->update_schema());
+
+		$this->assertFalse($this->tools->sql_column_exists($table, 'reply_id'));
+		$this->assertFalse($this->tools->sql_column_exists('phpbb_kb_articles', 'bbcode_bitfield'));
+		$result = $this->db->sql_query('SELECT article_id, word_id, title_match FROM ' . $table);
+		$this->assertSame([['article_id' => 1, 'word_id' => 1, 'title_match' => 0]], $this->db->sql_fetchrowset($result));
+		$this->db->sql_freeresult($result);
+	}
+
 	public function test_shipped_legacy_schema_upgrades_without_losing_matches()
 	{
 		$initial = $this->migration(version_1_0_0::class)->update_schema();
