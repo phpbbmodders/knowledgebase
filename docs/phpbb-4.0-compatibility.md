@@ -7,8 +7,8 @@ alongside its current phpBB 3.3.x support.
 
 From `composer.json`:
 
-- `require.phpbb/phpbb`: `>=3.3.11`
-- `extra.soft-require.phpbb/phpbb`: `3.3.11,<4.0.0@dev` — phpBB 4.0 dev
+- `require.phpbb/phpbb`: `>=3.3.19`
+- `extra.soft-require.phpbb/phpbb`: `>=3.3.19,<4.0.0@dev` — phpBB 4.0 dev
   builds are explicitly excluded today.
 - `require.php`: `>=8.0`
 
