@@ -242,10 +242,31 @@ class index
 			WHERE ' . $sql_where . '
 			ORDER BY a.article_date DESC';
 		$result = $this->db->sql_query_limit($sql, $per_page, $start);
+		$art_rows = [];
 		while ($art_row = $this->db->sql_fetchrow($result))
+		{
+			$art_rows[] = $art_row;
+		}
+		$this->db->sql_freeresult($result);
+
+		// Batched once for the whole page, same as the category listing:
+		// this list also holds articles the viewer is only a co-author on,
+		// so each row says who wrote it.
+		$co_authors_display_map = $this->kb->get_co_authors_display_bulk(array_map(static function ($art_row) {
+			return (int) $art_row['article_id'];
+		}, $art_rows));
+
+		foreach ($art_rows as $art_row)
 		{
 			$art_id = (int) $art_row['article_id'];
 			$status = (int) $art_row['status'];
+
+			$co_author_links = [];
+			foreach ($co_authors_display_map[$art_id] ?? [] as $co_author)
+			{
+				$style = $co_author['type'] === functions_kb::AUTHOR_TYPE_GROUP ? ' style="color: #' . $co_author['colour'] . ';"' : '';
+				$co_author_links[] = '<a href="' . $co_author['url'] . '"' . $style . '>' . $co_author['name'] . '</a>';
+			}
 
 			// A draft-of-an-edit only ever exists for an article that
 			// isn't itself a draft (see posting.php) - checking it only
@@ -256,6 +277,8 @@ class index
 			$this->template->assign_block_vars('art_row', [
 				'ID'              => $art_id,
 				'ARTICLE_TITLE'   => $art_row['article_title'],
+				'ARTICLE_AUTHOR'  => $this->kb->get_author_display($art_row),
+				'CO_AUTHORS'      => implode(', ', $co_author_links),
 				'U_ARTICLE'       => $this->helper->route('phpbbmodders_knowledgebase_article', ['k' => $art_id]),
 				'U_EDIT'          => $this->helper->route('phpbbmodders_knowledgebase_posting', ['mode' => 'edit', 'id' => (int) $art_row['article_category_id'], 'k' => $art_id]),
 				'ARTICLE_DATE'    => $this->user->format_date($art_row['article_date']),
@@ -269,7 +292,6 @@ class index
 				'S_HAS_DRAFT_EDIT'  => $has_draft_edit,
 			]);
 		}
-		$this->db->sql_freeresult($result);
 
 		$this->template->assign_vars([
 			'TOTAL_ITEMS'         => $this->language->lang('TOTAL_ITEMS', $article_count),

@@ -84,16 +84,20 @@ blind: no "KB bot" placeholder is needed, since this extension's
 - New `KB_CO_AUTHORS`/`_EXPLAIN`/`KB_CO_AUTHOR_GROUPS`/
   `KB_UNKNOWN_USERNAME` language keys in en/ru/fr/cs.
 
+**"Your articles" author column - done (10/05/2026).**
+`index.php::my_articles()` ("Your articles") originally showed no author,
+on the reasoning that every row was the viewer's own article, and was left
+as-is when co-authors were added - only its query was extended to include
+co-authored articles. That reasoning stopped holding once co-authored and
+team-credited articles appeared in the list: a row could be someone else's
+article with nothing saying so. The page now has an Author column that shows
+the primary author followed by the co-authors, the same way the category
+listing does (co-author lookups batched into one query per page).
+
 **Still not done, on purpose:**
-- `index.php::my_articles()` ("Your articles") never displayed *any*
-  author before this feature existed - inherently redundant when every
-  row is already the viewer's own article - so it was left as-is rather
-  than adding an author column that wasn't there previously; the
-  underlying query was still extended to correctly include
-  co-authored articles (the part that actually matters there). The
-  board-index category-card view (`index.php::main()`) similarly shows
-  only its one most-recent-article-per-category teaser, not a full
-  listing, and wasn't touched either.
+- The board-index category-card view (`index.php::main()`) shows only its
+  one most-recent-article-per-category teaser, not a full listing, and
+  wasn't touched.
 
 **Query batching (09/25/2026 follow-up) - now done.** `category.php`'s
 per-row listing loop previously ran up to four separate queries per
