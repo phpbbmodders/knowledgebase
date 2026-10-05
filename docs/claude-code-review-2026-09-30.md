@@ -8,11 +8,19 @@ notifications, search backends, migrations, templates, JavaScript, and package
 configuration. Documentation and language files were checked where they affect
 runtime behavior or the current changes.
 
-Verdict: **Changes required.**
+Verdict (original, at `98af128`): **Changes required.**
+
+Update 10/05/2026: the fixes for findings 1-11 are on the
+`kb-acp-extensions-alias-and-review-followup` branch (pull request #17); the
+commit for each is listed under its heading. Finding 12 is still open. The
+finding text below is the original review and is left unchanged. Items not yet
+checked in a browser are marked as such.
 
 ## Findings
 
 ### P1 - Destructive ACP actions do not validate CSRF tokens
+
+**Status: resolved in d7b0c6c.** Form-token and link-hash checks added to the ACP actions; regression tests in `tests/kb_acp_csrf_test.php`. Rejection of a forged request has not been checked in a browser.
 
 Locations: `acp/fields_module.php:42-57`,
 `controller/acp_controller.php:707-805`,
@@ -45,6 +53,8 @@ Carry a validated token or hash through each batched/meta-refresh continuation.
 
 ### P1 - The custom-field add form posts to an undefined action variable
 
+**Status: resolved in d7b0c6c.** The template now uses `U_ACTION`, which the controller assigns. Not checked in a browser.
+
 Locations: `controller/acp_controller.php:1306-1311` and
 `adm/style/acp_knowledgebase_fields.html:4-4`
 
@@ -63,6 +73,8 @@ above; both defects must be fixed.
 
 ### P1 - MySQL keyword search sends PHP variable names as literal SQL
 
+**Status: resolved in 289f621.** The query is now built by concatenation, with the search string quoted and escaped. Tests: `tests/kb_search_sql_test.php`, and `tests/kb_search_database_test.php` against a real MySQL server.
+
 Location: `search/backend/kb_fulltext_mysql.php:451-456`
 
 The final query is built with a single-quoted PHP string containing
@@ -78,6 +90,8 @@ backends do, and add a MySQL integration test that creates the index and runs a
 keyword query with category, author, date, and sort options.
 
 ### P1 - PostgreSQL index creation targets the posts table with invalid columns
+
+**Status: resolved in 289f621** (index creation targets the articles table with per-column names) **and ca00963** (index create/delete/recreate lifecycle and stats reset). Tests: `tests/kb_search_database_test.php` against a real PostgreSQL server.
 
 Locations: `search/backend/kb_fulltext_postgres.php:617-635` and
 `search/backend/kb_fulltext_postgres.php:743-763`
@@ -100,6 +114,8 @@ PostgreSQL index lifecycle with an integration test.
 
 ### P1 - Combined keyword and author search appends an undefined author ID
 
+**Status: resolved in 289f621.** `controller/search.php` filters on `a.author_id` with `sql_in_set()`; the MySQL and PostgreSQL backends quote the author name. Tests: `tests/kb_search_sql_test.php`, `tests/kb_search_database_test.php`.
+
 Location: `controller/search.php:316-325`
 
 When both `$author` and `$keywords` are supplied, the final result query appends
@@ -116,6 +132,8 @@ author-filtered, or use `sql_in_set('a.author_id', $author_id_ary)` with the
 qualified column name.
 
 ### P1 - Edit and delete incorrectly require article-add permission
+
+**Status: resolved in ebcb42c.** The add-permission gate in `controller/posting.php` now applies only to add mode. Tests: `tests/kb_posting_permissions_test.php`. Not checked in a browser.
 
 Location: `controller/posting.php:187-204` and
 `controller/posting.php:232-272`
@@ -134,6 +152,8 @@ For existing articles, load the article first and enforce the already-computed
 edit or delete permission.
 
 ### P1 - Attachment downloads do not follow article visibility rules
+
+**Status: resolved in ebcb42c.** `controller/kb_file.php` now applies the same rules as the article page: drafts are visible only to their author, and unapproved articles only to the author, the assigned reviewer, or a moderator; approved articles keep their previous access. Tests: `tests/kb_attachment_permissions_test.php`. Not checked in a browser.
 
 Locations: `controller/article.php:140-165` and
 `controller/kb_file.php:117-138`
@@ -157,6 +177,8 @@ then reuse one shared article-visibility decision for both article pages and
 attached files.
 
 ### P1 - Draft deletion, movement, and ACP recounts corrupt article totals
+
+**Status: resolved in ebcb42c.** Deleting or moving a draft no longer changes category or global counts, and the ACP list and recount no longer overwrite `kb_num_articles` with a filtered or draft-inclusive number. Tests: `tests/kb_article_counts_test.php`, `tests/kb_acp_counts_test.php`.
 
 Locations: `controller/posting.php:857-877`,
 `controller/posting.php:916-927`, `inc/functions_kb.php:1892-1901`, and
@@ -184,6 +206,8 @@ delete.
 
 ### P1 - Extensions added as "Not assigned" disappear from Manage Extensions
 
+**Status: resolved in 5877c26.** The extension queries use a `LEFT JOIN` and show such rows as "Not assigned". Tests: `tests/kb_extensions_test.php`.
+
 Locations: `controller/acp_controller.php:379-393`,
 `controller/acp_controller.php:414-440`,
 `controller/acp_controller.php:486-499`, and
@@ -204,6 +228,8 @@ unsupported.
 
 ### P1 - Adding an extension leaves core and Knowledge Base caches stale
 
+**Status: resolved in 5877c26.** Adding an extension destroys the `_extensions` and `_kb_extension` caches. The same commit also requires the core `a_attach` permission and a valid group for adding. Tests: `tests/kb_extensions_test.php`.
+
 Location: `controller/acp_controller.php:414-444`
 
 `add_extension()` writes directly to phpBB's core `EXTENSIONS_TABLE` but does
@@ -219,6 +245,8 @@ Also invalidate the Knowledge Base cache after save operations whose group
 changes affect display-category behavior.
 
 ### P2 - Permission-deny notification filtering uses unrelated ACL options
+
+**Status: resolved in a05867c.** The deny lookup in the three notification types is limited to the requested `auth_option_id`. Tests: `tests/kb_notification_permissions_test.php`. Actual notification delivery has not been checked.
 
 Locations: `notification/type/need_approval.php:180-202`,
 `notification/type/approve.php:406-428`, and
@@ -239,6 +267,8 @@ centralize recipient permission evaluation so notifications and runtime access
 cannot drift apart.
 
 ### P2 - Migration 1.0.3 silently drops one of its schema operations
+
+**Status: open.** `migrations/version_1_0_3.php` still declares `drop_columns` twice and is unchanged on this branch. Partly covered by later migrations: `version_2_0_2` drops `reply_id` from `kb_src_wrdmtch`, and `version_2_0_15` rebuilds the `un_mtch` index without deleting matches (tests: `tests/kb_legacy_search_migration_test.php`). What remains is the upgrade path from a version older than 1.0.3, where rows that differ only by `reply_id` could still collide when 1.0.3 creates its narrower unique index. That case is untested. Editing an already-released migration needs a decision first.
 
 Location: `migrations/version_1_0_3.php:30-48` and
 `migrations/version_1_0_3.php:65-87`
@@ -291,3 +321,17 @@ No MySQL or PostgreSQL service was available in this pass, so those backend
 failures are established from the generated SQL rather than an executed DBMS
 trace. Fresh-install, upgrade, purge/re-enable, notification delivery, browser,
 and database-specific lifecycle behavior remain unverified at runtime.
+
+### Update 10/05/2026
+
+The new regression tests (`tests/*_test.php`) were run in disposable MySQL and
+PostgreSQL containers as described in [testing.md](testing.md): 69 tests, 337
+assertions, with the database-backed cases executed rather than skipped. Run
+against the pre-fix code, each test file that can load there fails; the two
+migration test files cannot load on `main` because the migrations they test do
+not exist there.
+
+Still unverified: browser submission and deletion, attachment downloads in a
+browser, rejection of forged ACP requests, real notification delivery, and
+fresh-install / upgrade lifecycle on a live board. These are tracked under
+"Active" in [TODO.md](TODO.md).
