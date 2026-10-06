@@ -91,7 +91,7 @@ Twig templates — these lean on recent (3.2+) core investments that
    feature effectively non-functional outside category 1.
 3. Two leftover pre-Twig legacy template snippets render as literal
    broken text since Twig doesn't parse them:
-   `styles/prosilver/template/kb_post_body.html:84`
+   `styles/all/template/kb_post_body.html:84`
    (`<!-- IF SHOW_PANEL -->...<!-- ENDIF -->`) and
    `adm/style/acp_knowledgebase_permissions.html:229`
    (`<!-- BEGIN category -->`).
@@ -108,7 +108,7 @@ Twig templates — these lean on recent (3.2+) core investments that
    doesn't affect actual delivery. The three notification types'
    `check_permission()` methods use `global $table_prefix;` instead
    of the DI pattern used everywhere else in this codebase. The three
-   template-event files under `styles/prosilver/template/event/`
+   template-event files under `styles/all/template/event/`
    only fire for prosilver-based styles — moving them to
    `styles/all/template/event/` would make them style-independent at
    no cost.

@@ -710,3 +710,54 @@ assignments, was then deleted the same way.
 
 Not covered: deleting a field while an author has its posting form open (the submit is simply
 ignored for a field that no longer exists).
+
+## One set of templates in styles/all, with the classic look as an option - 10/06/2026
+
+The UI redesign roadmap's last open item was a style native to prosilver that could be
+submitted upstream. The extension used to ship its page templates, scripts and CSS in
+`styles/prosilver`, with its own `.kb-tab` button tabs and striped `.kb-index-table`, so
+every prosilver-based board got that look and a board style that does not inherit from
+prosilver got no page templates at all. Now:
+
+- **`styles/all`** holds everything: the 13 page templates, the shared scripts, the three
+  event templates and the stylesheets. `styles/prosilver` no longer exists. phpBB looks in
+  a style's own folder, then its parents', then `styles/all`, so one set serves prosilver
+  and every style based on it (and styles based on nothing).
+- **The tab strip and the three article tables use prosilver's own classes** (`tabs`/`tab`/
+  `activetab`, and `table1`), so they take on each board style's colours. The `kb-*` classes
+  stay on the same elements as hooks.
+- **`phpbbmodders_knowledgebase.css`** is the base sheet for every look: layout fixes for the
+  article page, the copy button, the status badges, button fixes, the narrow article-table
+  columns.
+- **`phpbbmodders_knowledgebase_classic.css`** is the original look layered on top: slate
+  button tabs, the striped table with a dark header, and the forum-style category list (and
+  search results box) in the same muted slate instead of prosilver's blue. It loads only when the new ACP
+  setting **Use the classic Knowledge Base look** (`kb_classic_look`, migration
+  `version_2_0_21`, off by default) is ticked, on any board style. The setting reaches the
+  template as `S_KB_CLASSIC_LOOK` from the page-header listener.
+- This changes how the extension looks on boards that upgrade: it follows the board style
+  unless the setting is ticked.
+
+`kb_style_layout_test.php` (29 cases) guards the layout: `styles/all` is the only style
+folder, every expected template, script and stylesheet is there, nothing refers to
+`styles/prosilver`, the classic sheet is included only inside the setting's condition, the
+base sheet carries none of the classic rules and the classic sheet none of the shared ones,
+and the tab strip and tables carry both the prosilver classes and the `kb-*` hooks.
+`kb_classic_look_test.php` covers the migration and the variable the listener assigns. The
+full suite passes against the MySQL and PostgreSQL containers.
+
+Claude checked it live. On the SQLite test board, every Knowledge Base page (index,
+category, article, posting form, queue, "Manage Your Articles", search) loaded the base
+sheet and its scripts from `styles/all` with status 200, with the classic sheet present
+only when the setting was on. In the browser, prosilver showed the native light-blue tabs
+with the setting off, and the slate tabs and striped table with it on. On a throwaway MySQL
+board with the two custom styles installed in the web root, the same pages under
+`prosilver_se_revolution` and `ProMinoDeux` (both based on prosilver) found the templates
+and sheets in `styles/all` in both modes, and under `prosilver_se_revolution` the native
+tabs took that style's colours. The real ACP checkbox was driven on fresh SQLite, MySQL and
+PostgreSQL installs: unticked by default, saved on, saved off, saved on again, and the form
+reflected each.
+
+Not covered: a board style that inherits from nothing (not available to test), RTL and
+very narrow phone widths beyond what the inherited prosilver rules give, and the print
+stylesheet (only its path was updated and checked).

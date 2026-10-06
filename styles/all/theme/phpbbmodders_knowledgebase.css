@@ -172,65 +172,6 @@ dd.action {
 	color: #ff6600 !important;
 }
 
-.kb-tabs {
-	display: flex;
-	flex-wrap: wrap;
-	margin-bottom: 4px;
-}
-
-.kb-tab {
-	background: #8f9dab;
-	color: #ffffff;
-	padding: 6px 12px;
-	margin-right: 2px;
-	margin-bottom: 2px;
-	border-radius: 3px 3px 0 0;
-	text-decoration: none;
-	font-size: 0.95em;
-}
-
-.kb-tab:hover {
-	background: #7c8790;
-	text-decoration: none;
-}
-
-.kb-tab-active {
-	background: #536482;
-	font-weight: bold;
-}
-
-.kb-index-table {
-	width: 100%;
-	border-collapse: collapse;
-}
-
-.kb-index-table th {
-	background: #536482;
-	color: #ffffff;
-	text-align: left;
-	padding: 6px 8px;
-}
-
-.kb-index-table td {
-	padding: 8px;
-	border-bottom: 1px solid #cccccc;
-	vertical-align: top;
-}
-
-.kb-index-table tr:nth-child(even) td {
-	background: #f2f5f7;
-}
-
-.kb-index-table .kb-index-views {
-	white-space: nowrap;
-	width: 1%;
-}
-
-.kb-index-table .kb-index-author {
-	max-width: 200px;
-	overflow-wrap: break-word;
-}
-
 .kb-status-badge {
 	display: inline-block;
 	padding: 1px 6px;
@@ -324,4 +265,15 @@ button.button2:focus {
 	border-color: #11a3ea;
 	color: #0f4987;
 	outline-style: none;
+}
+
+/* The article tables: keep the narrow columns narrow whatever the look. */
+table.kb-index-table .kb-index-views {
+	white-space: nowrap;
+	width: 1%;
+}
+
+table.kb-index-table .kb-index-author {
+	max-width: 200px;
+	overflow-wrap: break-word;
 }
