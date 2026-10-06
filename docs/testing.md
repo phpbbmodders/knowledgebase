@@ -678,3 +678,35 @@ button, and a draft still saved with them empty.
 Not covered: a field changed from one type to another (the ACP cannot change a field's type
 after creation); the wording of the new labels in languages other than English (only
 English ships).
+
+## Deleting a custom field - 10/06/2026
+
+The ACP Custom Fields list gains a **Delete** link between Edit and Deactivate/Reactivate,
+on every field. It opens phpBB's confirmation page, which says how much goes with it,
+for example: Delete the field "Audience"? Its 3 values and their use on 1 articles will be
+removed. The articles themselves are not deleted. This cannot be undone. Confirming removes
+the field, all its values and every article's assignment of those values in one transaction;
+the articles and every other field are untouched. The deletion is written to the Knowledge Base
+admin log (`phpbb_kb_log`, shown on the KB Logs page as "Deleted custom field"), where the
+extension's other admin actions already go. Deactivating stays the reversible choice, and the
+seeded phpBB Version field can be deleted like any other (a later update does not bring it
+back, because its migration has already run).
+
+`kb_acp_delete_field_test.php` (5 cases, on a real in-memory SQLite database) covers the
+confirmation message and counts, that showing the page changes nothing, that confirming removes
+exactly the right rows, the log call and a missing field. The full suite passes against the
+MySQL and PostgreSQL containers.
+
+Claude then ran the real ACP on SQLite, MySQL 8.0 and PostgreSQL 16 (SQLite on a throwaway
+database file, so the board being used for manual testing was not touched). Each field row
+read Edit, Delete, Deactivate. With a dropdown field tagged on one article beside the seeded
+phpBB Version tag: the confirmation page named the field with 3 values and 1 article, opening
+the link alone and then cancelling deleted nothing, and confirming reported the field deleted.
+The field, its values and its assignment were gone, both articles remained, the version tag and
+every other field's values were untouched, the field disappeared from the ACP list, the posting
+form and the category filter, the log entry named it and the KB Logs page showed it in words,
+and deleting it a second time was refused as not found. The seeded phpBB Version field, with its
+assignments, was then deleted the same way.
+
+Not covered: deleting a field while an author has its posting form open (the submit is simply
+ignored for a field that no longer exists).

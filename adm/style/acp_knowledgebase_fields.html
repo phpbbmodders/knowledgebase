@@ -40,8 +40,10 @@
 						<td>{{ fields.FIELD_TYPE_NAME }}</td>
 						<td>{% if fields.S_REQUIRED %}{{ lang('YES') }}{% else %}{{ lang('NO') }}{% endif %}
 							(<a href="{{ fields.U_TOGGLE_REQUIRED }}">{% if fields.S_REQUIRED %}{{ lang('KB_FIELD_MAKE_OPTIONAL') }}{% else %}{{ lang('KB_FIELD_MAKE_REQUIRED') }}{% endif %}</a>)</td>
-						<td style="text-align: center; vertical-align: top; white-space: nowrap; width: 120px;">
+						<td style="text-align: center; vertical-align: top; white-space: nowrap; width: 200px;">
 							<a href="{{ fields.U_EDIT_VALUES }}">{{ lang('KB_FIELD_EDIT_VALUES') }}</a>
+							&bull;
+							<a href="{{ fields.U_DELETE }}">{{ lang('DELETE') }}</a>
 							&bull;
 							<a href="{{ fields.U_TOGGLE }}">{% if fields.S_ENABLED %}{{ lang('KB_DEACTIVATE') }}{% else %}{{ lang('KB_REACTIVATE') }}{% endif %}</a>
 						</td>
