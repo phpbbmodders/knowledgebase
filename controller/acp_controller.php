@@ -1363,6 +1363,7 @@ class acp_controller
 				'S_ENABLED'       => (bool) $field['enabled'],
 				'S_REQUIRED'      => (bool) $field['field_required'],
 				'U_TOGGLE_REQUIRED' => $this->u_action . '&amp;action=toggle_required&amp;field_id=' . $field['field_id'] . '&amp;hash=' . generate_link_hash('kb_field_required_' . $field['field_id']),
+				'U_DELETE'        => $this->u_action . '&amp;action=delete_field&amp;field_id=' . $field['field_id'],
 				'U_TOGGLE'        => $this->u_action . '&amp;action=toggle_field&amp;field_id=' . $field['field_id'] . '&amp;hash=' . generate_link_hash('kb_field_toggle_' . $field['field_id']),
 				'U_EDIT_VALUES'   => $this->u_action . '&amp;action=edit_values&amp;field_id=' . $field['field_id'],
 			]);
@@ -1447,6 +1448,58 @@ class acp_controller
 
 		meta_refresh(2, $this->u_action);
 		trigger_error($this->language->lang('KB_FIELD_UPDATED') . adm_back_link($this->u_action));
+	}
+
+	/**
+	 * Delete a custom field after confirmation: the field, all its values and
+	 * every article's assignment of those values. The articles stay.
+	 *
+	 * @param int $field_id
+	 * @return void
+	 */
+	public function delete_field(int $field_id): void
+	{
+		$field = $this->kb->get_field($field_id);
+		if (!$field)
+		{
+			trigger_error($this->language->lang('KB_FIELD_NOT_FOUND') . adm_back_link($this->u_action), E_USER_WARNING);
+		}
+
+		if (confirm_box(true))
+		{
+			$values = $this->kb->get_field_values_table();
+			$this->db->sql_transaction('begin');
+			$this->db->sql_query('DELETE FROM ' . $this->kb->get_article_field_values_table() . '
+				WHERE value_id IN (SELECT value_id FROM ' . $values . ' WHERE field_id = ' . $field_id . ')');
+			$this->db->sql_query('DELETE FROM ' . $values . ' WHERE field_id = ' . $field_id);
+			$this->db->sql_query('DELETE FROM ' . $this->kb->get_fields_table() . ' WHERE field_id = ' . $field_id);
+			$this->db->sql_transaction('commit');
+
+			$this->log->add('admin', $this->user->data['user_id'], $this->user->data['user_ip'], 'LOG_KB_FIELD_DELETE', time(), [$field['field_name']]);
+
+			meta_refresh(2, $this->u_action);
+			trigger_error($this->language->lang('KB_FIELD_DELETED') . adm_back_link($this->u_action));
+		}
+
+		$sql = 'SELECT COUNT(value_id) AS value_count
+			FROM ' . $this->kb->get_field_values_table() . '
+			WHERE field_id = ' . $field_id;
+		$result = $this->db->sql_query($sql);
+		$value_count = (int) $this->db->sql_fetchfield('value_count');
+		$this->db->sql_freeresult($result);
+
+		$sql = 'SELECT COUNT(DISTINCT a.article_id) AS article_count
+			FROM ' . $this->kb->get_article_field_values_table() . ' a, ' . $this->kb->get_field_values_table() . ' v
+			WHERE a.value_id = v.value_id
+				AND v.field_id = ' . $field_id;
+		$result = $this->db->sql_query($sql);
+		$article_count = (int) $this->db->sql_fetchfield('article_count');
+		$this->db->sql_freeresult($result);
+
+		confirm_box(false, $this->language->lang('KB_FIELD_DELETE_CONFIRM', $field['field_name'], $value_count, $article_count), build_hidden_fields([
+			'action'   => 'delete_field',
+			'field_id' => $field_id,
+		]));
 	}
 
 	/**

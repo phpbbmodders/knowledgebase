@@ -16,8 +16,10 @@ if (!function_exists(__NAMESPACE__ . '\confirm_box'))
 	{
 		if ($check)
 		{
-			return false;
+			// Tests that exercise the confirmed branch set this flag.
+			return !empty($GLOBALS['kb_test_confirmed']);
 		}
+		$GLOBALS['kb_test_confirm_title'] = $title;
 		$GLOBALS['kb_test_confirm_hidden'] = $hidden;
 		throw new \RuntimeException('CONFIRM_BOX');
 	}
