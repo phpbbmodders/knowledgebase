@@ -122,6 +122,11 @@ class category
 			$flat_all = true;
 		}
 
+		// With the flat index setting on, every category page keeps the flat
+		// layout - the category dropdown, no hierarchical subcategory list and
+		// no parent trail - not just the all-categories page (id=0).
+		$flat_layout = (bool) $this->config['kb_flat_index'];
+
 		if (!$flat_all)
 		{
 			$sql = 'SELECT category_id, category_name
@@ -263,7 +268,16 @@ class category
 
 		if (!$flat_all)
 		{
-			foreach ($this->kb->get_category_branch($cat_id, 'parents') as $row)
+			$crumb_rows = $this->kb->get_category_branch($cat_id, 'parents');
+			if ($flat_layout)
+			{
+				// The category itself, without the chain of parents above it.
+				$crumb_rows = array_filter($crumb_rows, static function ($crumb_row) use ($cat_id) {
+					return (int) $crumb_row['category_id'] === (int) $cat_id;
+				});
+			}
+
+			foreach ($crumb_rows as $row)
 			{
 				$this->template->assign_block_vars('navlinks', [
 					'FORUM_NAME'   => $row['category_name'],
@@ -275,9 +289,11 @@ class category
 				FROM ' . $this->categories_table . '
 				WHERE parent_id = ' . (int) $cat_id . '
 				ORDER BY left_id ASC';
-			$result = $this->db->sql_query($sql);
+			// The subcategory list is the hierarchical, forum-style part of
+			// the page; the flat layout does not show it, so it is not queried.
+			$result = $flat_layout ? null : $this->db->sql_query($sql);
 
-			while ($cat_row = $this->db->sql_fetchrow($result))
+			while ($result && ($cat_row = $this->db->sql_fetchrow($result)))
 			{
 				$exclude_cats = [];
 				foreach ($this->kb->get_category_branch($cat_row['category_id'], 'children') as $row)
@@ -410,7 +426,7 @@ class category
 
 		$this->template->assign_vars([
 				'CATS_DROPBOX'        => $this->kb->make_category_dropbox(),
-				'CATS_OPTIONS'        => $flat_all ? $this->kb->make_category_select(0, [], true) : '',
+				'CATS_OPTIONS'        => $flat_layout ? $this->kb->make_category_select($flat_all ? 0 : $cat_id, [], true) : '',
 				'S_FIELD_FILTER'         => $field_filter_options !== '',
 				'FIELD_FILTER_OPTIONS'   => $field_filter_options,
 				'S_FIELD_FILTER_ACTIVE'  => (bool) $filter_value_id,
@@ -426,6 +442,7 @@ class category
 				'S_CAN_ADD'           => !$flat_all && $this->kb->acl_kb_get($cat_id, 'kb_u_add'),
 				'S_CAN_ADD_REDIRECT'  => !$flat_all && ($this->auth->acl_get('a_manage_kb') || $this->kb->acl_kb_get($cat_id, 'kb_m_approve')),
 				'S_FLAT_ALL'          => $flat_all,
+				'S_FLAT_LAYOUT'       => $flat_layout,
 				'S_ACTION'            => $this->helper->route('phpbbmodders_knowledgebase_category', ['id' => $cat_id]),
 				'S_IS_SEARCH'         => (bool) $this->config['kb_search'],
 				'S_KB_SEARCH_ACTION'  => $this->helper->route('phpbbmodders_knowledgebase_search'),

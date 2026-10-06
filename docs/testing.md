@@ -301,6 +301,42 @@ article (it quotes the Markdown source as plain text), print view, and the
 wording of the new text in the French, Russian and Czech language files, which
 has not been reviewed by a native speaker.
 
+## Flat article index audit - 10/05/2026
+
+With `kb_flat_index` on, `/knowledgebase` redirects to the all-categories page
+(`category?id=0`), which shows a "narrow by category" dropdown and one flat list
+of articles. Claude requested every Knowledge Base page as a moderator on the
+seeded SQLite board with the setting on and off, and compared the layout
+markers on each (the forum-style subcategory list, the dropdown, the tab bar
+and the breadcrumb trail).
+
+- **Fixed:** the category pages below the all-categories page. Choosing a
+  category from the dropdown opened `category?id=N`, which dropped the dropdown
+  and, for a category with subcategories, showed the forum-style "Category /
+  Articles / Last article" list; a subcategory's breadcrumbs showed the whole
+  chain of parents. With the setting on, those pages now keep the dropdown (with
+  the current category selected), show no subcategory list and do not query it,
+  and show only the category itself in the breadcrumbs.
+- **Unchanged and correct:** the index redirect and the all-categories page. With
+  the setting off, the normal hierarchical layout is identical to before
+  (subcategory list on `id=1`, no dropdown, full breadcrumbs on `id=3`).
+- **Not index pages, left alone:** the article page, "Your articles", the
+  Administration queue, the search form and results, the posting form and the
+  review page. None of them shows a category list or dropdown in either mode;
+  they keep the tab bar and a breadcrumb trail.
+
+In the browser, changing the dropdown from "Advanced Topics" to "Getting
+Started" opened that category with the flat layout and the dropdown still
+showing the selection.
+
+Claude also repeated the category-page check on throwaway MySQL 8.0 and
+PostgreSQL 16 boards with this change checked out: with `kb_flat_index` off a
+category page carried no "narrow down" dropdown, and with it on the dropdown
+appeared (checked by fetching `category?id=1` as an author on each board).
+
+There is no automated test for this: it is a rendering change in the category
+controller and template, checked through the page audit and the browser.
+
 ## Contact group on "Manage Your Articles" - 10/05/2026
 
 phpbb.com's "Manage Your Articles" page ends its introduction with "If you have
