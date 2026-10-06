@@ -11,10 +11,11 @@ under [`docs/TODO/`](TODO/).
   after the Phase 1-5 redesign ([`docs/ui-redesign-roadmap.md`](ui-redesign-roadmap.md))
   was already implemented. Items 1, 4, and 5 are done as of
   09/28/2026: an explicit "Approved article"/"Article requiring
-  approval" choice for a moderator submitting a new article, a filter
-  dropdown on the Administration queue (redirects/inactive/one team,
-  plus a "show all" toggle so the filter can reach already-published
-  articles too, not just ones needing attention), and a direct "View
+  approval" choice for a moderator submitting a new article, a
+  "Display options" dropdown on the Administration queue (new and
+  revisions by default, all articles and redirects, redirects, inactive
+  articles, or one team's, with or without the active ones; reworked
+  from a filter plus a "show all" checkbox on 10/05/2026), and a direct "View
   topic" moderator action on the queue and approve pages. Remaining:
   required-field validation on categories/custom fields, and a BBCode
   restriction on the Description field.

@@ -3,15 +3,20 @@
 {% INCLUDE '@phpbbmodders_knowledgebase/kb_nav_tabs.html' %}
 
 <form method="get" action="{{ S_ACTION }}" class="action-bar bar-top">
-	<label>{{ lang('KB_FILTER_BY_FIELD') }}{{ lang('COLON') }}
+	<label>{{ lang('KB_DISPLAY_OPTIONS') }}{{ lang('COLON') }}
 		<select name="filter" onchange="this.form.submit();">
-			<option value="">{{ lang('KB_FILTER_ANY') }}</option>
-			<option value="redirect"{% if S_FILTER_REDIRECT %} selected="selected"{% endif %}>{{ lang('KB_FILTER_REDIRECTS') }}</option>
-			<option value="inactive"{% if S_FILTER_INACTIVE %} selected="selected"{% endif %}>{{ lang('KB_STATUS_INACTIVE') }}</option>
-			{{ TEAM_FILTER_OPTIONS }}
+			<option value="">{{ lang('KB_DISPLAY_NEW_REVISIONS') }}</option>
+			<option value="all"{% if S_FILTER_ALL %} selected="selected"{% endif %}>{{ lang('KB_DISPLAY_ALL') }}</option>
+			<option value="redirect"{% if S_FILTER_REDIRECT %} selected="selected"{% endif %}>{{ lang('KB_DISPLAY_REDIRECTS') }}</option>
+			<option value="inactive"{% if S_FILTER_INACTIVE %} selected="selected"{% endif %}>{{ lang('KB_DISPLAY_INACTIVE') }}</option>
+			{% if TEAM_FILTER_OPTIONS %}
+				<optgroup label="{{ lang('KB_DISPLAY_TEAMS') }}">
+					{{ TEAM_FILTER_OPTIONS }}
+				</optgroup>
+			{% endif %}
 		</select>
 	</label>
-	<label title="{{ lang('KB_SHOW_ALL_ARTICLES') }}"><input type="checkbox" name="show_all" value="1" onchange="this.form.submit();"{% if S_SHOW_ALL %} checked="checked"{% endif %}> {{ lang('KB_SHOW_ALL') }}</label>
+	<input type="submit" class="button2" value="{{ lang('GO') }}">
 	{% if S_FILTER_ACTIVE %}
 		<a href="{{ U_RESET_FILTER }}">{{ lang('RESET_FILTER') }}</a>
 	{% endif %}

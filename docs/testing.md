@@ -395,3 +395,43 @@ removed and the SQLite config restored afterwards.
 
 Not covered: the French, Russian and Czech wording of the five new sentences,
 which has not been reviewed by a native speaker.
+
+## Administration queue "Display options" - 10/05/2026
+
+The queue's filter dropdown plus "Show all articles" checkbox became one
+"Display options" dropdown with a Go button, as on phpbb.com. The choices:
+"View new and revisions (default)", "View all articles and redirects", "View
+redirects", "View inactive articles", and for each team "View assigned to
+<team>" and "Including active and redirects" (filter values `''`, `all`,
+`redirect`, `inactive`, `team_<id>`, `team_<id>_all`). Two behaviour changes,
+both chosen by the owner: the default view no longer lists inactive articles
+(an inactive article with a pending revision still appears), and "View
+redirects" lists every redirect rather than only those needing attention. Drafts
+never appear. Old `filter=...&show_all=1` links resolve to the matching new
+choice.
+
+New tests (`kb_queue_display_test.php`, 17 cases) cover how a requested value
+resolves, including the old `show_all` links and unknown or hostile values
+(`team_0`, `team_9x`, `team_9 OR 1=1`, negative ids), which fall back to the
+default. The full suite then passed against disposable MySQL 8.0 and
+PostgreSQL 16 containers (123 tests, 448 assertions, nothing skipped).
+
+Claude also ran the real page as the administrator on all three supported
+databases (the seeded SQLite board, and throwaway MySQL 8.0 and PostgreSQL 16
+boards installed from this branch). The seed-forum Knowledgebase fixtures were
+enlarged for this with 72 generated articles (pending approval, reviewed,
+active, pending revision, inactive and redirect, spread over the three
+categories, half assigned to the KB Team group), giving 82 submitted articles
+and more than one page of ten for every choice. On each database, every one
+of the six choices and five old or invalid URLs was walked page by page and
+returned exactly the article ids that an independent SQL-based check expected
+(41 needing attention over 5 pages, 82 for all over 9, 13 redirects over 2, 12
+inactive over 2, and the KB Team's 18, or 36 including active, over 2 and 4),
+with no duplicates, full pages before the last, the right option selected, and
+pagination links that carry the canonical choice and never the old `show_all`
+flag. The Go button, the "Teams" option group and the missing old checkbox were
+confirmed too. The temporary boards and containers were removed; the SQLite
+board was reseeded with the enlarged fixtures.
+
+Not covered: the French, Russian and Czech wording of the eight new strings,
+which has not been reviewed by a native speaker.
