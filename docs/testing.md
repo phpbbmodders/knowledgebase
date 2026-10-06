@@ -300,3 +300,30 @@ MySQL and PostgreSQL boards, the changelog topic's quoted diff for a Markdown
 article (it quotes the Markdown source as plain text), print view, and the
 wording of the new text in the French, Russian and Czech language files, which
 has not been reviewed by a native speaker.
+
+## Contact group on "Manage Your Articles" - 10/05/2026
+
+phpbb.com's "Manage Your Articles" page ends its introduction with "If you have
+any questions pertaining to your articles, please PM a Support Team Member."
+The Knowledge Base page now has the same second sentence: "...please PM a member
+of <group>", with the group's name linking to its member list and shown in the
+group's own colour. The group is set in the ACP (Configuration, Teams section,
+"Contact group"; migration `version_2_0_17` adds the `kb_contact_group` setting,
+default none). With none chosen, or when the chosen group no longer exists, the
+sentence is not shown and the page reads as it did before.
+
+Claude checked it on the seeded SQLite board at `localhost:8092`:
+
+- The ACP select lists every usergroup by its translated name with "None"
+  selected by default. Saving "KB Team" stored its id.
+- The author's page then showed the sentence with a link to
+  `memberlist.php?mode=group&g=11`, which lists the group's members. With the
+  group given the colour `E67300`, the link rendered in that colour.
+- A group id that no longer exists hid the sentence without any error. A made-up
+  id submitted through the form was stored as "none".
+
+New tests cover the lookup (none set, deleted group, translated name, link,
+colour allow-list), the ACP validation, and the migration. Not covered: the
+page on MySQL and PostgreSQL boards, and the wording of the new strings in the
+French, Russian and Czech language files, which has not been reviewed by a native
+speaker.

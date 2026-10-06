@@ -4,7 +4,7 @@
 
 <div class="panel">
 	<div class="inner">
-		<p>{{ lang('KB_MANAGE_ARTICLES_EXPLAIN') }}</p>
+		<p>{{ lang('KB_MANAGE_ARTICLES_EXPLAIN') }}{% if KB_MANAGE_ARTICLES_CONTACT %} {{ KB_MANAGE_ARTICLES_CONTACT }}{% endif %}</p>
 		<dl>
 			<dt><span class="kb-status-badge kb-status-new">{{ lang('KB_STATUS_NEW') }}</span></dt>
 			<dd>{{ lang('KB_STATUS_NEW') }}</dd>

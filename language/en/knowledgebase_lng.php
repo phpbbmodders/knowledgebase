@@ -89,6 +89,7 @@ $lang = array_merge($lang, [
 	'KB_IS_REDIRECT'                       => 'This entry redirects to an external page',
 	'KB_LAST_MODIFIED'                     => 'Last Modified',
 	'KB_MANAGE_ARTICLES_EXPLAIN'           => 'Below is a list of articles you have submitted to the Knowledge Base, accompanied by their status.',
+	'KB_MANAGE_ARTICLES_CONTACT'           => 'If you have any questions pertaining to your articles, please PM a member of %s.',
 	'KB_MARK_REVIEWED'                     => 'Mark reviewed',
 	'KB_MOVE_DOWN'                         => 'Move down',
 	'KB_MOVE_UP'                           => 'Move up',

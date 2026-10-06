@@ -142,6 +142,7 @@ $lang = array_merge($lang, [
 	'KB_IS_REDIRECT'                          => 'Tato položka přesměrovává na externí stránku',
 	'KB_LAST_MODIFIED'                        => 'Naposledy upraveno',
 	'KB_MANAGE_ARTICLES_EXPLAIN'              => 'Níže je seznam článků, které jste odeslali do znalostní báze, spolu s jejich stavem.',
+	'KB_MANAGE_ARTICLES_CONTACT'           => 'Máte-li k vašim článkům nějaké dotazy, napište soukromou zprávu některému z členů skupiny %s.',
 	'KB_MARK_REVIEWED'                        => 'Označit jako zkontrolované',
 	'KB_MOVE_DOWN'                            => 'Přesunout dolů',
 	'KB_MOVE_UP'                              => 'Přesunout nahoru',

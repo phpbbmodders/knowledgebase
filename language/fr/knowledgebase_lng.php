@@ -162,6 +162,7 @@ $lang = array_merge($lang, [
 	'KB_IS_REDIRECT'                          => 'Cette entrée redirige vers une page externe',
 	'KB_LAST_MODIFIED'                        => 'Dernière modification',
 	'KB_MANAGE_ARTICLES_EXPLAIN'              => 'Voici la liste des articles que vous avez soumis à la base de connaissances, accompagnés de leur statut.',
+	'KB_MANAGE_ARTICLES_CONTACT'           => 'Si vous avez des questions concernant vos articles, veuillez envoyer un message privé à un membre de %s.',
 	'KB_MARK_REVIEWED'                        => 'Marquer comme relu',
 	'KB_MOVE_DOWN'                            => 'Déplacer vers le bas',
 	'KB_MOVE_UP'                              => 'Déplacer vers le haut',
