@@ -321,6 +321,20 @@ services:
         tags:
             - { name: phpbbmodders.knowledgebase.field_type }
 
+    phpbbmodders.knowledgebase.field.single_select:
+        class: phpbbmodders\knowledgebase\inc\field\kb_single_select_field_type
+        arguments:
+            - '@language'
+        tags:
+            - { name: phpbbmodders.knowledgebase.field_type }
+
+    phpbbmodders.knowledgebase.field.radio_select:
+        class: phpbbmodders\knowledgebase\inc\field\kb_radio_select_field_type
+        arguments:
+            - '@language'
+        tags:
+            - { name: phpbbmodders.knowledgebase.field_type }
+
     phpbbmodders.knowledgebase.field.factory:
         class: phpbbmodders\knowledgebase\inc\field\kb_field_type_factory
         arguments:

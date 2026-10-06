@@ -41,6 +41,17 @@ interface kb_field_type_interface
 	public function render_posting_field(array $field, array $values, array $selected_value_ids): string;
 
 	/**
+	 * The value ids to keep from what the posting form submitted. A type that
+	 * allows one value returns at most one; a type that allows several returns
+	 * them all. Called both when checking a required field and when saving, so
+	 * a tampered request cannot store more than the type allows.
+	 *
+	 * @param int[] $value_ids value_ids submitted for this field
+	 * @return int[]
+	 */
+	public function normalize_submitted_ids(array $value_ids): array;
+
+	/**
 	 * Article-page HTML showing this field's assigned values.
 	 *
 	 * @param array $field            the kb_fields row

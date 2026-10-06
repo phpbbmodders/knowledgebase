@@ -537,14 +537,15 @@ class posting
 		{
 			$field_id = (int) $field['field_id'];
 			$field_values = $this->kb->get_field_values($field_id, true);
-			$submitted_ids = array_map('intval', $all_field_values[$field_id] ?? []);
+			$field_type = $this->field_factory->get($field['field_type']);
+			$submitted_ids = $field_type->normalize_submitted_ids(array_map('intval', $all_field_values[$field_id] ?? []));
 			if (functions_kb::is_required_field_missing($field, $field_values, $submitted_ids))
 			{
 				$missing_required_fields[] = $field['field_name'];
 			}
 			$selected_ids = $submit ? $submitted_ids : (($art_id) ? $this->kb->get_article_field_value_ids($art_id, $field_id) : []);
 
-			$field_widgets .= $this->field_factory->get($field['field_type'])->render_posting_field($field, $field_values, $selected_ids);
+			$field_widgets .= $field_type->render_posting_field($field, $field_values, $selected_ids);
 		}
 
 		include($this->phpbb_root_path . 'includes/functions_posting.' . $this->php_ext);
@@ -1328,7 +1329,8 @@ class posting
 		foreach ($enabled_fields as $field)
 		{
 			$field_id = (int) $field['field_id'];
-			$this->kb->set_article_field_values($article_id, $field_id, $all_field_values[$field_id] ?? []);
+			$field_type = $this->field_factory->get($field['field_type']);
+			$this->kb->set_article_field_values($article_id, $field_id, $field_type->normalize_submitted_ids(array_map('intval', $all_field_values[$field_id] ?? [])));
 		}
 	}
 

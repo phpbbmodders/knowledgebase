@@ -5,9 +5,17 @@ under [`docs/TODO/`](TODO/).
 
 ## Active
 
-Nothing is currently open.
+- A separate prosilver-native style for submitting the extension upstream.
+  The extension's own style (`styles/prosilver`) uses its own `.kb-tab`
+  button tabs and `.kb-index-table` CSS; the upstream version should use a
+  plain-text `&bull;`-separated tab row or prosilver's own tab-widget CSS
+  classes, not invent a third look. Decided in the
+  [UI redesign roadmap](TODO/archive/archive1.md#ui-feature-redesign-roadmap)
+  (archived 10/05/2026); not started.
 
 ## Archived Reviews
+
+The [UI redesign roadmap](TODO/archive/archive1.md#ui-feature-redesign-roadmap) - five phases modelled on phpbb.com's Knowledge Base - is implemented and was archived on 10/05/2026, apart from the item above.
 
 The last deferred finding from the [September 26 AI validation](TODO/archive/archive1.md#ai-validation-review-2026-09-26), the `kb_version` setting that no migration removes, was closed on 10/05/2026 as intentional: it is the version marker that 23 migrations read to skip steps a board already has, and the one the original-package upgrade relies on, so it stays. Each of those migrations now says so. The other finding, the N+1 queries in `migrations/version_1_0_2.php`, was fixed the same day.
 
