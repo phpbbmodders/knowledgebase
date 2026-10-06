@@ -634,3 +634,47 @@ articles. Fresh installs of this branch also pass on SQLite, MySQL 8.0 and Postg
 Not covered: original versions other than 2.0.1-RC6 (the 1.0.x line in particular);
 boards with real attachments or large data; a custom style that overrides the original's
 templates.
+
+## Single-choice custom field types - 10/05/2026
+
+Only the checkbox list existed, so every custom field allowed several values. Two types
+now allow exactly one, chosen from the same admin-managed list: **Single choice
+(dropdown)** and **Single choice (radio buttons)**. Free-form types (text, number,
+date, link) were deliberately not built: they need new storage, and a free-text value
+would reach a published article without the revision approval that content gets,
+because category and tag changes are saved immediately. A yes/no field needs no type
+of its own: make a single choice with the values "Yes" and "No".
+
+- The values, the ACP value editor, storage (`kb_article_field_values`), the category
+  filter, the article page and the required flag are shared with the checkbox list.
+- The type interface gained `normalize_submitted_ids()`, called both when checking a
+  required field and when saving, so a tampered request that sends several values
+  stores only the first real one. The placeholder entry submits 0 and is skipped, so it
+  cannot hide a real choice sent after it. The checkbox list keeps every value.
+- An optional dropdown starts with a "select" placeholder; an optional radio field has a
+  "None" button so a choice can be cleared. A required radio field has no "None" button,
+  and a required field of either type shows "Please select at least one." and is refused
+  when empty.
+- `kb_multi_select_field_type::get_type()` now returns `static::class`, so each subclass
+  reports its own class (it returned the checkbox list's for all of them).
+
+New tests (`kb_single_select_field_test.php`, 12 cases) cover the normalisation, the
+dropdown and radio markup (selection, escaping, placeholder and None rules, the required
+hint), each type reporting its own class and name, and all three being registered. The
+full suite passes against the MySQL and PostgreSQL containers.
+
+Claude then ran the real ACP and posting form on the seeded SQLite board and on throwaway
+MySQL 8.0 and PostgreSQL 16 boards: the ACP type list offered all three types, a dropdown
+field and a radio field were created with values through the ACP, both widgets appeared on
+the form, one value of each was stored, a request sending several values stored only the
+first of each, a placeholder sent before a real choice did not hide it, "no choice" was
+accepted when optional and stored nothing, and a made-up value id stored nothing. The
+article page showed both values, the category page listed the new field's values and
+narrowed to the article, and the edit form preselected the stored values. After making the
+fields required through the ACP, an empty dropdown and an empty radio field were each
+refused naming the field, real choices were accepted, the radio field lost its "None"
+button, and a draft still saved with them empty.
+
+Not covered: a field changed from one type to another (the ACP cannot change a field's type
+after creation); the wording of the new labels in languages other than English (only
+English ships).

@@ -94,6 +94,17 @@ class kb_multi_select_field_type implements kb_field_type_interface
 	}
 
 	/**
+	 * Any number of values may be chosen.
+	 *
+	 * @param int[] $value_ids
+	 * @return int[]
+	 */
+	public function normalize_submitted_ids(array $value_ids): array
+	{
+		return $value_ids;
+	}
+
+	/**
 	 * @param array $field
 	 * @param array $selected_values
 	 * @return string
@@ -117,6 +128,6 @@ class kb_multi_select_field_type implements kb_field_type_interface
 	 */
 	public function get_type(): string
 	{
-		return self::class;
+		return static::class;
 	}
 }
