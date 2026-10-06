@@ -277,3 +277,49 @@ table.kb-index-table .kb-index-author {
 	max-width: 200px;
 	overflow-wrap: break-word;
 }
+
+/*
+ * Headings in article text. Markdown articles can use all six levels, which
+ * a forum post never does: prosilver paints an h1 white and large because it
+ * expects the board name in the header there (so an article's own title
+ * disappeared against the pale body), and styles h3 as small capitals meant
+ * for a panel title. An h2 is already styled for content by the board style.
+ * The colours of h3-h6 stay the board style's own; the h1 takes the text
+ * colour so it works on any style.
+ */
+.content h1,
+.content h3,
+.content h4,
+.content h5,
+.content h6 {
+	float: none;
+	margin: 1em 0 0.5em;
+	padding: 0;
+	font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+	line-height: 1.25;
+	text-transform: none;
+}
+
+.content h1 {
+	color: inherit;
+	margin-right: 0;
+	padding-bottom: 0.3em;
+	border-bottom: 1px solid #cccccc;
+	font-size: 1.9em;
+	font-weight: normal;
+}
+
+.content h3 {
+	font-size: 1.3em;
+}
+
+.content h4 {
+	font-size: 1.15em;
+}
+
+.content h5,
+.content h6 {
+	font-size: 1em;
+	font-weight: bold;
+}
+

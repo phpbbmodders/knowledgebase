@@ -262,8 +262,9 @@ flag on `kb_articles`, `kb_article_revisions` and `kb_article_draft_edits`
 (migration `version_2_0_16`), parsed and rendered by a Knowledge Base only
 instance of phpBB's s9e formatter with the LiteDown and PipeTables plugins, so
 forum posts are never parsed as Markdown. Differences from the Pages extension's
-method: header ids are left off, because a heading such as "Search" would get
-`id="search"` and collide with the page's own search form.
+method: header ids were left off at first, because a heading such as "Search" would get
+`id="search"` and collide with the page's own search form (they now carry a prefix, see
+"Markdown rendering fixes" below).
 
 Claude checked it in a browser on the seeded SQLite board at `localhost:8092`:
 
@@ -761,3 +762,56 @@ reflected each.
 Not covered: a board style that inherits from nothing (not available to test), RTL and
 very narrow phone widths beyond what the inherited prosilver rules give, and the print
 stylesheet (only its path was updated and checked).
+
+## Markdown rendering fixes - 10/06/2026
+
+An article written in Markdown (a 35 KB phpBB CLI reference) showed three problems:
+
+- **A white, invisible title.** Markdown's `# Heading` becomes an `<h1>`, and prosilver
+  paints every `h1` white with the board-name margins, because it expects the board name in
+  the header there. A forum post never contains one. `h3` was small capitals meant for a
+  panel title. The base stylesheet now gives headings in article text their own sizes and
+  spacing, and the `h1` the text colour (so it works on any board style); the colours of
+  `h2` to `h6` stay the board style's own.
+- **Ragged paragraphs.** phpBB's formatter turns every newline into a `<br>`, so text
+  written in wrapped lines broke at every source line (114 stray breaks in that article).
+  The Markdown formatter now leaves a newline inside a paragraph, a list item or a quote as
+  a space, as Markdown does. Two trailing spaces still make a line break. BBCode articles
+  are unchanged.
+- **A table of contents that went nowhere.** Links such as `[Basic usage](#basic-usage)`
+  had no heading to jump to. Headings now get an id built from their text (the same rule
+  as GitHub's: lower case, other characters collapsed to a hyphen) with a `kb-` prefix, and
+  a link that points at a fragment of the same page gets the same prefix, so the author's
+  links work unchanged and a heading called "Search" cannot take the id of the page's own
+  search box. The Markdown source is unchanged (editing shows `(#basic-usage)`). Two headings
+  with the same text get the same id, and the link goes to the first.
+
+Articles already stored kept their old breaks and had no ids until parsed again, so migration
+`version_2_0_22` parses every Markdown article, pending revision and draft of an edit once
+more and saves only the ones whose result changed (running it twice is harmless; BBCode
+articles are skipped; the formatter is assembled from core services, because the
+extension's own services are missing from the container while it is being enabled, which
+the first version of the migration tripped over on a fresh install). The formatter's cache
+keys were renamed (`..._v2`) so a cached parser or renderer from before the change is not
+used. On the board with that article, the stored text lost its 114 `<br/>` and kept the same
+visible text and the same 542 tags.
+
+`kb_markdown_rendering_test.php` (16 cases) covers the fragment prefixing (including
+`#Top`, links to other pages and a hostile fragment) and the migration (all three tables,
+only Markdown rows, no change on a second run, more rows than one batch, and no formatter
+built when there is nothing to do); `kb_style_layout_test.php` guards the heading rules. The
+full suite passes against the MySQL and PostgreSQL containers.
+
+Claude then checked it on SQLite, MySQL 8.0 and PostgreSQL 16 boards by posting a Markdown
+article through the real form: a wrapped paragraph reflowed with no `<br>`, a hard break
+stayed a `<br>`, a list item continuation was not broken, `h1` to `h3` rendered as headings
+with prefixed ids, the table of contents link pointed at the prefixed id, a link to another
+page kept its fragment, no id appeared twice, editing showed the source as typed, and a BBCode
+article still broke at every newline. Rewinding each board's article, pending revision and
+draft of an edit to the old form and re-running the migration repaired all three and left
+the BBCode article alone. In the browser, the article's title appeared in dark text with a
+rule under it, paragraphs ran the full width, and the table of contents was in place.
+
+Not covered: the `#anchor` links of articles that repeat a heading's text, backslash line
+breaks (not supported by the formatter), and the revision-review page and posting preview
+in the browser (they use the same `.content` rules and renderer).
