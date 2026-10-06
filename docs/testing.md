@@ -574,3 +574,63 @@ PostgreSQL containers: 168 tests, 509 assertions, nothing skipped.
 
 Not covered: an upgrade of a real board from 1.0.1 (the tests exercise the method
 on the three databases, not the whole migration chain).
+
+## Taking over from the original sheer/knowledgebase package - 10/05/2026
+
+The `kb_version` setting that the September 26 validation said no migration removes
+turned out to be the bridge for boards that ran the original package, and testing
+that bridge found it did not work. Claude built a throwaway MySQL 8.0 board with
+the original (`sheer/knowledgebase` 2.0.1-RC6, the baseline commit this fork was
+imported from), gave it 2 categories and 3 articles, disabled the original, put the
+fork in its place and enabled it:
+
+- `version_1_0_0::effectively_installed()` returned nothing, so the first migration
+  always ran, unlike every later one. It failed on the original's tables, and phpBB
+  then reverted it, whose `revert_schema()` drops every KB table. **`DROP TABLE
+  phpbb_kb_articles` appeared in MySQL's query log: all articles were lost.**
+- Even without that, the original registers its ACP modules (`\sheer\knowledgebase\...`
+  and `ext_sheer/knowledgebase`), its search backend class name and its notification
+  types under its own name, and keeps uploaded files inside its own extension folder.
+
+What changed (the owner chose to support the upgrade properly, for original 2.0.x
+only):
+
+- `version_1_0_0` is now skipped when `kb_version` is 2.0.0 or higher, or the older
+  `knowledge_base_version` is 1.0.0 or higher, like the migrations after it.
+- New migration `version_2_0_20` renames the ACP modules and their permission string,
+  the search backend class name and the notification types and users' notification
+  settings (and switches the types back on, because the original disabled them),
+  and copies the uploaded files from `ext/sheer/knowledgebase/files/` into this
+  extension's `files/` folder when the old folder still exists, before touching the
+  database. On a board that never ran the original it does nothing.
+- Enabling the extension is refused, with a message, while `sheer/knowledgebase` is
+  still enabled (`ext.php`).
+- Every migration that reads `kb_version` now says why it stays.
+- `docs/upgrading-from-original.md` describes the upgrade.
+
+The original cannot be installed on SQLite (`near "INDEX": syntax error`) or on
+PostgreSQL (`column "KNOWLEGE_BASE" does not exist`), so only MySQL-family boards can
+have come from it; this is stated in the guide.
+
+Tests: `kb_adopt_original_test.php` (renames, idempotence, a board that never ran the
+original, search backend values, notification types including a clash, file copying
+including no overwrite, a missing or shared folder and a failed copy stopping before
+any database change, and the first-migration skip) on SQLite, MySQL and PostgreSQL;
+`kb_ext_enableable_test.php`. The full suite passes against the MySQL and PostgreSQL
+containers.
+
+Claude then repeated the whole upgrade on the MySQL board, with a used board's extras
+added (a notification type, a user setting, a sent notification and an uploaded file
+with its thumbnail). Enabling the fork while the original was enabled was refused and
+changed nothing. After disabling the original and enabling the fork: the 3 articles and
+2 categories were intact, no migration was left unfinished, no ACP module or permission
+string still named the original, all 13 KB ACP modules loaded and appeared in the
+sidebar, the search backend and notification type names were converted (and the type
+enabled), the user setting and the sent notification followed, both files were copied
+and the originals left in place, and the front end showed the original's categories and
+articles. Fresh installs of this branch also pass on SQLite, MySQL 8.0 and PostgreSQL 16
+(`kb_version` 2.0.20, 83 seeded articles, 13 modules, none named after the original).
+
+Not covered: original versions other than 2.0.1-RC6 (the 1.0.x line in particular);
+boards with real attachments or large data; a custom style that overrides the original's
+templates.

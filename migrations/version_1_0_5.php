@@ -20,6 +20,10 @@ class version_1_0_5 extends \phpbb\db\migration\migration
 
 	public function effectively_installed()
 	{
+		// kb_version stays in the config on purpose: this check reads it, so a
+		// board that already ran the original sheer/knowledgebase package skips
+		// the steps that package did (see version_2_0_20 and
+		// docs/upgrading-from-original.md).
 		return
 			(isset($this->config['knowledge_base_version']) &&
 				version_compare($this->config['knowledge_base_version'], '1.0.5', '>=')) ||

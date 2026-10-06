@@ -9,6 +9,10 @@ A wiki/FAQ system for phpBB: categories and articles with attachments, an approv
 3. Enable the **Knowledge Base** extension
 4. Configure it under **Extensions → Knowledge Base**
 
+Upgrading from the original `sheer/knowledgebase` extension? See
+[Upgrading from the original](docs/upgrading-from-original.md): your data carries
+over.
+
 Attachments are stored under `ext/phpbbmodders/knowledgebase/files/`,
 protected by that directory's `.htaccess`. **This only works on
 Apache** - nginx ignores `.htaccess` entirely. If you're running

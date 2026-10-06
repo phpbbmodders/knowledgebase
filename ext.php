@@ -19,6 +19,9 @@ class ext extends \phpbb\extension\base
 	/** Minimum PHP version */
 	public const MIN_PHP_VERSION = '8.0.0';
 
+	/** The original package this extension can take over from; it must be disabled first. */
+	public const ORIGINAL_EXTENSION = 'sheer/knowledgebase';
+
 	/**
 	 * Check whether the extension can be enabled.
 	 * The current phpBB version should meet or exceed
@@ -28,17 +31,26 @@ class ext extends \phpbb\extension\base
 	 */
 	public function is_enableable()
 	{
-		$enableable = $this->check_phpbb_version() && $this->check_php_version();
+		$messages = [];
+		$language = $this->container->get('language');
 
-		if (!$enableable)
+		if (!$this->check_phpbb_version() || !$this->check_php_version())
 		{
-			$language = $this->container->get('language');
 			$language->add_lang('install_failed', 'phpbbmodders/knowledgebase');
-
-			return [$language->lang('INSTALL_FAILED_VERSION', self::MIN_PHPBB_VERSION, PHPBB_VERSION, self::MIN_PHP_VERSION, PHP_VERSION)];
+			$messages[] = $language->lang('INSTALL_FAILED_VERSION', self::MIN_PHPBB_VERSION, PHPBB_VERSION, self::MIN_PHP_VERSION, PHP_VERSION);
 		}
 
-		return true;
+		// The original sheer/knowledgebase package shares this extension's
+		// tables and routes, so the two can never be enabled together. It
+		// has to be disabled first; enabling this one then takes over its
+		// data (see migration version_2_0_20).
+		if ($this->container->get('ext.manager')->is_enabled(self::ORIGINAL_EXTENSION))
+		{
+			$language->add_lang('install_failed', 'phpbbmodders/knowledgebase');
+			$messages[] = $language->lang('INSTALL_FAILED_ORIGINAL_ENABLED', self::ORIGINAL_EXTENSION);
+		}
+
+		return $messages ?: true;
 	}
 
 	/**
