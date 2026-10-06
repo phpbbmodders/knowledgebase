@@ -104,6 +104,16 @@
 		</dl>
 		<dl>
 			<dt>
+				<label for="description_max_length">{{ lang('KB_DESCRIPTION_MAX_LENGTH') }}{{ lang('COLON') }}</label><br>
+				<span>{{ lang('KB_DESCRIPTION_MAX_LENGTH_EXPLAIN') }}</span>
+			</dt>
+			<dd>
+				<input name="description_max_length" id="description_max_length" class="post" type="number" max="{{ DESCRIPTION_COLUMN_LENGTH }}" min="1"
+					maxlength="3" size="12" value="{{ DESCRIPTION_MAX_LENGTH }}"/>
+			</dd>
+		</dl>
+		<dl>
+			<dt>
 				<label for="sort_type">{{ lang('SORT_TYPE') }}{{ lang('COLON') }}</label><br>
 				<span>{{ lang('SORT_TYPE_EXPLAIN') }}</span>
 			</dt>

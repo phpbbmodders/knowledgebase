@@ -558,7 +558,8 @@ class posting
 			// a title, so it can be found again later. A real submission
 			// (including promoting an existing draft) still needs it.
 			$has_content = $is_redirect ? $this->kb->is_valid_redirect_url($redirect_url) : (bool) $article_text;
-			if ($article_title && ($savedraft || $has_content))
+			$description_error = $this->kb->get_description_error($article_description);
+			if ($article_title && $description_error === '' && ($savedraft || $has_content))
 			{
 				if (!$is_redirect)
 				{
@@ -1022,6 +1023,11 @@ class posting
 					$error[] = $this->language->lang('NO_TITLE');
 				}
 
+				if ($description_error !== '')
+				{
+					$error[] = $description_error;
+				}
+
 				if ($is_redirect)
 				{
 					if (!$has_content)
@@ -1045,6 +1051,12 @@ class posting
 			if (!$article_title)
 			{
 				$error[] = $this->language->lang('NO_TITLE');
+			}
+
+			$description_error = $this->kb->get_description_error($article_description);
+			if ($description_error !== '')
+			{
+				$error[] = $description_error;
 			}
 
 			if ($is_redirect)
@@ -1086,6 +1098,7 @@ class posting
 				'L_POST_A'          => ($mode == 'edit') ? $this->language->lang('EDIT_ARTICLE') : ($is_redirect ? $this->language->lang('KB_SUBMIT_REDIRECT') : $this->language->lang('ADD_ARTICLE')),
 				'CATEGORY_NAME'     => $category_name,
 				'DESCR'             => $article_description,
+				'DESCR_MAX_LENGTH'  => $this->kb->get_description_max_length(),
 				'TOPIC_TITLE'       => $article_title,
 				'SUBJECT'           => $article_title,
 				'MESSAGE'           => $article_text,

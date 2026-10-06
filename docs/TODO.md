@@ -16,9 +16,9 @@ under [`docs/TODO/`](TODO/).
   revisions by default, all articles and redirects, redirects, inactive
   articles, or one team's, with or without the active ones; reworked
   from a filter plus a "show all" checkbox on 10/05/2026), and a direct "View
-  topic" moderator action on the queue and approve pages. Remaining:
-  required-field validation on categories/custom fields, and a BBCode
-  restriction on the Description field.
+  topic" moderator action on the queue and approve pages. Item 3, the
+  plain-text Description, is also done as of 10/05/2026. Remaining:
+  required-field validation on categories/custom fields.
 - Two known, deliberately-deferred `[valinfo]` findings from
   [archived September 26 AI validation](TODO/archive/archive1.md#ai-validation-review-2026-09-26)
   (neither is a bug, both are design suggestions): `migrations/version_1_0_2.php`

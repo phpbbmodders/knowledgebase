@@ -80,6 +80,16 @@ mandatory.
 
 ## 3. BBCode/emoticons restriction on the Description field
 
+**Done (10/05/2026).** The Description stays a one-line box and is plain
+text: the posting form says "BBCode and emoticons are disabled", the KB pages
+already showed it literally, and the announcement topic no longer formats it
+(the title, author, description and category go into that post as plain text
+after parsing, so BBCode, smilies and links typed into them stay literal). The
+length limit is now enforced on the server too, with an ACP setting
+("Description maximum length", default and ceiling 255, the width of the
+database column). Details are in the testing notes. The original analysis
+follows.
+
 phpbb.com disabled BBCode and emoticons specifically on the
 Description field (kept it plain-text), while the article body allows
 full formatting. This extension currently allows full BBCode on both

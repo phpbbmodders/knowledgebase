@@ -276,6 +276,8 @@ class acp_controller
 			'FLAT_INDEX_ON'            => $this->config['kb_flat_index'] ? 'checked="checked"' : '',
 			'REQUIRE_PM_ON'            => $this->config['kb_require_author_pm'] ? 'checked="checked"' : '',
 			'PER_PAGE'                 => $this->config['kb_articles_per_page'] ?? 10,
+			'DESCRIPTION_MAX_LENGTH'   => $this->kb->get_description_max_length(),
+			'DESCRIPTION_COLUMN_LENGTH' => functions_kb::DESCRIPTION_COLUMN_LENGTH,
 			'S_YES_ATTACH'             => (bool) $this->config['kb_allow_attachments'],
 			'S_YES_THUMBNAIL'          => (bool) $this->config['kb_allow_thumbnail'],
 			// make_forum_select() never offers a "none" choice on its
@@ -325,6 +327,7 @@ class acp_controller
 		$this->config_text->set('kb_forum_prefix', utf8_normalize_nfc($this->request->variable('forum_prefix', '', true)));
 		$this->config_text->set('kb_topic_prefix', utf8_normalize_nfc($this->request->variable('topic_prefix', '', true)));
 		$this->config->set('kb_articles_per_page', $this->request->variable('articles_per_page', 15));
+		$this->config->set('kb_description_max_length', $this->valid_description_max_length($this->request->variable('description_max_length', functions_kb::DESCRIPTION_COLUMN_LENGTH)));
 		$this->config->set('kb_sort_type', $this->request->variable('sort_type', 0));
 		$this->config->set('kb_allow_attachments', $this->request->variable('allow_attachments', 0));
 		$this->config->set('kb_allow_thumbnail', $this->request->variable('thumbnail', 0));
@@ -335,6 +338,18 @@ class acp_controller
 		$this->config_text->set('kb_team_groups', json_encode($team_groups));
 
 		$this->config->set('kb_contact_group', $this->valid_contact_group($this->request->variable('contact_group', 0)));
+	}
+
+	/**
+	 * A submitted description length limit, kept between 1 and the width of
+	 * the article_description column it has to fit in.
+	 *
+	 * @param int $length
+	 * @return int
+	 */
+	protected function valid_description_max_length(int $length): int
+	{
+		return max(1, min(functions_kb::DESCRIPTION_COLUMN_LENGTH, $length));
 	}
 
 	/**

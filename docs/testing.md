@@ -435,3 +435,60 @@ board was reseeded with the enlarged fixtures.
 
 Not covered: the French, Russian and Czech wording of the eight new strings,
 which has not been reviewed by a native speaker.
+
+## Plain-text Description - 10/05/2026
+
+phpBB.com keeps the Description plain: its form says "BBCode is disabled" and
+"Emoticons are disabled". Ours already showed the description literally on
+every Knowledge Base page (Claude put `[b]bold[/b] :) [url=...]link[/url]` into
+a seeded article's description and fetched the article and category pages
+logged in), but nothing said so, and the announcement topic did not follow
+suit. `submit_article()` spliced the title, author, description and category
+into a BBCode post and parsed the whole thing, so BBCode, links and smilies
+typed into a description were formatted in the public topic. Claude confirmed
+that with phpBB's own formatter before changing it, and also found that
+swapping brackets for `&#91;` entities does not help (phpBB decodes them and
+parses the BBCode anyway).
+
+What changed:
+
+- Those four values now go into the announcement post as placeholders that are
+  swapped in as XML-escaped plain text after parsing. The step that decoded the
+  finished post with `htmlspecialchars_decode()` was removed, because it turned
+  `&lt;` and `&amp;` in a description back into raw `<` and `&` inside the
+  stored XML.
+- The posting form shows "A good description tells users what they should
+  expect to find. BBCode and emoticons are disabled." under the label, on the
+  article and redirect forms.
+- A length limit is enforced on the server for submitting, previewing and
+  saving a draft. It counts characters as typed ("&" is one), and separately
+  refuses text that would not fit the 255-character column once escaped. The
+  form's `maxlength` follows the setting.
+- A new ACP setting, "Description maximum length" (migration `version_2_0_18`,
+  `kb_description_max_length`, default 255), kept between 1 and 255.
+
+The full suite then passed against disposable MySQL 8.0 and PostgreSQL 16
+containers: 148 tests, 479 assertions, nothing skipped.
+
+New tests (`kb_description_test.php`, `kb_acp_description_length_test.php`,
+`kb_description_migration_test.php`) cover the limit and its clamping, the
+error cases (multibyte, escaped length, over the column), the plain-text
+insertion (literal BBCode, XML escaping, well-formed output, no re-scanning of
+inserted text) and the migration.
+
+Claude then drove the real posting form as the moderator on the seeded SQLite
+board and on throwaway MySQL 8.0 and PostgreSQL 16 boards installed from this
+branch, once at the default of 255 and once with the limit lowered to 120
+through the ACP. On each: a description and title containing BBCode, a link, a
+smiley, `<`, `&` and quotes were accepted, shown literally on the article page,
+and stored as plain text in a well-formed announcement post; an over-limit
+description was refused with the right message on submit, preview, redirect and
+draft (the form kept what was typed); a description of exactly the limit was
+accepted; 100 ampersands (500 characters escaped) were refused as special
+characters; and the form's `maxlength` and hint were right. In the ACP the field
+showed the current value, 120 was saved as 120, 9999 as 255 and 0 as 1.
+
+Not covered: the French, Russian and Czech wording of the five new strings,
+which has not been reviewed by a native speaker; the changelog topic, which
+is deliberately BBCode (it quotes a diff of the body) and was not changed; the
+article title's length, which is still limited only by the form's `maxlength`.

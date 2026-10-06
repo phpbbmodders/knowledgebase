@@ -36,6 +36,9 @@ class functions_kb
 	// with a status already stored for an existing article.
 	public const STATUS_DRAFT = 4;
 
+	/** Width of the article_description column. */
+	public const DESCRIPTION_COLUMN_LENGTH = 255;
+
 	public const AUTHOR_TYPE_USER = 0;
 	public const AUTHOR_TYPE_GROUP = 1;
 
@@ -1687,6 +1690,72 @@ class functions_kb
 	}
 
 	/**
+	 * The longest article description, in characters, that the posting form
+	 * accepts: the "kb_description_max_length" setting, kept between 1 and
+	 * the width of the article_description column.
+	 *
+	 * @return int
+	 */
+	public function get_description_max_length(): int
+	{
+		$configured = (int) ($this->config['kb_description_max_length'] ?? self::DESCRIPTION_COLUMN_LENGTH);
+
+		return max(1, min(self::DESCRIPTION_COLUMN_LENGTH, $configured ?: self::DESCRIPTION_COLUMN_LENGTH));
+	}
+
+	/**
+	 * Why a submitted description cannot be saved, or an empty string if it
+	 * can. The description arrives HTML-escaped (request->variable()), so its
+	 * length as the author sees it is measured on the decoded text, and the
+	 * escaped text must also still fit the database column - "&", "<", ">"
+	 * and quotes each take several characters there.
+	 *
+	 * @param string $description The description as read from the request
+	 * @return string A translated error message, or '' when it is acceptable
+	 */
+	public function get_description_error(string $description): string
+	{
+		$length = mb_strlen(htmlspecialchars_decode($description, ENT_QUOTES), 'UTF-8');
+		$max = $this->get_description_max_length();
+
+		if ($length > $max)
+		{
+			return $this->language->lang('KB_DESCRIPTION_TOO_LONG', $length, $max);
+		}
+
+		if (mb_strlen($description, 'UTF-8') > self::DESCRIPTION_COLUMN_LENGTH)
+		{
+			return $this->language->lang('KB_DESCRIPTION_TOO_MANY_SPECIAL');
+		}
+
+		return '';
+	}
+
+	/**
+	 * Put plain text into a post that has already been parsed, so BBCode,
+	 * smilies and links typed into it stay literal instead of being
+	 * formatted. The post is written with a placeholder where each value
+	 * belongs, parsed, and only then are the placeholders swapped for the
+	 * XML-escaped text.
+	 *
+	 * @param string $parsed_post  The post as generate_text_for_storage() left it (XML)
+	 * @param array  $plain_values Placeholder => text as stored in the database (HTML-escaped)
+	 * @return string The post with every placeholder replaced
+	 */
+	public static function insert_plain_text(string $parsed_post, array $plain_values): string
+	{
+		$replacements = [];
+		foreach ($plain_values as $placeholder => $escaped_text)
+		{
+			$replacements[$placeholder] = htmlspecialchars(htmlspecialchars_decode((string) $escaped_text, ENT_QUOTES), ENT_NOQUOTES | ENT_XML1, 'UTF-8');
+		}
+
+		// One pass, so text inserted for one value is never searched for
+		// another placeholder.
+		return strtr($parsed_post, $replacements);
+	}
+
+	/**
 	 * The usergroup authors are told to contact with questions about their
 	 * articles (the "contact group" setting), or null when none is set or the
 	 * chosen group no longer exists.
@@ -2040,17 +2109,27 @@ class functions_kb
 		}
 		$this->db->sql_freeresult($result);
 
-		$topic_text = '[b]' . $this->language->lang('ARTICLE_TITLE') . $this->language->lang('COLON') . '[/b] ' . $article_title;
+		// The title, author, description and category are user-supplied, so they
+		// go in as placeholders and are swapped in as plain text after parsing -
+		// otherwise BBCode typed into a description would be formatted in the
+		// public announcement topic.
+		$topic_text = '[b]' . $this->language->lang('ARTICLE_TITLE') . $this->language->lang('COLON') . '[/b] {KB_TITLE}';
 		$topic_text .= "\n";
-		$topic_text .= '[b]' . $this->language->lang('ARTICLE_AUTHOR') . $this->language->lang('COLON') . '[/b] ' . $article_author;
+		$topic_text .= '[b]' . $this->language->lang('ARTICLE_AUTHOR') . $this->language->lang('COLON') . '[/b] {KB_AUTHOR}';
 		$topic_text .= "\n";
-		$topic_text .= '[b]' . $this->language->lang('ARTICLE_DESCRIPTION') . $this->language->lang('COLON') . '[/b] ' . $article_description;
+		$topic_text .= '[b]' . $this->language->lang('ARTICLE_DESCRIPTION') . $this->language->lang('COLON') . '[/b] {KB_DESCRIPTION}';
 		$topic_text .= "\n";
-		$topic_text .= '[b]' . $this->language->lang('CATEGORY') . $this->language->lang('COLON') . '[/b] ' . $category_name;
+		$topic_text .= '[b]' . $this->language->lang('CATEGORY') . $this->language->lang('COLON') . '[/b] {KB_CATEGORY}';
 		$topic_text .= "\n\n";
 		$topic_text .= '[b][url=' . generate_board_url() . '/knowledgebase/article?k=' . $new . ']' . $this->language->lang('READ_FULL') . '[/url][/b]';
 
 		generate_text_for_storage($topic_text, $bbcode_uid, $bitfield, $options, true, true, true);
+		$topic_text = self::insert_plain_text($topic_text, [
+			'{KB_TITLE}'       => $article_title,
+			'{KB_AUTHOR}'      => $article_author,
+			'{KB_DESCRIPTION}' => $article_description,
+			'{KB_CATEGORY}'    => $category_name,
+		]);
 
 		$data = [
 			'topic_title'      => $topic_title,
@@ -2065,7 +2144,7 @@ class functions_kb
 			'notify'           => 0,
 			'notify_set'       => '',
 			'enable_indexing'  => true,
-			'message'          => htmlspecialchars_decode($topic_text),
+			'message'          => $topic_text,
 			'message_md5'      => md5(time()),
 			'bbcode_bitfield'  => $bitfield,
 			'bbcode_uid'       => substr(md5(rand()), 0, 8),

@@ -76,8 +76,9 @@
 							value="{{ SUBJECT }}" class="inputbox autowidth"/></dd>
 				</dl>
 				<dl style="clear: left;">
-					<dt><label for="descr">{{ lang('DESCR') }}{{ lang('COLON') }}</label></dt>
-					<dd><input type="text" name="descr" id="descr" size="60" maxlength="60" tabindex="3"
+					<dt><label for="descr">{{ lang('DESCR') }}{{ lang('COLON') }}</label><br>
+						<span>{{ lang('KB_DESCRIPTION_EXPLAIN') }}</span></dt>
+					<dd><input type="text" name="descr" id="descr" size="60" maxlength="{{ DESCR_MAX_LENGTH }}" tabindex="3"
 							value="{{ DESCR }}" class="inputbox autowidth"/></dd>
 				</dl>
 				{% if S_IS_REDIRECT %}
