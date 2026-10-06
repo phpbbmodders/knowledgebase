@@ -147,14 +147,14 @@ services:
             - '@text_formatter.s9e.link_helper'
             - '@log'
             - '%text_formatter.cache.dir%'
-            - '_phpbbmodders_knowledgebase_text_formatter_parser'
-            - '_phpbbmodders_knowledgebase_text_formatter_renderer'
+            - '_phpbbmodders_knowledgebase_text_formatter_parser_v2'
+            - '_phpbbmodders_knowledgebase_text_formatter_renderer_v2'
 
     phpbbmodders.knowledgebase.text_formatter.parser:
         class: phpbb\textformatter\s9e\parser
         arguments:
             - '@cache.driver'
-            - '_phpbbmodders_knowledgebase_text_formatter_parser'
+            - '_phpbbmodders_knowledgebase_text_formatter_parser_v2'
             - '@phpbbmodders.knowledgebase.text_formatter.factory'
             - '@dispatcher'
 
@@ -163,7 +163,7 @@ services:
         arguments:
             - '@cache.driver'
             - '%text_formatter.cache.dir%'
-            - '_phpbbmodders_knowledgebase_text_formatter_renderer'
+            - '_phpbbmodders_knowledgebase_text_formatter_renderer_v2'
             - '@phpbbmodders.knowledgebase.text_formatter.factory'
             - '@dispatcher'
         calls:

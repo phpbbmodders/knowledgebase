@@ -103,6 +103,19 @@ class kb_style_layout_test extends \PHPUnit\Framework\TestCase
 		$this->assertStringNotContainsString('kb-listing', $this->read('styles/all/theme/phpbbmodders_knowledgebase.css'));
 	}
 
+	public function test_markdown_headings_in_article_text_are_visible_and_not_styled_as_a_forum_title()
+	{
+		$base = $this->read('styles/all/theme/phpbbmodders_knowledgebase.css');
+
+		// prosilver paints an h1 white and gives it the board-name margins.
+		$this->assertMatchesRegularExpression('/\.content h1\s*\{[^}]*color:\s*inherit;[^}]*margin-right:\s*0;/s', $base);
+		foreach (['h1', 'h3', 'h4', 'h5', 'h6'] as $heading)
+		{
+			$this->assertStringContainsString('.content ' . $heading, $base, $heading);
+		}
+		$this->assertMatchesRegularExpression('/\.content h1,\s*\.content h3,[^{]*\{[^}]*float:\s*none;[^}]*text-transform:\s*none;/s', $base);
+	}
+
 	/** @dataProvider article_tables */
 	public function test_the_article_tables_use_prosilvers_table_class_and_keep_the_kb_hook($template)
 	{
