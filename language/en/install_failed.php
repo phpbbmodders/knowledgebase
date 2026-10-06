@@ -22,4 +22,5 @@ if (empty($lang) || !is_array($lang))
 
 $lang = array_merge($lang, [
 	'INSTALL_FAILED_VERSION' => '<b>The Knowledge Base extension does not match some of the startup requirements</b><br><br>phpBB min. version %1s - you are using %2s <br>php min. version %3s - you are using %4s',
+	'INSTALL_FAILED_ORIGINAL_ENABLED' => '<b>The original %1$s extension is still enabled</b><br><br>It uses the same database tables and pages as this Knowledge Base, so both cannot be enabled together. Disable %1$s first (Customise &raquo; Manage extensions), then enable this extension: it takes over the articles, categories, permissions and settings the original created.',
 ]);

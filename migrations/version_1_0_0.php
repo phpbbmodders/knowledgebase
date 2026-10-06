@@ -18,9 +18,20 @@ class version_1_0_0 extends \phpbb\db\migration\migration
 		return ['\phpbb\db\migration\data\v310\dev'];
 	}
 
+	/**
+	 * A board that already ran the original sheer/knowledgebase package has
+	 * these tables and settings. Running this migration over them would fail
+	 * and phpBB would then revert it, dropping the existing tables - so skip
+	 * it, the same way every later migration in this extension does. The
+	 * leftovers of the original package are converted by version_2_0_20.
+	 */
 	public function effectively_installed()
 	{
-		return;
+		return
+			(isset($this->config['knowledge_base_version']) &&
+				version_compare($this->config['knowledge_base_version'], '1.0.0', '>=')) ||
+			(isset($this->config['kb_version']) &&
+				version_compare($this->config['kb_version'], '2.0.0', '>='));
 	}
 
 	public function update_schema()

@@ -5,18 +5,11 @@ under [`docs/TODO/`](TODO/).
 
 ## Active
 
-- One known, deliberately-deferred `[valinfo]` finding from
-  [archived September 26 AI validation](TODO/archive/archive1.md#ai-validation-review-2026-09-26)
-  (not a bug, a design suggestion): `kb_version` is stored in phpBB config with no
-  migration ever removing it; the suggestion is to make package
-  metadata/migration dependencies authoritative instead and clean up
-  the config value in a later migration - migration `2_0_11` still
-  writes it, so this remains unaddressed by choice for now. (The other
-  finding from that review, the N+1 query pattern in
-  `migrations/version_1_0_2.php`, was fixed on 10/05/2026; see the
-  [testing notes](testing.md).)
+Nothing is currently open.
 
 ## Archived Reviews
+
+The last deferred finding from the [September 26 AI validation](TODO/archive/archive1.md#ai-validation-review-2026-09-26), the `kb_version` setting that no migration removes, was closed on 10/05/2026 as intentional: it is the version marker that 23 migrations read to skip steps a board already has, and the one the original-package upgrade relies on, so it stays. Each of those migrations now says so. The other finding, the N+1 queries in `migrations/version_1_0_2.php`, was fixed the same day.
 
 The [phpbb.com KB parity gaps](TODO/archive/archive1.md#phpbb-com-kb-parity-gaps) - five feature-completeness differences found by comparing screenshots with the original phpbb.com Knowledge Base - are all done and were archived on 10/05/2026.
 

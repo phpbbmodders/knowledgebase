@@ -21,6 +21,9 @@ class version_2_0_3 extends \phpbb\db\migration\migration
 
 	public function effectively_installed()
 	{
+		// kb_version stays in the config on purpose: it is this extension's
+		// version marker, and this check reads it to skip a step the board
+		// already has (see version_2_0_20 and docs/upgrading-from-original.md).
 		return
 			(isset($this->config['kb_version']) &&
 				version_compare($this->config['kb_version'], '2.0.3', '>='));
