@@ -1,0 +1,121 @@
+/*
+ * The classic Knowledge Base look, layered over the base sheet when
+ * "Use the classic Knowledge Base look" is switched on in the ACP. The
+ * templates carry prosilver's own classes (tabs, table1) so the base look
+ * is native to every prosilver-based style; this file only re-skins the
+ * navigation tabs and the article tables through the kb-* class hooks
+ * that stay on the same elements.
+ */
+
+.tabs.kb-tabs {
+	margin-bottom: 4px;
+}
+
+.tabs.kb-tabs > ul {
+	display: flex;
+	flex-wrap: wrap;
+}
+
+.tabs.kb-tabs .kb-tab {
+	float: none;
+	margin-right: 2px;
+	margin-bottom: 2px;
+}
+
+.tabs.kb-tabs .kb-tab > a {
+	background: #8f9dab;
+	background-image: none;
+	border: none;
+	box-shadow: none;
+	color: #ffffff;
+	padding: 6px 12px;
+	border-radius: 3px 3px 0 0;
+	text-decoration: none;
+	font-size: 0.95em;
+}
+
+.tabs.kb-tabs .kb-tab > a:hover {
+	background: #7c8790;
+	background-image: none;
+	color: #ffffff;
+	text-decoration: none;
+}
+
+.tabs.kb-tabs .kb-tab-active > a,
+.tabs.kb-tabs .kb-tab-active > a:hover {
+	background: #536482;
+	background-image: none;
+	box-shadow: none;
+	color: #ffffff;
+	font-weight: bold;
+}
+
+table.table1.kb-index-table {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+table.table1.kb-index-table thead th {
+	background: #536482;
+	border-bottom: none;
+	color: #ffffff;
+	text-align: left;
+	padding: 6px 8px;
+}
+
+table.table1.kb-index-table tbody td {
+	padding: 8px;
+	border: none;
+	border-bottom: 1px solid #cccccc;
+	vertical-align: top;
+}
+
+table.table1.kb-index-table tbody tr:nth-child(even) td {
+	background: #f2f5f7;
+}
+
+table.table1.kb-index-table tbody tr:hover td {
+	background: #f2f5f7;
+}
+
+table.table1.kb-index-table .kb-index-views {
+	white-space: nowrap;
+	width: 1%;
+}
+
+table.table1.kb-index-table .kb-index-author {
+	max-width: 200px;
+	overflow-wrap: break-word;
+}
+
+/*
+ * The forum-style boxes (the category list, the search results) in the same
+ * muted slate as the tabs and the article tables, instead of prosilver's blue.
+ */
+.forabg.kb-listing,
+.forumbg.kb-listing {
+	background-color: #536482;
+	background-image: none;
+}
+
+.kb-listing ul.topiclist li.header dt,
+.kb-listing ul.topiclist li.header dd,
+.kb-listing ul.topiclist li.header a {
+	color: #ffffff;
+}
+
+.kb-listing ul.topiclist.forums,
+.kb-listing ul.topiclist.topics {
+	background-color: #f2f5f7;
+	background-image: none;
+}
+
+.kb-listing ul.topiclist li.row {
+	border-top-color: #ffffff;
+	border-bottom-color: #cccccc;
+}
+
+.kb-listing ul.topiclist li.row:hover {
+	background-color: #e8edf1;
+}
+

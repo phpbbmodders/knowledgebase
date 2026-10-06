@@ -1,3 +1,6 @@
 {% if S_KNOWLEDGEBASE %}
 	{% INCLUDECSS '@phpbbmodders_knowledgebase/phpbbmodders_knowledgebase.css' %}
+	{% if S_KB_CLASSIC_LOOK %}
+		{% INCLUDECSS '@phpbbmodders_knowledgebase/phpbbmodders_knowledgebase_classic.css' %}
+	{% endif %}
 {% endif %}

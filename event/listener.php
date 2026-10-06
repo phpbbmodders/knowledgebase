@@ -111,6 +111,7 @@ class listener implements EventSubscriberInterface
 	{
 		$this->template->assign_vars([
 			'KB_FONT_ICON' => $this->config['kb_font_icon'],
+			'S_KB_CLASSIC_LOOK' => (bool) $this->config['kb_classic_look'],
 			//      'S_KNOWLEDGEBASE_LINK_ENABLED' => !empty($this->config['kbase_enable']) && !empty($this->config['kbase_header_link']) && $this->auth->acl_get('u_manage_kb'),
 			//      'U_LIBRARY' => $this->helper->route('phpbbmodders_knowledgebase_index')
 			'U_LIBRARY'    => ($this->auth->acl_get('u_kb_view') || $this->auth->acl_get('a_manage_kb')) ? $this->helper->route('phpbbmodders_knowledgebase_index') : '',
