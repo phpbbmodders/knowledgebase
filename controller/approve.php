@@ -134,9 +134,10 @@ class approve
 	}
 
 	/**
-	 * "Administration" moderation queue: every article across every
-	 * category the current user moderates that needs attention (not
-	 * Active with no pending revision), with an inline per-row action
+	 * "Administration" moderation queue: the articles across every
+	 * category the current user moderates, by default those that need
+	 * attention (new, reviewed, or with a pending revision) and
+	 * otherwise whatever the "Display options" select asks for, with an inline per-row action
 	 * select that submits to the existing approve_article() endpoint -
 	 * this method only ever renders the listing, it never duplicates
 	 * the do_assign()/do_review()/etc. action handling above.
@@ -168,37 +169,42 @@ class approve
 		// show-all toggle below.
 		$sql_where .= ' AND status <> ' . functions_kb::STATUS_DRAFT;
 
-		// Additive narrowing on top of the "needs attention" listing
-		// below - phpbb.com's Administration page offered the same
-		// four-way split (all/redirects/inactive/one team). Only a
-		// filter with "show all" checked can see past needs-attention
-		// (e.g. an already-published, auto-approved redirect) - by
-		// default the queue stays exactly what its name says.
-		$filter = $this->request->variable('filter', '');
-		$show_all = $this->request->variable('show_all', false);
-		$filter_team_id = 0;
+		// One "Display options" choice picks what the queue lists (phpbb.com's
+		// Administration page does the same): by default only articles that
+		// need attention (new, reviewed, or carrying a pending revision),
+		// everything, redirects, inactive articles, or one team's articles
+		// with or without the active ones. The old show_all=1 parameter is
+		// still honoured so existing links keep working.
+		$display = self::resolve_queue_display(
+			$this->request->variable('filter', ''),
+			$this->request->variable('show_all', false)
+		);
+		$needs_attention = '(status IN (' . functions_kb::STATUS_NEW . ', ' . functions_kb::STATUS_REVIEWED . ')
+			OR article_id IN (SELECT article_id FROM ' . $this->kb->get_revisions_table() . '))';
 
-		if (!$show_all)
+		switch ($display['view'])
 		{
-			$sql_where .= ' AND (status <> ' . functions_kb::STATUS_ACTIVE . '
-				OR article_id IN (SELECT article_id FROM ' . $this->kb->get_revisions_table() . '))';
-		}
+			case 'redirect':
+				$sql_where .= ' AND is_redirect = 1';
+				break;
 
-		if ($filter === 'redirect')
-		{
-			$sql_where .= ' AND is_redirect = 1';
-		}
-		else if ($filter === 'inactive')
-		{
-			$sql_where .= ' AND status = ' . functions_kb::STATUS_INACTIVE;
-		}
-		else if (str_starts_with($filter, 'team_'))
-		{
-			$filter_team_id = (int) substr($filter, 5);
-			if ($filter_team_id)
-			{
-				$sql_where .= ' AND assigned_team_id = ' . $filter_team_id;
-			}
+			case 'inactive':
+				$sql_where .= ' AND status = ' . functions_kb::STATUS_INACTIVE;
+				break;
+
+			case 'team':
+				$sql_where .= ' AND assigned_team_id = ' . $display['team_id'];
+				if (!$display['include_active'])
+				{
+					$sql_where .= ' AND ' . $needs_attention;
+				}
+				break;
+
+			case 'all':
+				break;
+
+			default:
+				$sql_where .= ' AND ' . $needs_attention;
 		}
 
 		$sql = 'SELECT COUNT(article_id) AS article_count
@@ -209,13 +215,9 @@ class approve
 		$this->db->sql_freeresult($result);
 
 		$pagination_ary = [];
-		if ($filter)
+		if ($display['value'] !== '')
 		{
-			$pagination_ary['filter'] = $filter;
-		}
-		if ($show_all)
-		{
-			$pagination_ary['show_all'] = 1;
+			$pagination_ary['filter'] = $display['value'];
 		}
 		$pagination_url = $this->helper->route('phpbbmodders_knowledgebase_queue', $pagination_ary);
 		if ($article_count)
@@ -284,11 +286,11 @@ class approve
 			'CURRENT_PAGE_NUMBER'    => $this->pagination->get_on_page($per_page, $start),
 			'S_KNOWLEDGEBASE'        => true,
 			'S_ACTION'               => $this->helper->route('phpbbmodders_knowledgebase_queue'),
-			'S_FILTER_REDIRECT'      => $filter === 'redirect',
-			'S_FILTER_INACTIVE'      => $filter === 'inactive',
-			'TEAM_FILTER_OPTIONS'    => $this->get_team_filter_options($filter_team_id),
-			'S_SHOW_ALL'             => $show_all,
-			'S_FILTER_ACTIVE'        => (bool) $filter || $show_all,
+			'S_FILTER_ALL'           => $display['value'] === 'all',
+			'S_FILTER_REDIRECT'      => $display['value'] === 'redirect',
+			'S_FILTER_INACTIVE'      => $display['value'] === 'inactive',
+			'TEAM_FILTER_OPTIONS'    => $this->get_team_filter_options($display['value']),
+			'S_FILTER_ACTIVE'        => $display['value'] !== '',
 			'U_RESET_FILTER'         => $this->helper->route('phpbbmodders_knowledgebase_queue'),
 		]);
 
@@ -779,20 +781,69 @@ class approve
 	}
 
 	/**
-	 * Same team list as get_team_options(), but for the queue's
-	 * "scoped to one team" filter - option values are prefixed
-	 * (team_<id>) so a single <select> can mix them with the
-	 * non-team filter choices (all/redirects/inactive).
+	 * Resolve the queue's "Display options" request into what to list.
 	 *
-	 * @param int $selected_team_id
+	 * The select's values are '' (needs attention, the default), 'all',
+	 * 'redirect', 'inactive', 'team_<id>' (one team's articles that need
+	 * attention) and 'team_<id>_all' (that team's articles including active
+	 * ones). The older show_all=1 parameter widens '' to 'all' and
+	 * 'team_<id>' to 'team_<id>_all'. Anything else falls back to the
+	 * default.
+	 *
+	 * @param string $filter   The requested filter value
+	 * @param bool   $show_all The legacy show_all flag
+	 * @return array{view: string, team_id: int, include_active: bool, value: string}
+	 *               view is attention|all|redirect|inactive|team; value is
+	 *               the canonical select value to mark as selected and to
+	 *               carry through pagination
+	 */
+	public static function resolve_queue_display(string $filter, bool $show_all = false): array
+	{
+		$display = ['view' => 'attention', 'team_id' => 0, 'include_active' => false, 'value' => ''];
+
+		if ($filter === 'all' || ($filter === '' && $show_all))
+		{
+			return ['view' => 'all', 'team_id' => 0, 'include_active' => true, 'value' => 'all'];
+		}
+
+		if ($filter === 'redirect' || $filter === 'inactive')
+		{
+			return ['view' => $filter, 'team_id' => 0, 'include_active' => true, 'value' => $filter];
+		}
+
+		if (preg_match('/^team_([1-9][0-9]*)(_all)?$/', $filter, $matches))
+		{
+			$include_active = !empty($matches[2]) || $show_all;
+			return [
+				'view'           => 'team',
+				'team_id'        => (int) $matches[1],
+				'include_active' => $include_active,
+				'value'          => 'team_' . $matches[1] . ($include_active ? '_all' : ''),
+			];
+		}
+
+		return $display;
+	}
+
+	/**
+	 * The queue's team entries for the "Display options" select: for each
+	 * team, one choice for what is assigned to it and needs attention and
+	 * one that also includes active articles and redirects. The values are
+	 * prefixed (team_<id>, team_<id>_all) so a single <select> can mix
+	 * them with the non-team choices.
+	 *
+	 * @param string $selected_value The canonical value currently selected
 	 * @return string
 	 */
-	protected function get_team_filter_options(int $selected_team_id): string
+	protected function get_team_filter_options(string $selected_value): string
 	{
 		$options = '';
 		foreach ($this->kb->get_kb_team_group_names() as $group_id => $group_name)
 		{
-			$options .= '<option value="team_' . $group_id . '"' . ($group_id === $selected_team_id ? ' selected="selected"' : '') . '>' . $group_name . '</option>';
+			$assigned = 'team_' . $group_id;
+			$including_active = $assigned . '_all';
+			$options .= '<option value="' . $assigned . '"' . ($selected_value === $assigned ? ' selected="selected"' : '') . '>' . $this->language->lang('KB_DISPLAY_TEAM_ASSIGNED', $group_name) . '</option>';
+			$options .= '<option value="' . $including_active . '"' . ($selected_value === $including_active ? ' selected="selected"' : '') . '>' . $this->language->lang('KB_DISPLAY_TEAM_INCLUDING_ACTIVE') . '</option>';
 		}
 		return $options;
 	}

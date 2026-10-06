@@ -126,6 +126,16 @@ default, so the queue's ordinary behavior is unchanged. Verified live:
 auto-published redirect; `filter=redirect&show_all=1` correctly shows
 it with a working Deactivate action.
 
+**Reworked (10/05/2026):** the filter plus "show all" checkbox became one
+"Display options" dropdown with a Go button, matching phpbb.com's: "View new
+and revisions (default)", "View all articles and redirects", "View
+redirects", "View inactive articles", and for each team "View assigned to
+<team>" and "Including active and redirects". Two behaviours changed with it:
+the default view no longer lists inactive articles (they have their own
+option, and an inactive article with a pending revision still shows by default),
+and "View redirects" lists every redirect, including auto-published ones.
+Old `?show_all=1` links still work. See the testing notes.
+
 phpbb.com's Administration page had a "Display Options" filter
 separate from the per-article action menu: all articles + redirects,
 redirects only, inactive only, or scoped to one specific team. This
