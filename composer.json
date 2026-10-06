@@ -28,7 +28,7 @@
 			"name": "phpBB Modders",
 			"email": "board@phpbbmodders.com",
 			"homepage": "https://www.phpbbmodders.com/",
-			"role": "Maintainer"
+			"role": "Extension Developer"
 		}
 	],
 	"require": {
