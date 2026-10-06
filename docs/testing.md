@@ -248,9 +248,9 @@ mail appeared after that route was requested, not at the moment of the action.
   link. A new test checks that every notification type's e-mail template file
   exists.
 
-Only the English mail was read. The Czech, French and Russian folders ship the
-same three file names, so the fix applies to them too, but their text was not
-checked.
+Only the English mail was read. (The Czech, French and Russian folders shipped the
+same three file names at the time; those language folders were removed on
+10/05/2026, see below.)
 
 Not covered: larger datasets and delivery through a real mail server.
 
@@ -297,9 +297,7 @@ MySQL and PostgreSQL containers: 88 tests, 404 assertions.
 
 Not covered: approving a Markdown revision and searching a Markdown article on
 MySQL and PostgreSQL boards, the changelog topic's quoted diff for a Markdown
-article (it quotes the Markdown source as plain text), print view, and the
-wording of the new text in the French, Russian and Czech language files, which
-has not been reviewed by a native speaker.
+article (it quotes the Markdown source as plain text), and print view.
 
 ## Flat article index audit - 10/05/2026
 
@@ -361,8 +359,6 @@ Claude checked it on the seeded SQLite board at `localhost:8092`:
 New tests cover the lookup (none set, deleted group, translated name, link,
 colour allow-list), the ACP validation, and the migration. The page was also
 checked on MySQL 8.0 and PostgreSQL 16 boards (see the database checks below).
-Not covered: the wording of the new strings in the French, Russian and Czech
-language files, which has not been reviewed by a native speaker.
 
 ## Status explanations on "Manage Your Articles" - 10/05/2026
 
@@ -392,9 +388,6 @@ checked on MySQL and PostgreSQL, with that branch checked out: the category
 dropdown was absent on a category page with `kb_flat_index` off and present with
 it on. The temporary boards and containers were
 removed and the SQLite config restored afterwards.
-
-Not covered: the French, Russian and Czech wording of the five new sentences,
-which has not been reviewed by a native speaker.
 
 ## Administration queue "Display options" - 10/05/2026
 
@@ -432,9 +425,6 @@ pagination links that carry the canonical choice and never the old `show_all`
 flag. The Go button, the "Teams" option group and the missing old checkbox were
 confirmed too. The temporary boards and containers were removed; the SQLite
 board was reseeded with the enlarged fixtures.
-
-Not covered: the French, Russian and Czech wording of the eight new strings,
-which has not been reviewed by a native speaker.
 
 ## Plain-text Description - 10/05/2026
 
@@ -488,8 +478,7 @@ accepted; 100 ampersands (500 characters escaped) were refused as special
 characters; and the form's `maxlength` and hint were right. In the ACP the field
 showed the current value, 120 was saved as 120, 9999 as 255 and 0 as 1.
 
-Not covered: the French, Russian and Czech wording of the five new strings,
-which has not been reviewed by a native speaker; the changelog topic, which
+Not covered: the changelog topic, which
 is deliberately BBCode (it quotes a diff of the body) and was not changed; the
 article title's length, which is still limited only by the form's `maxlength`.
 
@@ -534,6 +523,24 @@ no value still worked; the link made the field optional again; and a new require
 field added through the ACP form was stored as required, while a required field with
 no enabled values did not block submitting.
 
-Not covered: the French, Russian and Czech wording of the six new strings, which has
-not been reviewed by a native speaker; the revert of the migration against a real
-database (only its schema array is tested).
+Not covered: the revert of the migration against a real database (only its schema
+array is tested).
+
+## Czech, French and Russian language folders removed - 10/05/2026
+
+The extension no longer ships `language/cs`, `language/fr` and `language/ru`; only
+English remains. The French pack was translated by Galixte and the Czech and Russian
+packs came with the original sheer/knowledgebase package, but the roughly 30 strings
+added in 2.0.16-2.0.19 (Markdown, contact group, status explanations, Display
+options, plain-text description and required fields) were written without a native
+speaker, and no one maintains the rest. They are still in git history (everything
+before the commit that removed them).
+
+phpBB falls back from a missing language folder to English per file, not per string,
+so a user whose board language is French, Russian or Czech sees English for the whole
+extension rather than raw key names. Claude checked this by loading both extension
+language files through phpBB's own language service with the user language set to
+`fr`, `ru` and `cs`: each returned the English text for a new key
+(`KB_DISPLAY_OPTIONS`), an ACP key (`KB_FIELD_REQUIRED`) and an older key
+(`KB_MANAGE_ARTICLES_EXPLAIN`). The full suite still passes on MySQL and PostgreSQL
+fixtures (the e-mail template test discovers whichever language folders exist).
