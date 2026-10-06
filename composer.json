@@ -7,7 +7,9 @@
 	"keywords": [
 		"phpbb",
 		"extension",
-		"knowledge base"
+		"knowledge base",
+		"articles",
+		"markdown"
 	],
 	"time": "2026-09-03",
 	"license": "GPL-2.0-only",
