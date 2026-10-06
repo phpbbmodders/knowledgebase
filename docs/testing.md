@@ -815,3 +815,25 @@ rule under it, paragraphs ran the full width, and the table of contents was in p
 Not covered: the `#anchor` links of articles that repeat a heading's text, backslash line
 breaks (not supported by the formatter), and the revision-review page and posting preview
 in the browser (they use the same `.content` rules and renderer).
+
+## Adding an article from the all-articles view - 10/06/2026
+
+With "Flat article index" on, `category?id=0` lists every article and has no category of
+its own, so the Add article and Submit a Redirect buttons and tabs were missing. They now
+appear there and open the form with the first category the user may post in (tree order)
+preselected. The posting form shows the Category select for new articles and redirects too
+(it used to be edit-only), greying out categories the user cannot post in. A submitted
+category is honoured only when the user has the permission there; a forged or unknown one
+falls back to the preselected category. Redirects use the moderator `kb_m_approve`
+permission, articles use `kb_u_add`.
+
+`kb_postable_category_test.php` (6 cases) covers the choice: tree order rather than id
+order, no postable category gives 0, the two permissions are independent, the answer is
+memoized, and the search stops at the first permitted category.
+
+Claude checked it live on fresh SQLite, MySQL and PostgreSQL installs with the setting on.
+An author saw both buttons and tabs on the all-articles view, pointing at the first
+category they could post in; the form preselected it and disabled the others; a chosen
+category was used; a bogus category id was ignored. A moderator's redirect was filed in the
+chosen category. A reader saw no add buttons and the posting form refused them. The full
+suite passes against the MySQL and PostgreSQL containers (258 tests, no skips).

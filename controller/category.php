@@ -424,6 +424,12 @@ class category
 			$field_filter_options .= '</optgroup>';
 		}
 
+		// The all-articles view has no category of its own; "Add article" then
+		// starts the posting form in the first category the visitor may post in,
+		// where the form's category select lets them change it.
+		$add_cat_id = $flat_all ? $this->kb->get_postable_category_id('kb_u_add') : $cat_id;
+		$redirect_cat_id = $flat_all ? $this->kb->get_postable_category_id('kb_m_approve') : $cat_id;
+
 		$this->template->assign_vars([
 				'CATS_DROPBOX'        => $this->kb->make_category_dropbox(),
 				'CATS_OPTIONS'        => $flat_layout ? $this->kb->make_category_select($flat_all ? 0 : $cat_id, [], true) : '',
@@ -435,12 +441,12 @@ class category
 				'CATEGORY_ID'         => $cat_id,
 				'TOTAL_ITEMS'         => $this->language->lang('TOTAL_ITEMS', (int) $article_count),
 				'PAGE_NUMBER'         => $this->pagination->on_page($article_count, $per_page, $start),
-				'U_ADD_ARTICLE'       => $this->helper->route('phpbbmodders_knowledgebase_posting', ['id' => $cat_id]),
-				'U_ADD_REDIRECT'      => $this->helper->route('phpbbmodders_knowledgebase_posting', ['id' => $cat_id, 'mode' => 'redirect']),
+				'U_ADD_ARTICLE'       => $this->helper->route('phpbbmodders_knowledgebase_posting', ['id' => $add_cat_id]),
+				'U_ADD_REDIRECT'      => $this->helper->route('phpbbmodders_knowledgebase_posting', ['id' => $redirect_cat_id, 'mode' => 'redirect']),
 				'U_KB'                => $this->helper->route('phpbbmodders_knowledgebase_index'),
 				'U_KB_SEARCH'         => $this->helper->route('phpbbmodders_knowledgebase_search'),
-				'S_CAN_ADD'           => !$flat_all && $this->kb->acl_kb_get($cat_id, 'kb_u_add'),
-				'S_CAN_ADD_REDIRECT'  => !$flat_all && ($this->auth->acl_get('a_manage_kb') || $this->kb->acl_kb_get($cat_id, 'kb_m_approve')),
+				'S_CAN_ADD'           => (bool) $add_cat_id && $this->kb->acl_kb_get($add_cat_id, 'kb_u_add'),
+				'S_CAN_ADD_REDIRECT'  => (bool) $redirect_cat_id && ($this->auth->acl_get('a_manage_kb') || $this->kb->acl_kb_get($redirect_cat_id, 'kb_m_approve')),
 				'S_FLAT_ALL'          => $flat_all,
 				'S_FLAT_LAYOUT'       => $flat_layout,
 				'S_ACTION'            => $this->helper->route('phpbbmodders_knowledgebase_category', ['id' => $cat_id]),

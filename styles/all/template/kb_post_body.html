@@ -21,11 +21,11 @@
 										id="delete"/> {{ lang('DELETE_ARTICLE_WARN') }}</label></dd>
 						</dl>
 					{% endif %}
-					<dl>
-						<dt><label>{{ lang('CATEGORY') }}{{ lang('COLON') }}</label></dt>
-						<dd><label><select name="to_id">{{ CATS_BOX }}</select></label></dd>
-					</dl>
 				{% endif %}
+				<dl>
+					<dt><label for="to_id">{{ lang('CATEGORY') }}{{ lang('COLON') }}</label></dt>
+					<dd><select name="to_id" id="to_id">{{ CATS_BOX }}</select></dd>
+				</dl>
 				{% if not S_EDIT_POST and S_CAN_POST_AS_TEAM %}
 					<dl style="clear: left;">
 						<dt><label for="post_as_group">{{ lang('KB_POST_AS') }}{{ lang('COLON') }}</label></dt>

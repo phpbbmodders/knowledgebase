@@ -132,6 +132,9 @@ class functions_kb
 	/** @var int[]|null */
 	protected ?array $moderatable_categories_cache = null;
 
+	/** @var int[] Memo for get_postable_category_id(), keyed by permission */
+	protected array $postable_category_ids = [];
+
 	/**
 	 * Constructor
 	 *
@@ -522,6 +525,46 @@ class functions_kb
 	}
 
 	/**
+	 * The first category, in tree order, in which the current visitor holds a
+	 * permission - where "Add article" leads from a page that has no category
+	 * of its own (the all-articles view, the index, search, Manage Your
+	 * Articles), since the posting form then lets them pick the category.
+	 *
+	 * @param string $permission kb_u_add to submit an article, kb_m_approve to submit a redirect
+	 * @return int The category id, or 0 when there is none
+	 */
+	public function get_postable_category_id(string $permission = 'kb_u_add'): int
+	{
+		if (isset($this->postable_category_ids[$permission]))
+		{
+			return $this->postable_category_ids[$permission];
+		}
+
+		$sql = 'SELECT category_id
+			FROM ' . $this->categories_table . '
+			ORDER BY left_id ASC';
+		$result = $this->db->sql_query($sql);
+		$category_ids = [];
+		while ($row = $this->db->sql_fetchrow($result))
+		{
+			$category_ids[] = (int) $row['category_id'];
+		}
+		$this->db->sql_freeresult($result);
+
+		$found = 0;
+		foreach ($category_ids as $category_id)
+		{
+			if ($this->acl_kb_get($category_id, $permission))
+			{
+				$found = $category_id;
+				break;
+			}
+		}
+
+		return $this->postable_category_ids[$permission] = $found;
+	}
+
+	/**
 	 * Assigns the shared five-tab (View Article Index / Manage Your
 	 * Articles / Submit an Article / Submit a Redirect / Administration)
 	 * navigation strip variables used by kb_nav_tabs.html on every
@@ -539,27 +582,26 @@ class functions_kb
 	 */
 	public function assign_nav_tabs_vars(string $active, int $cat_id = 0, ?string $extra_tab_label = null): void
 	{
-		// posting.php has nothing to submit into without a category, so
-		// on a page with no category context (the KB index, Manage Your
-		// Articles, search results, the Administration queue, the
-		// article-not-found notice) the Submit/Submit-a-Redirect tabs
-		// are hidden entirely rather than linking back to the page the
-		// visitor is already on - a link that only ever reloads it isn't
-		// a real destination. When a category IS known, both tabs go
-		// straight into it - but only shown at all to a visitor who
-		// actually holds the matching permission (kb_u_add for Submit,
-		// the stricter kb_m_approve for Submit a Redirect, same gate
-		// posting.php itself enforces - acl_kb_get() already folds in
-		// the a_manage_kb/founder override), so a plain viewer isn't
-		// shown a tab that only leads to a refusal page.
-		$can_submit_tab = $cat_id && $this->acl_kb_get($cat_id, 'kb_u_add');
-		$can_redirect_tab = $cat_id && $this->acl_kb_get($cat_id, 'kb_m_approve');
+		// A page with a category of its own links straight into it - but only
+		// for a visitor who holds the matching permission (kb_u_add for
+		// Submit, the stricter kb_m_approve for Submit a Redirect, the same
+		// gate posting.php enforces; acl_kb_get() already folds in the
+		// a_manage_kb/founder override), so a plain viewer isn't shown a tab
+		// that only leads to a refusal page. A page with no category (the
+		// all-articles view, the KB index, Manage Your Articles, search
+		// results, the Administration queue) links into the first category
+		// the visitor may post in: the posting form has a category select,
+		// so that is only where it starts.
+		$submit_cat_id = $cat_id ?: $this->get_postable_category_id('kb_u_add');
+		$redirect_cat_id = $cat_id ?: $this->get_postable_category_id('kb_m_approve');
+		$can_submit_tab = $submit_cat_id && $this->acl_kb_get($submit_cat_id, 'kb_u_add');
+		$can_redirect_tab = $redirect_cat_id && $this->acl_kb_get($redirect_cat_id, 'kb_m_approve');
 
 		$this->template->assign_vars([
 			'U_KB_TAB_INDEX'         => $this->helper->route('phpbbmodders_knowledgebase_index'),
 			'U_KB_TAB_MY_ARTICLES'   => $this->helper->route('phpbbmodders_knowledgebase_my_articles'),
-			'U_KB_TAB_SUBMIT'        => $can_submit_tab ? $this->helper->route('phpbbmodders_knowledgebase_posting', ['id' => $cat_id]) : '',
-			'U_KB_TAB_REDIRECT'      => $can_redirect_tab ? $this->helper->route('phpbbmodders_knowledgebase_posting', ['id' => $cat_id, 'mode' => 'redirect']) : '',
+			'U_KB_TAB_SUBMIT'        => $can_submit_tab ? $this->helper->route('phpbbmodders_knowledgebase_posting', ['id' => $submit_cat_id]) : '',
+			'U_KB_TAB_REDIRECT'      => $can_redirect_tab ? $this->helper->route('phpbbmodders_knowledgebase_posting', ['id' => $redirect_cat_id, 'mode' => 'redirect']) : '',
 			'U_KB_TAB_ADMIN'         => $this->helper->route('phpbbmodders_knowledgebase_queue'),
 			'S_KB_CAN_SUBMIT_TAB'    => (bool) $can_submit_tab,
 			'S_KB_CAN_REDIRECT_TAB'  => (bool) $can_redirect_tab,
@@ -1439,7 +1481,7 @@ class functions_kb
 	 * @param bool  $ignore_acl
 	 * @return string
 	 */
-	public function make_category_select($select_id, array $ignore_id, bool $ignore_acl = false): string
+	public function make_category_select($select_id, array $ignore_id, bool $ignore_acl = false, string $permission = 'kb_u_add'): string
 	{
 		$sql = 'SELECT * FROM ' . $this->categories_table . ' ORDER BY left_id ASC';
 		$result = $this->db->sql_query($sql, 600);
@@ -1464,7 +1506,7 @@ class functions_kb
 			$disabled = false;
 
 			if (!$ignore_acl &&
-				(in_array($row['category_id'], $ignore_id) || !$this->acl_kb_get($row['category_id'], 'kb_u_add'))
+				(in_array($row['category_id'], $ignore_id) || !$this->acl_kb_get($row['category_id'], $permission))
 			)
 			{
 				$disabled = true;
