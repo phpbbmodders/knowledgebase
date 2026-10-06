@@ -837,3 +837,16 @@ category they could post in; the form preselected it and disabled the others; a 
 category was used; a bogus category id was ignored. A moderator's redirect was filed in the
 chosen category. A reader saw no add buttons and the posting form refused them. The full
 suite passes against the MySQL and PostgreSQL containers (258 tests, no skips).
+
+## phpBB Modders file headers on the PHP files - 10/06/2026
+
+105 of the 116 PHP files now carry the org header (`Knowledge Base extension for the phpBB
+Forum Software package`, `@copyright (c) 2026, phpBB Modders`, the GPL-2.0 `@license`). Files that
+already named Sheer or sutrus keep those `@copyright` lines unchanged beneath the new one; the
+35 test files and the 2.0.x migrations that had no header got the full one. The 11 files that
+come from phpBB core (`search/`, `language/en/`) were left alone.
+
+Only comments changed. Claude compared every touched file with its committed version token by
+token, ignoring comments and whitespace, and found no difference; every other doc comment is
+identical, all files pass `php -l`, and the full suite passes against the MySQL and PostgreSQL
+containers (275 tests, 800 assertions). The live board still serves its pages.

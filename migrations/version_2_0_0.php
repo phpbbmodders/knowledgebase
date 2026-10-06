@@ -2,10 +2,11 @@
 
 /**
  *
- * Knowledge base. An extension for the phpBB Forum Software package.
+ * Knowledge Base extension for the phpBB Forum Software package
  *
+ * @copyright (c) 2026, phpBB Modders, https://www.phpbbmodders.com/
  * @copyright (c) 2022, sutrus
- * @license       GNU General Public License, version 2 (GPL-2.0)
+ * @license GNU General Public License, version 2 (GPL-2.0)
  *
  */
 

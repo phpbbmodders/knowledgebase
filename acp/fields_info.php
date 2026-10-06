@@ -1,9 +1,10 @@
 <?php
 /**
  *
- * Knowledge base. An extension for the phpBB Forum Software package.
+ * Knowledge Base extension for the phpBB Forum Software package
  *
- * @license       GNU General Public License, version 2 (GPL-2.0)
+ * @copyright (c) 2026, phpBB Modders, https://www.phpbbmodders.com/
+ * @license GNU General Public License, version 2 (GPL-2.0)
  *
  */
 
