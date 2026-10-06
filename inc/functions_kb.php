@@ -1264,6 +1264,34 @@ class functions_kb
 	}
 
 	/**
+	 * Whether a required custom field was left without a value.
+	 *
+	 * A field only counts as missing when it is marked required, has at
+	 * least one enabled value to choose from (otherwise nobody could ever
+	 * satisfy it), and none of the submitted ids is one of those values.
+	 * Submitted ids that are not enabled values of the field are ignored,
+	 * the same way saving them would drop them.
+	 *
+	 * @param array $field            The field row, including field_required
+	 * @param array $enabled_values   The field's enabled value rows
+	 * @param int[] $submitted_ids    The value ids the author ticked
+	 * @return bool
+	 */
+	public static function is_required_field_missing(array $field, array $enabled_values, array $submitted_ids): bool
+	{
+		if (empty($field['field_required']) || empty($enabled_values))
+		{
+			return false;
+		}
+
+		$valid_ids = array_map(function ($value) {
+			return (int) $value['value_id'];
+		}, $enabled_values);
+
+		return !array_intersect(array_map('intval', $submitted_ids), $valid_ids);
+	}
+
+	/**
 	 * The value rows (not just ids) assigned to an article for one field.
 	 *
 	 * @param int $article_id

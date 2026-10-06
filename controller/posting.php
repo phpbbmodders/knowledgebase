@@ -532,11 +532,16 @@ class posting
 		$enabled_fields = $this->kb->get_enabled_fields();
 		$all_field_values = $this->request->variable('field_values', [0 => [0]]);
 		$field_widgets = '';
+		$missing_required_fields = [];
 		foreach ($enabled_fields as $field)
 		{
 			$field_id = (int) $field['field_id'];
 			$field_values = $this->kb->get_field_values($field_id, true);
 			$submitted_ids = array_map('intval', $all_field_values[$field_id] ?? []);
+			if (functions_kb::is_required_field_missing($field, $field_values, $submitted_ids))
+			{
+				$missing_required_fields[] = $field['field_name'];
+			}
 			$selected_ids = $submit ? $submitted_ids : (($art_id) ? $this->kb->get_article_field_value_ids($art_id, $field_id) : []);
 
 			$field_widgets .= $this->field_factory->get($field['field_type'])->render_posting_field($field, $field_values, $selected_ids);
@@ -559,7 +564,10 @@ class posting
 			// (including promoting an existing draft) still needs it.
 			$has_content = $is_redirect ? $this->kb->is_valid_redirect_url($redirect_url) : (bool) $article_text;
 			$description_error = $this->kb->get_description_error($article_description);
-			if ($article_title && $description_error === '' && ($savedraft || $has_content))
+			// A draft is unfinished by definition, so only a real submission
+			// needs every required field filled in.
+			$required_fields_missing = !$savedraft && !empty($missing_required_fields);
+			if ($article_title && $description_error === '' && !$required_fields_missing && ($savedraft || $has_content))
 			{
 				if (!$is_redirect)
 				{
@@ -1028,6 +1036,14 @@ class posting
 					$error[] = $description_error;
 				}
 
+				if ($required_fields_missing)
+				{
+					foreach ($missing_required_fields as $field_name)
+					{
+						$error[] = $this->language->lang('KB_FIELD_REQUIRED_ERROR', $field_name);
+					}
+				}
+
 				if ($is_redirect)
 				{
 					if (!$has_content)
@@ -1057,6 +1073,11 @@ class posting
 			if ($description_error !== '')
 			{
 				$error[] = $description_error;
+			}
+
+			foreach ($missing_required_fields as $field_name)
+			{
+				$error[] = $this->language->lang('KB_FIELD_REQUIRED_ERROR', $field_name);
 			}
 
 			if ($is_redirect)

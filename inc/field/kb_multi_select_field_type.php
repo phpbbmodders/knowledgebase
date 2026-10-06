@@ -85,8 +85,10 @@ class kb_multi_select_field_type implements kb_field_type_interface
 			$options .= '<label><input type="checkbox" name="field_values[' . (int) $field['field_id'] . '][]" value="' . (int) $value['value_id'] . '"' . $checked . '/> ' . htmlspecialchars($value['value_label']) . '</label> ';
 		}
 
+		$hint = !empty($field['field_required']) ? '<br><span>' . $this->language->lang('KB_FIELD_REQUIRED_HINT') . '</span>' : '';
+
 		return '<dl style="clear: left;">
-			<dt><label>' . htmlspecialchars($field['field_name']) . $this->language->lang('COLON') . '</label></dt>
+			<dt><label>' . htmlspecialchars($field['field_name']) . $this->language->lang('COLON') . '</label>' . $hint . '</dt>
 			<dd>' . $options . '</dd>
 		</dl>';
 	}

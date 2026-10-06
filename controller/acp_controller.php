@@ -1361,6 +1361,8 @@ class acp_controller
 				'FIELD_KEY'       => $field['field_key'],
 				'FIELD_TYPE_NAME' => $this->field_factory->get($field['field_type'])->get_type_name(),
 				'S_ENABLED'       => (bool) $field['enabled'],
+				'S_REQUIRED'      => (bool) $field['field_required'],
+				'U_TOGGLE_REQUIRED' => $this->u_action . '&amp;action=toggle_required&amp;field_id=' . $field['field_id'] . '&amp;hash=' . generate_link_hash('kb_field_required_' . $field['field_id']),
 				'U_TOGGLE'        => $this->u_action . '&amp;action=toggle_field&amp;field_id=' . $field['field_id'] . '&amp;hash=' . generate_link_hash('kb_field_toggle_' . $field['field_id']),
 				'U_EDIT_VALUES'   => $this->u_action . '&amp;action=edit_values&amp;field_id=' . $field['field_id'],
 			]);
@@ -1416,6 +1418,7 @@ class acp_controller
 			'field_name' => $field_name,
 			'field_type' => $field_type,
 			'enabled'    => 1,
+			'field_required' => $this->request->variable('field_required', 0) ? 1 : 0,
 		]);
 		$this->db->sql_query($sql);
 
@@ -1440,6 +1443,31 @@ class acp_controller
 		}
 
 		$sql = 'UPDATE ' . $this->kb->get_fields_table() . ' SET enabled = ' . ($field['enabled'] ? 0 : 1) . ' WHERE field_id = ' . $field_id;
+		$this->db->sql_query($sql);
+
+		meta_refresh(2, $this->u_action);
+		trigger_error($this->language->lang('KB_FIELD_UPDATED') . adm_back_link($this->u_action));
+	}
+
+	/**
+	 * Switch a custom field between required and optional.
+	 *
+	 * @param int $field_id
+	 * @return void
+	 */
+	public function toggle_required_field(int $field_id): void
+	{
+		if (!check_link_hash($this->request->variable('hash', ''), 'kb_field_required_' . $field_id))
+		{
+			trigger_error($this->language->lang('FORM_INVALID') . adm_back_link($this->u_action), E_USER_WARNING);
+		}
+		$field = $this->kb->get_field($field_id);
+		if (!$field)
+		{
+			trigger_error($this->language->lang('KB_FIELD_NOT_FOUND'), E_USER_WARNING);
+		}
+
+		$sql = 'UPDATE ' . $this->kb->get_fields_table() . ' SET field_required = ' . ($field['field_required'] ? 0 : 1) . ' WHERE field_id = ' . $field_id;
 		$this->db->sql_query($sql);
 
 		meta_refresh(2, $this->u_action);

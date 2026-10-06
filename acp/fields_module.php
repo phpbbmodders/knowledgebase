@@ -52,6 +52,10 @@ class fields_module
 				$admin_controller->toggle_field($field_id);
 			break;
 
+			case 'toggle_required':
+				$admin_controller->toggle_required_field($field_id);
+			break;
+
 			case 'edit_values':
 				$admin_controller->edit_field_values($field_id);
 			break;
