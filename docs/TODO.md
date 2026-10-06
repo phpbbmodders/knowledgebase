@@ -5,23 +5,16 @@ under [`docs/TODO/`](TODO/).
 
 ## Active
 
-- Two known, deliberately-deferred `[valinfo]` findings from
+- One known, deliberately-deferred `[valinfo]` finding from
   [archived September 26 AI validation](TODO/archive/archive1.md#ai-validation-review-2026-09-26)
-  (neither is a bug, both are design suggestions): `migrations/version_1_0_2.php`
-  has an N+1 query pattern (a per-category query inside a loop, plus a
-  discarded first result) - real on a large install, but it's a
-  historical already-released migration, and editing a released
-  migration in place is itself the riskier move, so this needs an
-  actual migration-replacement/maintenance-path decision, not a quick
-  patch. (Two other released migrations were since edited in place at
-  the owner's direction - `1_0_0`'s PostgreSQL string quoting and
-  `1_0_3`'s duplicate `drop_columns` key - so there is precedent, but
-  those were bugs; this one is a performance suggestion, so it stays
-  deferred unless the owner asks for it.) Separately, `kb_version` is stored in phpBB config with no
+  (not a bug, a design suggestion): `kb_version` is stored in phpBB config with no
   migration ever removing it; the suggestion is to make package
   metadata/migration dependencies authoritative instead and clean up
   the config value in a later migration - migration `2_0_11` still
-  writes it, so this remains unaddressed by choice for now.
+  writes it, so this remains unaddressed by choice for now. (The other
+  finding from that review, the N+1 query pattern in
+  `migrations/version_1_0_2.php`, was fixed on 10/05/2026; see the
+  [testing notes](testing.md).)
 
 ## Archived Reviews
 

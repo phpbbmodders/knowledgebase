@@ -58,29 +58,40 @@ class version_1_0_2 extends \phpbb\db\migration\migration
 		];
 	}
 
+	/**
+	 * Number the articles of every category 1, 2, 3... in the order they were
+	 * submitted. One query reads all the articles, and the new positions are
+	 * written back in batches, so the number of queries stays small however
+	 * many articles there are.
+	 */
 	public function set_display_order()
 	{
-		$sql = 'SELECT category_id
-			FROM ' . $this->table_prefix . 'kb_categories';
-		$this->db->sql_query($sql);
+		$sql = 'SELECT a.article_id, a.article_category_id
+			FROM ' . $this->table_prefix . 'kb_articles a, ' . $this->table_prefix . 'kb_categories c
+			WHERE a.article_category_id = c.category_id
+			ORDER BY a.article_category_id ASC, a.article_id ASC';
 		$result = $this->db->sql_query($sql);
+		$position = $orders = [];
 		while ($row = $this->db->sql_fetchrow($result))
 		{
-			$sql = 'SELECT article_id
-				FROM ' . $this->table_prefix . 'kb_articles
-				WHERE article_category_id = ' . (int) $row['category_id'];
-			$res = $this->db->sql_query($sql);
-			$i = 1;
-			while ($art_row = $this->db->sql_fetchrow($res))
-			{
-				$sql = 'UPDATE ' . $this->table_prefix . 'kb_articles
-						SET display_order = ' . $i . '
-						WHERE article_id = ' . (int) $art_row['article_id'];
-				$this->db->sql_query($sql);
-				$i++;
-			}
-			$this->db->sql_freeresult($res);
+			$category_id = (int) $row['article_category_id'];
+			$position[$category_id] = ($position[$category_id] ?? 0) + 1;
+			$orders[(int) $row['article_id']] = $position[$category_id];
 		}
 		$this->db->sql_freeresult($result);
+
+		foreach (array_chunk($orders, 500, true) as $batch)
+		{
+			$cases = '';
+			foreach ($batch as $article_id => $order)
+			{
+				$cases .= ' WHEN ' . $article_id . ' THEN ' . $order;
+			}
+
+			$sql = 'UPDATE ' . $this->table_prefix . 'kb_articles
+				SET display_order = CASE article_id' . $cases . ' END
+				WHERE ' . $this->db->sql_in_set('article_id', array_keys($batch));
+			$this->db->sql_query($sql);
+		}
 	}
 }
