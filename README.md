@@ -1,6 +1,6 @@
 # Knowledge Base
 
-A wiki/FAQ system for phpBB: categories and articles with attachments, an approval workflow, a search index, and its own permission system, all managed from the ACP.
+A knowledge base for phpBB: articles organised in categories, with attachments, Markdown or BBCode text, revisions, an approval workflow, search, and its own permission system, all managed from the ACP.
 
 ## Installation
 
