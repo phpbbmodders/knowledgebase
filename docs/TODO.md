@@ -5,20 +5,6 @@ under [`docs/TODO/`](TODO/).
 
 ## Active
 
-- [phpbb.com KB parity gaps](TODO/todo-phpbb-com-kb-parity.md) - five
-  feature-completeness differences from the original phpbb.com
-  Knowledge Base, found via a second-opinion screenshot comparison
-  after the Phase 1-5 redesign ([`docs/ui-redesign-roadmap.md`](ui-redesign-roadmap.md))
-  was already implemented. Items 1, 4, and 5 are done as of
-  09/28/2026: an explicit "Approved article"/"Article requiring
-  approval" choice for a moderator submitting a new article, a
-  "Display options" dropdown on the Administration queue (new and
-  revisions by default, all articles and redirects, redirects, inactive
-  articles, or one team's, with or without the active ones; reworked
-  from a filter plus a "show all" checkbox on 10/05/2026), and a direct "View
-  topic" moderator action on the queue and approve pages. Item 3, the
-  plain-text Description, is also done as of 10/05/2026. Remaining:
-  required-field validation on categories/custom fields.
 - Two known, deliberately-deferred `[valinfo]` findings from
   [archived September 26 AI validation](TODO/archive/archive1.md#ai-validation-review-2026-09-26)
   (neither is a bug, both are design suggestions): `migrations/version_1_0_2.php`
@@ -38,6 +24,8 @@ under [`docs/TODO/`](TODO/).
   writes it, so this remains unaddressed by choice for now.
 
 ## Archived Reviews
+
+The [phpbb.com KB parity gaps](TODO/archive/archive1.md#phpbb-com-kb-parity-gaps) - five feature-completeness differences found by comparing screenshots with the original phpbb.com Knowledge Base - are all done and were archived on 10/05/2026.
 
 Completed [database search validation](TODO/archive/archive1.md#database-search-validation)
 is recorded separately from the historical reviews below.

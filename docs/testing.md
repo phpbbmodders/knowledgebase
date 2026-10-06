@@ -492,3 +492,48 @@ Not covered: the French, Russian and Czech wording of the five new strings,
 which has not been reviewed by a native speaker; the changelog topic, which
 is deliberately BBCode (it quotes a diff of the body) and was not changed; the
 article title's length, which is still limited only by the form's `maxlength`.
+
+## Required custom fields - 10/05/2026
+
+phpBB.com marks "Categories" and "For phpBB Version" as "Please select at least
+one". Our primary category is already implicitly required (every article is
+posted into a category), but custom fields, including the seeded phpBB Version
+field, were always optional. A field can now be marked required: migration
+`version_2_0_19` adds `field_required` to `kb_fields` (off for every field, so a
+board is unchanged until an administrator turns it on), the ACP field list has a
+Required column with a make-required/make-optional link, and the add-field form
+has a Required checkbox.
+
+The rules, as chosen by the owner:
+
+- Submitting or previewing an article or a redirect without selecting an enabled
+  value of a required field is refused with "Please select at least one value for
+  <field>", and the form shows "Please select at least one." under the field.
+- A draft is exempt, like it already is for the article text.
+- A field with no enabled values is never enforced (nobody could satisfy it), and
+  ids that are not enabled values of the field do not count.
+- Only the author's submission is checked. Moderator actions on an existing
+  article (review, approve, deactivate) go through a different controller and are
+  not blocked by a field that became required after the article was written.
+
+New tests (`kb_required_field_test.php`, 11 cases, and
+`kb_required_field_migration_test.php`) cover the check and the migration. The full
+suite passed against disposable MySQL 8.0 and PostgreSQL 16 containers: 161 tests,
+496 assertions, nothing skipped.
+
+Claude then ran the real ACP and posting form on the seeded SQLite board and on
+throwaway MySQL 8.0 and PostgreSQL 16 boards installed from this branch (the SQLite
+board was also upgraded from 2.0.18 with `db:migrate`). On each: the field list
+showed the Required column with the seeded field optional, and an article without a
+value was accepted; the ACP link made the field required and the form showed the
+hint; submitting without a value was refused naming "phpBB Version", with a value it
+was accepted and the value saved, preview showed the same error, a draft saved
+without a value, a redirect was refused without and accepted with a value, and a
+made-up value id did not satisfy it; a moderator's "mark reviewed" on an article with
+no value still worked; the link made the field optional again; and a new required
+field added through the ACP form was stored as required, while a required field with
+no enabled values did not block submitting.
+
+Not covered: the French, Russian and Czech wording of the six new strings, which has
+not been reviewed by a native speaker; the revert of the migration against a real
+database (only its schema array is tested).
