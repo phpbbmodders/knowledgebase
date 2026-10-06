@@ -544,3 +544,33 @@ language files through phpBB's own language service with the user language set t
 (`KB_DISPLAY_OPTIONS`), an ACP key (`KB_FIELD_REQUIRED`) and an older key
 (`KB_MANAGE_ARTICLES_EXPLAIN`). The full suite still passes on MySQL and PostgreSQL
 fixtures (the e-mail template test discovers whichever language folders exist).
+
+## Display-order migration: N+1 queries removed - 10/05/2026
+
+The September 26 validation flagged `migrations/version_1_0_2.php`: numbering each
+category's articles ran one query per category plus one `UPDATE` per article, after
+a duplicated first query whose result was thrown away. It only runs when a board
+upgrades from 1.0.0 or 1.0.1 (a board already at 1.0.2 or 2.0.0 skips it), so it is
+rare, but on such a board with many articles it was one round trip per article.
+The owner asked for it, and two other released migrations had already been edited
+in place for bugs, so it was fixed in place.
+
+It now reads every article once (joined to its category, so an article whose
+category no longer exists is still left at 0, as before), counts 1, 2, 3... per
+category in submission order, and writes the numbers back with one `UPDATE ... SET
+display_order = CASE article_id WHEN ... END` per 500 articles. That is 1 query
+plus 1 per 500 articles, whatever the number of categories. The old code had no
+`ORDER BY`, so the numbering followed whatever order the database returned;
+the new code orders by article id, which is the submission order the old code got
+in practice on MySQL and SQLite.
+
+`kb_display_order_migration_test.php` (7 cases) checks interleaved categories with
+out-of-order ids, an empty category, an orphaned article and an empty board on SQLite,
+MySQL 8.0 and PostgreSQL 16, and counts the queries on 1,201 articles in 40
+categories (4: one `SELECT` and three `UPDATE`s). Run against the old code, the same
+test took 1,243 queries and, on PostgreSQL, gave a different numbering, because the
+old code did not order its results. The full suite passes against the MySQL and
+PostgreSQL containers: 168 tests, 509 assertions, nothing skipped.
+
+Not covered: an upgrade of a real board from 1.0.1 (the tests exercise the method
+on the three databases, not the whole migration chain).
