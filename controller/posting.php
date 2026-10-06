@@ -194,6 +194,21 @@ class posting
 		$art_id = (int) $this->request->variable('k', 0);
 		$mode = $this->request->variable('mode', '');
 
+		// A new article (or redirect) is filed under the category its form's
+		// select names, so "Add article" can start from a page with no
+		// category of its own. The choice only counts for a category that
+		// exists and in which the visitor may post that kind of entry;
+		// anything else is ignored and the category in the address stays.
+		if ($mode !== 'edit' && $mode !== 'delete')
+		{
+			$chosen_cat_id = (int) $this->request->variable('to_id', 0);
+			if ($chosen_cat_id && $chosen_cat_id !== $cat_id && $this->kb->get_cat_info($chosen_cat_id)
+				&& $this->kb->acl_kb_get($chosen_cat_id, $mode === 'redirect' ? 'kb_m_approve' : 'kb_u_add'))
+			{
+				$cat_id = $chosen_cat_id;
+			}
+		}
+
 		// Redirect entries are moderator-only, same gate as team assignment
 		// in Phase 1 - no new permission invented for this.
 		$is_redirect = $mode === 'redirect';
@@ -1179,7 +1194,7 @@ class posting
 				'S_ATTACH_DATA'           => (count($attachment_data)) ? json_encode($attachment_data) : '[]',
 				'MAX_ATTACHMENT_FILESIZE' => $this->config['kb_max_filesize'] > 0 ? $this->language->lang('MAX_ATTACHMENT_FILESIZE', get_formatted_filesize($this->config['kb_max_filesize'])) : '',
 
-				'CATS_BOX'       => '<option value="0" disabled="disabled">' . $this->language->lang('CATEGORIES_LIST') . '</option>' . $this->kb->make_category_select($article_category_id, [], false),
+				'CATS_BOX'       => '<option value="0" disabled="disabled">' . $this->language->lang('CATEGORIES_LIST') . '</option>' . $this->kb->make_category_select($article_category_id, [], false, $is_redirect && $mode !== 'edit' ? 'kb_m_approve' : 'kb_u_add'),
 				'CROSS_CATS_BOX' => $this->kb->make_category_select($cross_categories_display, [$article_category_id], false),
 
 				'S_CAN_POST_AS_TEAM' => $this->auth->acl_get('a_manage_kb') || $this->kb->acl_kb_get($cat_id, 'kb_m_approve'),
