@@ -359,7 +359,39 @@ Claude checked it on the seeded SQLite board at `localhost:8092`:
   id submitted through the form was stored as "none".
 
 New tests cover the lookup (none set, deleted group, translated name, link,
-colour allow-list), the ACP validation, and the migration. Not covered: the
-page on MySQL and PostgreSQL boards, and the wording of the new strings in the
-French, Russian and Czech language files, which has not been reviewed by a native
-speaker.
+colour allow-list), the ACP validation, and the migration. The page was also
+checked on MySQL 8.0 and PostgreSQL 16 boards (see the database checks below).
+Not covered: the wording of the new strings in the French, Russian and Czech
+language files, which has not been reviewed by a native speaker.
+
+## Status explanations on "Manage Your Articles" - 10/05/2026
+
+The status key at the top of "Manage Your Articles" used to repeat each badge
+name beside the badge. phpBB.com explains each status in a sentence, and the
+page now does the same: New (waiting for a team member to start reviewing),
+Reviewed (reviewed, awaiting approval), Active (visible to the public),
+Inactive (hidden; a revision can be submitted to have it reviewed again) and
+Revision pending (a revision is waiting for approval). Draft already had its
+own explanation. The sentences follow what the code does: `STATUS_REVIEWED` is
+set by the moderator's review action, and both active and inactive articles can
+carry a pending revision.
+
+### Database checks
+
+The full suite passed against disposable MySQL 8.0 and PostgreSQL 16
+containers with the fixture ports set (106 tests, 431 assertions, nothing
+skipped). Claude also ran the page on all three supported databases at
+`localhost:8092`: the seeded SQLite board, and throwaway MySQL 8.0 and
+PostgreSQL 16 boards installed from this branch. On each, logged in as an
+author, the key showed all six explanations and the contact-group sentence
+linked to the chosen group's member list (the select was saved through the ACP
+on MySQL and PostgreSQL; on MySQL a before/after comparison showed
+`kb_contact_group` changing from 0 to the group id and no other `kb_` setting
+changing). The flat article index from the separate flat-index branch was also
+checked on MySQL and PostgreSQL, with that branch checked out: the category
+dropdown was absent on a category page with `kb_flat_index` off and present with
+it on. The temporary boards and containers were
+removed and the SQLite config restored afterwards.
+
+Not covered: the French, Russian and Czech wording of the five new sentences,
+which has not been reviewed by a native speaker.
