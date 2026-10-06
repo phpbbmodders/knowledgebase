@@ -293,9 +293,18 @@ class index
 			]);
 		}
 
+		// "...please PM a member of <group>", when an administrator has chosen
+		// a contact group; the group's name links to its member list, in the
+		// group's own colour.
+		$contact_group = $this->kb->get_contact_group();
+		$contact_text = $contact_group
+			? $this->language->lang('KB_MANAGE_ARTICLES_CONTACT', '<a href="' . $contact_group['url'] . '"' . ($contact_group['colour'] ? ' style="color: #' . $contact_group['colour'] . ';"' : '') . '>' . htmlspecialchars($contact_group['name'], ENT_COMPAT, 'UTF-8') . '</a>')
+			: '';
+
 		$this->template->assign_vars([
 			'TOTAL_ITEMS'         => $this->language->lang('TOTAL_ITEMS', $article_count),
 			'CURRENT_PAGE_NUMBER' => $this->pagination->get_on_page($per_page, $start),
+			'KB_MANAGE_ARTICLES_CONTACT' => $contact_text,
 			'S_KNOWLEDGEBASE'     => true,
 			'S_DRAFTS_ONLY'       => $drafts_only,
 			'S_ACTION'            => $this->helper->route('phpbbmodders_knowledgebase_my_articles'),
