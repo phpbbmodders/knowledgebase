@@ -65,23 +65,23 @@
 								{% if articles.S_CAN_REORDER %}
 									{% if articles.S_FIRST_ROW && not articles.S_LAST_ROW %}
 										<i class="icon acp-icon acp-icon-disabled fa-arrow-up fa-fw" title="{{ lang('MOVE_UP') }}"></i>
-										<a href="{{ articles.U_MOVE_DOWN }}"><i class="icon acp-icon fa-arrow-down fa-fw" title="{{ lang('MOVE_DOWN') }}"></i></a>
+										<a href="{{ articles.U_MOVE_DOWN }}" aria-label="{{ lang('MOVE_DOWN') }}"><i class="icon acp-icon fa-arrow-down fa-fw" title="{{ lang('MOVE_DOWN') }}"></i></a>
 									{% elseif not articles.S_FIRST_ROW && not articles.S_LAST_ROW %}
-										<a href="{{ articles.U_MOVE_UP }}"><i class="icon acp-icon fa-arrow-up fa-fw" title="{{ lang('MOVE_UP') }}"></i></a>
-										<a href="{{ articles.U_MOVE_DOWN }}"><i class="icon acp-icon fa-arrow-down fa-fw" title="{{ lang('MOVE_DOWN') }}"></i></a>
+										<a href="{{ articles.U_MOVE_UP }}" aria-label="{{ lang('MOVE_UP') }}"><i class="icon acp-icon fa-arrow-up fa-fw" title="{{ lang('MOVE_UP') }}"></i></a>
+										<a href="{{ articles.U_MOVE_DOWN }}" aria-label="{{ lang('MOVE_DOWN') }}"><i class="icon acp-icon fa-arrow-down fa-fw" title="{{ lang('MOVE_DOWN') }}"></i></a>
 									{% elseif articles.S_LAST_ROW && not articles.S_FIRST_ROW %}
-										<a href="{{ articles.U_MOVE_UP }}"><i class="icon acp-icon fa-arrow-up fa-fw" title="{{ lang('MOVE_UP') }}"></i></a>
+										<a href="{{ articles.U_MOVE_UP }}" aria-label="{{ lang('MOVE_UP') }}"><i class="icon acp-icon fa-arrow-up fa-fw" title="{{ lang('MOVE_UP') }}"></i></a>
 										<i class="icon acp-icon acp-icon-disabled fa-arrow-down fa-fw" title="{{ lang('MOVE_DOWN') }}"></i>
 									{% else %}
 										<i class="icon acp-icon acp-icon-disabled fa-arrow-up fa-fw" title="{{ lang('MOVE_UP') }}"></i>
 										<i class="icon acp-icon acp-icon-disabled fa-arrow-down fa-fw" title="{{ lang('MOVE_DOWN') }}"></i>
 									{% endif %}
 								{% endif %}
-								<a href="{{ articles.U_MOVE }}" title="{{ lang('MOVE') }}">
+								<a href="{{ articles.U_MOVE }}" title="{{ lang('MOVE') }}" aria-label="{{ lang('MOVE') }}">
 									<i class="icon acp-icon fa-folder-o fa-fw"></i></a> <a href="{{ articles.U_DELETE }}"
-									title="{{ lang('DELETE') }}"><i class="icon acp-icon fa-trash fa-fw"></i></a>
+									title="{{ lang('DELETE') }}" aria-label="{{ lang('DELETE') }}"><i class="icon acp-icon fa-trash fa-fw"></i></a>
 								<a href="{{ articles.U_ARTICLE_EDIT }}" title="{{ lang('EDIT') }}"
-									onclick="find_username(this.href); return false;">
+									onclick="find_username(this.href); return false;" aria-label="{{ lang('EDIT') }}">
 									<i class="icon acp-icon fa-pencil fa-fw"></i></a>
 							</td>
 						</tr>

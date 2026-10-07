@@ -42,9 +42,9 @@
 					<input class="inputbox search tiny" name="keywords" id="search_keywords" size="20"
 						placeholder="{{ lang('SEARCH_IN_CAT') }}" type="search">
 					<button class="button button-search" type="submit" title="{{ lang('SEARCH') }}">
-						<i class="icon fa-search fa-fw" aria-hidden="true"></i></button>
+						<i class="icon fa-search fa-fw" aria-hidden="true"></i><span class="sr-only">{{ lang('SEARCH') }}</span></button>
 					<a href="{{ U_KB_SEARCH }}" class="button button-search-end" title="{{ lang('SEARCH_ADV') }}">
-						<i class="icon fa-cog fa-fw" aria-hidden="true"></i></a>
+						<i class="icon fa-cog fa-fw" aria-hidden="true"></i><span class="sr-only">{{ lang('SEARCH_ADV') }}</span></a>
 					<input type="hidden" name="sf" value="articles">
 					<input type="hidden" name="cid" value="{{ CATEGORY_ID }}">
 				</fieldset>
@@ -113,22 +113,22 @@
 							title="{% if art_row.STATUS == 3 %}{{ lang('KB_STATUS_INACTIVE') }}{% else %}{{ lang('NEED_APPROVE') }}{% endif %}"
 							class="button button-icon-only"><i
 								class="icon fa-{% if art_row.STATUS == 3 %}eye-slash{% else %}check{% endif %} fa-fw orange"
-								aria-hidden="true"></i></a></li>{% endif %}
+								aria-hidden="true"></i><span class="sr-only">{% if art_row.STATUS == 3 %}{{ lang('KB_STATUS_INACTIVE') }}{% else %}{{ lang('NEED_APPROVE') }}{% endif %}</span></a></li>{% endif %}
 					{% if S_CAN_MOVE %}
 						<li><a href="{{ art_row.U_MOVE_UP }}" title="{{ lang('KB_MOVE_UP') }}"
 							class="button button-icon-only"><i class="icon fa-arrow-up fa-fw green"
-								aria-hidden="true"></i></a></li>
+								aria-hidden="true"></i><span class="sr-only">{{ lang('KB_MOVE_UP') }}</span></a></li>
 						<li><a href="{{ art_row.U_MOVE_DOWN }}" title="{{ lang('KB_MOVE_DOWN') }}"
 							class="button button-icon-only"><i class="icon fa-arrow-down fa-fw green"
-								aria-hidden="true"></i></a></li>{% endif %}
+								aria-hidden="true"></i><span class="sr-only">{{ lang('KB_MOVE_DOWN') }}</span></a></li>{% endif %}
 					{% if art_row.S_CAN_DELETE %}
 						<li><a href="{{ art_row.U_DELETE }}" title="{{ lang('DELETE') }}"
 							class="button button-icon-only"><i class="icon fa-times fa-fw red"
-								aria-hidden="true"></i></a></li>{% endif %}
+								aria-hidden="true"></i><span class="sr-only">{{ lang('DELETE') }}</span></a></li>{% endif %}
 					{% if art_row.S_CAN_EDIT %}
 						<li><a href="{{ art_row.U_EDIT_ART }}" title="{{ lang('EDIT') }}"
 							class="button button-icon-only"><i class="icon fa-pencil fa-fw blue"
-								aria-hidden="true"></i></a></li>{% endif %}
+								aria-hidden="true"></i><span class="sr-only">{{ lang('EDIT') }}</span></a></li>{% endif %}
 				</ul>
 			</td>
 		</tr>
