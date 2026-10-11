@@ -222,7 +222,11 @@ class article
 		{
 			$field_id = (int) $field['field_id'];
 			$selected_values = $this->kb->get_article_field_values($art_id, $field_id);
-			$field_display .= $this->field_factory->get($field['field_type'])->render_display($field, $selected_values);
+			$rendered_field = $this->field_factory->get($field['field_type'])->render_display($field, $selected_values);
+			if ($rendered_field !== '')
+			{
+				$field_display .= $rendered_field . '<br>';
+			}
 		}
 		$this->template->assign_var('FIELD_DISPLAY', $field_display);
 

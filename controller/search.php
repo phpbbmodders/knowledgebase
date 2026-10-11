@@ -397,7 +397,8 @@ class search
 			'S_SELECT_SORT_DIR'  => $s_sort_dir,
 			'S_SEARCH_ACTION'    => $search_url,
 			'U_KB_SEARCH'        => $this->helper->route('phpbbmodders_knowledgebase_search'),
-			'CATS_BOX'           => $this->kb->make_category_select(0, [], false),
+			// Read/search access is checked above; posting ACLs do not restrict searches.
+			'CATS_BOX'           => $this->kb->make_category_select(0, [], true),
 		]);
 
 		$this->template->assign_block_vars('navlinks', [

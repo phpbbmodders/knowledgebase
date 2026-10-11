@@ -538,10 +538,10 @@ class posting
 		}));
 
 		// What to show as pre-selected in the multi-select: whatever was
-		// just submitted if this is a (possibly failed) submit attempt,
+		// just submitted if this is a preview or (possibly failed) submit,
 		// otherwise the article's existing cross-listings on a fresh edit
 		// load, or nothing for a brand new article.
-		$cross_categories_display = $submit ? $cross_categories : (($art_id) ? $this->kb->get_cross_listed_categories($art_id) : []);
+		$cross_categories_display = ($submit || $preview) ? $cross_categories : (($art_id) ? $this->kb->get_cross_listed_categories($art_id) : []);
 
 		// Custom fields: read every field's submitted values in one go, then
 		// pre-render each enabled field's posting widget for the template.
@@ -559,7 +559,7 @@ class posting
 			{
 				$missing_required_fields[] = $field['field_name'];
 			}
-			$selected_ids = $submit ? $submitted_ids : (($art_id) ? $this->kb->get_article_field_value_ids($art_id, $field_id) : []);
+			$selected_ids = ($submit || $preview) ? $submitted_ids : (($art_id) ? $this->kb->get_article_field_value_ids($art_id, $field_id) : []);
 
 			$field_widgets .= $field_type->render_posting_field($field, $field_values, $selected_ids);
 		}
