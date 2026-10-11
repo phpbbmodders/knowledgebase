@@ -15,6 +15,12 @@ picker implementation. William subsequently authorized publishing these
 documents and linking them from `docs/TODO.md`; production implementation
 still requires a separate instruction.
 
+The full proposal below incorporates William's clarification that this is a
+private repository with only a test board, not external or production
+installations. "Site admin" refers to the phpbbmodders extensions team leader.
+William requested this proposal be recorded; that is not authorization to
+implement it. New proposal details are distinguished from earlier agreements.
+
 ## Agreed Design
 
 - **Flat index** keeps its current browsing behavior: an all-articles index
@@ -37,15 +43,27 @@ still requires a separate instruction.
 Earlier proposals to remove the picker, or ship Classic layout and colors
 together as one alternative, were superseded. Do not implement those versions.
 
-## Upgrade Decision Still Needed
+## Additional Layout Proposal
 
-Preserving an existing Classic-enabled board's color selection was discussed.
-Preserving existing Flat index settings instead of silently enabling flat
-browsing was also proposed. With the final layout/color split, an existing
-Classic-on/Flat-off board cannot retain every old visual detail without
-changing its browsing behavior. Explain that tradeoff and confirm upgrade
-behavior before writing a migration. Do not silently enable Flat index,
-rewrite applied historical migrations, or reset a database to upgrade.
+Keep hierarchical browsing as the default and remove the old Classic look
+option. Selected tabs in either layout use the member's active board style's
+forum-header colors, as illustrated by the temporary previews. Retain needed
+KB layout rules, but remove fixed colors that interfere with board styling.
+These color details are proposed behavior, not an implemented result.
+
+## Test-Board Migration Proposal
+
+The previous public-upgrade compatibility concern is superseded: there are no
+unknown installations or production appearance settings to preserve.
+
+- Add the new alternative-styling configuration, disabled by default.
+- Remove the obsolete Classic look setting through a new migration.
+- Leave the current Flat index setting unchanged.
+- Do not automatically map the old Classic setting to a color selection.
+- Preserve articles, permissions and other unrelated settings.
+
+Do not rewrite applied historical migrations or reset the database merely to
+apply the new configuration. Implementation still needs authorization.
 
 ## Commented CSS Example
 
@@ -96,16 +114,29 @@ Bundled alternatives belong in the extension's `styles/all/theme/`, loaded
 through phpBB's normal `INCLUDECSS` mechanism. Style-specific support can use
 the corresponding extension `styles/<style>/theme/` directory and inheritance.
 
-Admin-added alternatives were discussed, but upload/editor functionality and
-automatic discovery are not approved or fully designed. The proposed
-persistent location is `store/phpbbmodders_knowledgebase/stylesheets/` under
-the board root. That exact name is a design proposal, not a phpBB convention.
+### Custom Alternatives Proposal
 
-`store/` is protected from direct web access. CSS there needs a controlled
-serving mechanism, strict filename/path validation, CSS content type and
-deliberate handling of relative asset URLs. Do not weaken server protections
-or assume `INCLUDECSS` can serve arbitrary stored files. Confirm this scope
-before adding it; bundled Classic colors do not require such an endpoint.
+For the initial version, administrators manually install CSS files. Do not add
+an upload interface or browser editor. The proposed persistent location is
+`store/phpbbmodders_knowledgebase/stylesheets/` under the board root so custom
+files can survive extension replacement. That name is a design proposal, not
+a phpBB convention.
+
+- Automatically list valid CSS files directly inside the directory, clearly
+  distinguishing custom choices from bundled choices in the ACP dropdown.
+- Reject subdirectories, symlinks and invalid filenames.
+- Serve selected custom CSS through a controlled extension endpoint with
+  strict filename/path validation and a CSS content type.
+- Initially support self-contained CSS without relative asset references or
+  imports; asset handling requires a separate design.
+- Remember the selected file while alternative styling is disabled.
+- If the selected file disappears, fall back to board styling and show an
+  ACP warning rather than silently selecting a different alternative.
+
+`store/` is protected from direct web access. Do not weaken server protections
+or assume `INCLUDECSS` can serve arbitrary stored files. Bundled Classic
+colors do not require this endpoint. Discovery, serving and fallback are now
+part of the full proposal, but are not implemented or authorized for coding.
 
 References checked in the discussion:
 
@@ -123,34 +154,43 @@ Use `docs/styling/` for the guide and `docs/images/styling/` for screenshots,
 following the repository's canonical documentation-image location.
 
 Illustrate hierarchical versus Flat index layouts, native versus Classic
-colors, and a small override affecting one area only. Include prosilver and
-Revolution, with mobile examples. Identify the board style and KB settings
-in every example. Link to the commented CSS. Use actual browser screenshots
+colors, and a small override affecting one area only. Include prosilver,
+Revolution and ProMinoDeux, with mobile examples. Identify the board style and
+KB settings in every example. Link to the commented CSS. Use actual browser screenshots
 of implemented behavior, not mockups presented as verification.
 
 Revolution checkout: `/home/william/Desktop/repos/prosilver_se_revolution`.
 Its `style.cfg` declares `parent = prosilver`; its stylesheet uses red forum
 headers and dark-gray outer page backgrounds. This contrast is useful for
-finding forced KB colors. Preserve existing notes/screenshots in `docs/v/`.
+finding forced KB colors.
 
 ## Eventual Verification
 
 After implementation authorization, test Flat index on/off independently of
-alternative styling on/off. Test prosilver, Revolution and the already-used
+styling disabled, bundled Classic colors and a partial custom override.
+Test prosilver, Revolution and the already-used
 ProMinoDeux style; desktop/tablet/phone; long labels, deep breadcrumbs,
 empty/populated categories, tables, search results and articles. Check selected
 tabs, hover, keyboard focus, contrast, wrapping, overflow and overlap. Check
 ordinary forum pages for leaked CSS. Record both verified and untested cases.
 
-An ACP warning/fallback for missing alternatives was suggested, not finalized.
+Verify ACP selection persistence while disabled, custom-file discovery,
+missing-file fallback and warnings, and the custom CSS endpoint's serving
+protections, including invalid filenames, traversal and symlink rejection.
+Verify the migration leaves Flat index and unrelated data unchanged.
+
 A live preview was optional discussion, not agreed implementation scope.
+
+Keep this handoff and `docs/TODO.md` current with approved scope,
+implementation status and remaining work. Preserve the existing comparison
+under `docs/tabs/`; future guide screenshots belong in `docs/images/styling/`.
 
 ## Existing Work And Preservation
 
 Disposable board: `/home/william/Desktop/repos/seeded-board/kb`.
 URL: `http://localhost:8092/knowledgebase`.
 Its `ext/phpbbmodders/knowledgebase` is mounted from the source checkout.
-Do not delete unrelated `files/` content, untracked `docs/v/`, or local config.
+Do not delete unrelated `files/` content or local config.
 
 Naming, author-PM preferences and comments/changelog testing are complete and
 merged separately in [PR #45](https://github.com/phpbbmodders/knowledgebase/pull/45).

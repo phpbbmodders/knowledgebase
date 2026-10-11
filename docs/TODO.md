@@ -7,7 +7,8 @@ under [`docs/TODO/`](TODO/).
 
 - [Styling design and continuation handoff](styling/discussion-handoff.md):
   separate Flat index layout from optional color overrides and retain the ACP
-  stylesheet picker. Implementation awaits authorization and an upgrade decision.
+  stylesheet picker. The proposal includes test-board migration and custom
+  stylesheet discovery; implementation awaits authorization.
 - [Tab shape preview](tabs/README.md): compare native and Classic tab shapes
   across prosilver, Revolution and ProMinoDeux, including mobile screenshots.
   This is a visual decision aid, not an implemented styling feature.
