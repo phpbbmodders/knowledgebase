@@ -5,7 +5,12 @@ under [`docs/TODO/`](TODO/).
 
 ## Active
 
-Nothing is currently open.
+- [Styling design and continuation handoff](styling/discussion-handoff.md):
+  separate Flat index layout from optional color overrides and retain the ACP
+  stylesheet picker. Implementation awaits authorization and an upgrade decision.
+- [Tab shape preview](tabs/README.md): compare native and Classic tab shapes
+  across prosilver, Revolution and ProMinoDeux, including mobile screenshots.
+  This is a visual decision aid, not an implemented styling feature.
 
 ## Archived Reviews
 

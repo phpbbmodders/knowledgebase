@@ -1,0 +1,58 @@
+/*
+ * Temporary screenshot comparison, not a production stylesheet.
+ * The browser supplies these variables from the active board's forum header
+ * and navigation bar. Both shapes use the same palette for a fair comparison.
+ * Classic's existing combined layout/color stylesheet is suppressed only in
+ * the preview browser; no board configuration or extension CSS is changed.
+ */
+.tabs.kb-tabs .kb-tab > a {
+	background: var(--kb-preview-inactive-bg);
+	color: var(--kb-preview-inactive-color);
+	border-color: var(--kb-preview-inactive-bg);
+	text-shadow: none;
+}
+
+/* Match the selected tab to the board's actual forum-header treatment. */
+.tabs.kb-tabs .kb-tab-active > a,
+.tabs.kb-tabs .kb-tab-active > a:hover {
+	background-color: var(--kb-preview-header-bg);
+	background-image: var(--kb-preview-header-image);
+	color: var(--kb-preview-header-color);
+	border-color: var(--kb-preview-header-bg);
+	box-shadow: none;
+}
+
+.tabs.kb-tabs .kb-tab > a:hover {
+	color: var(--kb-preview-inactive-color);
+}
+
+/* Classic shape only: retain its wrapping, spacing and compact tab geometry.
+ * No fixed Classic colors are included in this comparison.
+ */
+.tabs.kb-tabs.kb-tab-preview-classic {
+	margin-bottom: 4px;
+}
+
+.tabs.kb-tabs.kb-tab-preview-classic > ul {
+	display: flex;
+	flex-wrap: wrap;
+}
+
+.tabs.kb-tabs.kb-tab-preview-classic .kb-tab {
+	float: none;
+	margin-right: 2px;
+	margin-bottom: 2px;
+}
+
+.tabs.kb-tabs.kb-tab-preview-classic .kb-tab > a {
+	border: none;
+	box-shadow: none;
+	padding: 6px 12px;
+	border-radius: 3px 3px 0 0;
+	text-decoration: none;
+	font-size: 0.95em;
+}
+
+.tabs.kb-tabs.kb-tab-preview-classic .kb-tab-active > a {
+	font-weight: bold;
+}

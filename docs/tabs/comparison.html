@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Knowledge Base Tab Comparison</title>
+<style>
+* { box-sizing: border-box; }
+body { margin: 0; font: 15px/1.5 system-ui, sans-serif; color: #202327; background: #f5f6f8; }
+main { max-width: 1500px; padding: 24px; margin: auto; }
+h1 { font-size: 26px; margin: 0 0 4px; }
+p { margin: 0 0 20px; }
+.columns, .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.columns { font-weight: 650; padding-bottom: 12px; border-bottom: 1px solid #c9cdd2; }
+section { padding: 18px 0; border-bottom: 1px solid #c9cdd2; }
+h2 { font-size: 18px; margin: 0 0 10px; }
+figure { margin: 0; min-width: 0; }
+img { display: block; width: auto; max-width: 100%; height: auto; background: white; border: 1px solid #d5d9df; }
+figcaption { padding-top: 7px; font-size: 13px; }
+a { color: #075e9f; }
+footer { padding-top: 18px; font-size: 13px; }
+@media (max-width: 800px) { main { padding: 16px; } .columns { display: none; } .pair { grid-template-columns: 1fr; gap: 18px; } }
+</style>
+</head>
+<body>
+<main>
+<h1>Knowledge Base Tab Comparison</h1>
+<p>Temporary browser preview. Both shapes use the board's forum-header and navigation colors.</p>
+<div class="columns"><div>Native tab shape</div><div>Classic tab shape</div></div>
+<section>
+<h2>prosilver</h2>
+<div class="pair">
+<figure><a href="prosilver-native-desktop.png"><img src="prosilver-native-tabs.png" alt="prosilver colors with native tabs"></a><figcaption>Native: <a href="prosilver-native-desktop.png">full desktop</a> &middot; <a href="prosilver-native-mobile.png">mobile</a></figcaption></figure>
+<figure><a href="prosilver-classic-desktop.png"><img src="prosilver-classic-tabs.png" alt="prosilver colors with Classic-shaped tabs"></a><figcaption>Classic shape: <a href="prosilver-classic-desktop.png">full desktop</a> &middot; <a href="prosilver-classic-mobile.png">mobile</a></figcaption></figure>
+</div>
+</section>
+<section>
+<h2>Revolution</h2>
+<div class="pair">
+<figure><a href="revolution-native-desktop.png"><img src="revolution-native-tabs.png" alt="Revolution colors with native tabs"></a><figcaption>Native: <a href="revolution-native-desktop.png">full desktop</a> &middot; <a href="revolution-native-mobile.png">mobile</a></figcaption></figure>
+<figure><a href="revolution-classic-desktop.png"><img src="revolution-classic-tabs.png" alt="Revolution colors with Classic-shaped tabs"></a><figcaption>Classic shape: <a href="revolution-classic-desktop.png">full desktop</a> &middot; <a href="revolution-classic-mobile.png">mobile</a></figcaption></figure>
+</div>
+</section>
+<section>
+<h2>ProMinoDeux</h2>
+<div class="pair">
+<figure><a href="prominodeux-native-desktop.png"><img src="prominodeux-native-tabs.png" alt="ProMinoDeux colors with native tabs"></a><figcaption>Native: <a href="prominodeux-native-desktop.png">full desktop</a> &middot; <a href="prominodeux-native-mobile.png">mobile</a></figcaption></figure>
+<figure><a href="prominodeux-classic-desktop.png"><img src="prominodeux-classic-tabs.png" alt="ProMinoDeux colors with Classic-shaped tabs"></a><figcaption>Classic shape: <a href="prominodeux-classic-desktop.png">full desktop</a> &middot; <a href="prominodeux-classic-mobile.png">mobile</a></figcaption></figure>
+</div>
+</section>
+<footer>No picker implementation or permanent KB CSS changes. <a href="README.md">Method and boundaries</a> &middot; <a href="results.json">Capture results</a> &middot; <a href="preview.css">Commented preview CSS</a></footer>
+</main>
+</body>
+</html>
