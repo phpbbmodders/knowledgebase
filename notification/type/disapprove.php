@@ -147,27 +147,7 @@ class disapprove extends \phpbb\notification\type\base
 		$options = array_merge(['ignore_users' => [],], $options);
 
 		$users = $this->get_author_user_ids((int) $type_data['author_id'], (int) ($type_data['author_type'] ?? 0));
-		$notify_users = $this->check_user_notification_options($users, $options);
-
-		// See notification\type\approve::find_users_for_notification() -
-		// same required-PM override, same reasoning.
-		if (!empty($this->config['kb_require_author_pm']))
-		{
-			$pm_method = 'phpbbmodders.knowledgebase.notification.method.pm';
-			foreach ($users as $user_id)
-			{
-				if (!isset($notify_users[$user_id]))
-				{
-					$notify_users[$user_id] = [];
-				}
-				if (!in_array($pm_method, $notify_users[$user_id], true))
-				{
-					$notify_users[$user_id][] = $pm_method;
-				}
-			}
-		}
-
-		return $notify_users;
+		return $this->check_user_notification_options($users, $options);
 	}
 
 	/**

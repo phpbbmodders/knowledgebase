@@ -145,32 +145,7 @@ class approve extends \phpbb\notification\type\base
 		$options = array_merge(['ignore_users' => [],], $options);
 
 		$users = $this->get_author_user_ids((int) $type_data['author_id'], (int) ($type_data['author_type'] ?? 0));
-		$notify_users = $this->check_user_notification_options($users, $options);
-
-		// When required, the author's PM notification can't be something
-		// they've quietly turned off in their UCP notification options -
-		// added here regardless of what check_user_notification_options()
-		// (which only reflects each user's own preference) returned for
-		// them, including a user who disabled every method for this type
-		// entirely (absent from $notify_users, not just missing the PM
-		// method specifically).
-		if (!empty($this->config['kb_require_author_pm']))
-		{
-			$pm_method = 'phpbbmodders.knowledgebase.notification.method.pm';
-			foreach ($users as $user_id)
-			{
-				if (!isset($notify_users[$user_id]))
-				{
-					$notify_users[$user_id] = [];
-				}
-				if (!in_array($pm_method, $notify_users[$user_id], true))
-				{
-					$notify_users[$user_id][] = $pm_method;
-				}
-			}
-		}
-
-		return $notify_users;
+		return $this->check_user_notification_options($users, $options);
 	}
 
 	/**

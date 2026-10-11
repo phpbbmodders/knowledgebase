@@ -121,8 +121,12 @@ accounts:
 - The moderator assigned the article to the team, marked it reviewed, approved
   it with a reason, and rejected another article. The author's notification
   list showed both the approval and the rejection, and the moderator's showed
-  the pending article. With `kb_require_author_pm` turned on, a rejection also
-  created private messages.
+  the pending article. At the time of that run, the former
+  `kb_require_author_pm` override also caused rejection private messages.
+  Approval/rejection PMs now default on through UCP notification preferences,
+  and explicit opt-outs are respected instead of overridden. See
+  [author PM and forum testing](author-pm-and-forum-testing.md) for the current
+  browser checks and example comment/changelog threads.
 - Deleting a draft left the counts unchanged. Deleting an approved article
   lowered both counts by one and removed its attachment row and stored file; a
   later download returned 404.

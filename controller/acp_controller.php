@@ -276,7 +276,6 @@ class acp_controller
 			'ADVANCED_FORM'            => $this->config['kb_anounce'] ? '' : 'none',
 			'FLAT_INDEX_ON'            => $this->config['kb_flat_index'] ? 'checked="checked"' : '',
 			'CLASSIC_LOOK_ON'          => $this->config['kb_classic_look'] ? 'checked="checked"' : '',
-			'REQUIRE_PM_ON'            => $this->config['kb_require_author_pm'] ? 'checked="checked"' : '',
 			'PER_PAGE'                 => $this->config['kb_articles_per_page'] ?? 10,
 			'DESCRIPTION_MAX_LENGTH'   => $this->kb->get_description_max_length(),
 			'DESCRIPTION_COLUMN_LENGTH' => functions_kb::DESCRIPTION_COLUMN_LENGTH,
@@ -324,7 +323,6 @@ class acp_controller
 		$this->config->set('kb_anounce', $this->request->variable('anounce', 0));
 		$this->config->set('kb_flat_index', $this->request->variable('flat_index', 0));
 		$this->config->set('kb_classic_look', $this->request->variable('classic_look', 0) ? 1 : 0);
-		$this->config->set('kb_require_author_pm', $this->request->variable('require_author_pm', 0));
 		$this->config->set('kb_forum_id', $this->request->variable('forum_id', 0));
 		$this->config->set('kb_changelog_forum_id', $this->request->variable('changelog_forum_id', 0));
 		$this->config_text->set('kb_forum_prefix', utf8_normalize_nfc($this->request->variable('forum_prefix', '', true)));

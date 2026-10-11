@@ -79,6 +79,11 @@ class pm extends \phpbb\notification\method\base
 		return $notification_type === null || in_array($notification_type->get_type(), self::SUPPORTED_TYPES, true);
 	}
 
+	public function is_enabled_by_default()
+	{
+		return true;
+	}
+
 	/**
 	 * {@inheritdoc}
 	 */
