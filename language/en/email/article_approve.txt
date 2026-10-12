@@ -4,7 +4,7 @@ Hello, {USERNAME}!
 
 You are receiving this notice because the moderator {MODERATOR} approved your article “{ARTICLE_TITLE}”.
 
-If you want to view an article, click on the following link:
+If you want to view the article, click on the following link:
 {U_VIEW_ARTICLE}
 
 {EMAIL_SIG}

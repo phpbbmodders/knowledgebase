@@ -1,4 +1,4 @@
-Subject: Article in a queue for moderation - “{ARTICLE_TITLE}”
+Subject: Article awaiting approval - “{ARTICLE_TITLE}”
 
 Hello!
 
