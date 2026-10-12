@@ -91,6 +91,55 @@ checked against the current code on 10/12/2026.
 | 5 | `need_approval::is_available()` read a key that does not exist in `user->data` (`author_id`); the notification types used `global $table_prefix` instead of injected table names; the template-event files sat in a prosilver-only folder. | Fixed in `cb8345c` and `32a8ba9`; the events now live in `styles/all/template/event/`, which is the extension's only style folder. |
 | 6 | `controller/posting.php` compared the category-move ids with `!==` in one place and `!=` a few lines later. Harmless while both are ints, fragile otherwise. | Fixed in `c53137a`: both comparisons are strict. |
 
+## Checked against phpBB master (4.0.0-a3-dev) - 10/12/2026
+
+The notes above were written before 4.0 was readable. On 10/12/2026 the extension was checked
+against upstream `phpbb/phpbb` `master` (`a57d60d`, 4.0.0-a3-dev, PHP `^8.2`, Symfony 7.4,
+Twig 3.14) in two ways: a static comparison with 3.3.x (`e81e644`), and a smoke test on a real
+4.0.0-a3-dev board (a local checkout at `ccb3ac2`, three weeks older than that master, with the
+version cap lifted in a throwaway copy of the extension).
+
+**Still fine.** All six `core.*` events exist with identical variable lists (the viewonline one
+moved to `phpbb/members/controller/online.php`). The three template events exist in prosilver and
+`INCLUDECSS` still accepts an expression. All 49 core functions, 20 constants and 38 classes the
+extension uses still exist; the only public methods removed from those classes are
+`template::clear_cache`, the Flash filters and the viewflash setter, none of which it calls.
+The notification method base is unchanged. `check_is_img()` works (both the old constants and
+`\phpbb\attachment\attachment_category` exist), and `download_mode`, dropped from the extension
+groups table, is read with `g.*` and a default. The templates use only `if`, `for` and the
+`INCLUDE*` tags, which Twig 3 accepts. On the 4.0 board the extension enabled (all 33 migrations
+ran, 17 tables), and every front-end page loaded (index, categories, all articles, my articles,
+search and results, article, print view, posting form, UCP notification pages), every ACP module
+rendered, and an article submitted through the posting form was saved without error.
+
+**Found, not yet fixed.**
+
+1. **Notification avatars (breaks).** `get_avatar(): string` in `notification/type/approve.php`,
+   `disapprove.php` and `need_approval.php` returns the avatar as an HTML string. On 4.0
+   `user_loader::get_avatar()` returns an array of avatar data and the base class passes it to
+   `avatar_helper`, so all three types throw a `TypeError` ("Return value must be of type string,
+   array returned"), reproduced on the 4.0 board. Showing a Knowledge Base notification would
+   fail there. The fix needs a version branch (3.3.x wants the string, 4.0 the array; a group
+   author returns `''` today and would need `[]`).
+2. **Upload directory (not verified by an upload).** `controller/posting.php` sets the plupload
+   directories from `$this->config['upload_path']`. 4.0 removes that setting (migration
+   `storage_attachment` moves it to `storage\attachment\config\path`), so it reads as empty
+   there. Core's own plupload still reads `upload_path` at that master, so this may be fixed or
+   changed in core first; the extension should fall back to the storage setting.
+3. **Image size limits (harmless).** `textformatter/article_text.php` reads `max_post_img_width`
+   and `max_post_img_height`, which 4.0 removes with Flash and image links; they read as empty,
+   and `enable_bbcode('flash')` is a no-op once the BBCode is gone.
+4. **Declared support.** `require.php` is `>=8.0` but 4.0 needs 8.2, and both phpBB constraints
+   exclude 4.0 (`<4.0.0`). They need loosening, and 4.0's PHP floor stating, once the other points
+   are settled.
+
+**Not checked.** An actual attachment upload on 4.0, email delivery of the notifications, the
+rewritten `acp_extensions` (extension catalogue and Composer handling), and a run on the current
+master rather than the three-week-old checkout. The 4.0 board also had other extensions installed;
+one of them (`tas2580/wiki`) breaks the UCP notification settings page on 4.0 because it overrides
+the notification base constructor, which gained two arguments. The Knowledge Base types do not
+override it and are unaffected by that change. No new core event is needed for any of this.
+
 ## Reference material
 
 On the maintainer's machine, under `/home/william/Desktop/repos/misc/docs/`:
