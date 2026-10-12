@@ -1534,7 +1534,8 @@ class posting
 			}
 		}
 		$this->get_kb_submitted_attachments($art_id, $attachment_data, $preview, $edit, $submit);
-		$this->plupload->set_upload_directories($this->config['upload_path'], $this->config['upload_path'] . '/plupload');
+		$upload_path = $this->kb->get_upload_path();
+		$this->plupload->set_upload_directories($upload_path, $upload_path . '/plupload');
 	}
 
 	/**

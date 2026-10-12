@@ -112,28 +112,34 @@ ran, 17 tables), and every front-end page loaded (index, categories, all article
 search and results, article, print view, posting form, UCP notification pages), every ACP module
 rendered, and an article submitted through the posting form was saved without error.
 
-**Found, not yet fixed.**
+**Found, and fixed the same day** (version 2.0.24 code, working on both 3.3.x and 4.0):
 
-1. **Notification avatars (breaks).** `get_avatar(): string` in `notification/type/approve.php`,
-   `disapprove.php` and `need_approval.php` returns the avatar as an HTML string. On 4.0
-   `user_loader::get_avatar()` returns an array of avatar data and the base class passes it to
-   `avatar_helper`, so all three types throw a `TypeError` ("Return value must be of type string,
-   array returned"), reproduced on the 4.0 board. Showing a Knowledge Base notification would
-   fail there. The fix needs a version branch (3.3.x wants the string, 4.0 the array; a group
-   author returns `''` today and would need `[]`).
-2. **Upload directory (not verified by an upload).** `controller/posting.php` sets the plupload
-   directories from `$this->config['upload_path']`. 4.0 removes that setting (migration
-   `storage_attachment` moves it to `storage\attachment\config\path`), so it reads as empty
-   there. Core's own plupload still reads `upload_path` at that master, so this may be fixed or
-   changed in core first; the extension should fall back to the storage setting.
-3. **Image size limits (harmless).** `textformatter/article_text.php` reads `max_post_img_width`
-   and `max_post_img_height`, which 4.0 removes with Flash and image links; they read as empty,
-   and `enable_bbcode('flash')` is a no-op once the BBCode is gone.
-4. **Declared support.** `require.php` is `>=8.0` but 4.0 needs 8.2, and both phpBB constraints
-   exclude 4.0 (`<4.0.0`). They need loosening, and 4.0's PHP floor stating, once the other points
-   are settled.
+1. **Notification avatars (was a fatal error on 4.0).** `get_avatar(): string` in
+   `notification/type/approve.php`, `disapprove.php` and `need_approval.php` returned the avatar as
+   an HTML string, but on 4.0 `user_loader::get_avatar()` returns an array of avatar data that the
+   base class passes to its avatar helper, so all three types threw a `TypeError` ("Return value
+   must be of type string, array returned"), reproduced on the 4.0 board. The types now return
+   what the loader gives, without a string return type, and a group author gets an empty value of
+   the right kind (`[]` on 4.0, `''` on 3.3.x) from the new `notification/type/avatar_compat.php`
+   trait. The 4.0 base class is recognised by the `avatar_helper` property it gained, not by a
+   version number, so a 4.0 development build behaves like the release. On the 4.0 board all
+   three types, including the group-author case, now build their display data.
+2. **Upload directory.** `controller/posting.php` took the plupload directories from
+   `config['upload_path']`, which 4.0 removes (migration `storage_attachment` moves it to
+   `storage\attachment\config\path`). `functions_kb::get_upload_path()` now reads either setting,
+   falling back to `files`. Real uploads on the 4.0 board, a small image and a chunked 8.6 MB file,
+   succeeded with the old code as well: the extension sets its own directories earlier in the
+   request, so the stale line only reset them afterwards. It was a latent inconsistency rather
+   than a break, and is now correct.
+3. **Image size limits.** `textformatter/article_text.php` reads `max_post_img_width` and
+   `max_post_img_height`, which 4.0 removes with Flash and image links; a missing value now counts
+   as no limit. `enable_bbcode('flash')` stays; it does nothing once the BBCode is gone.
 
-**Not checked.** An actual attachment upload on 4.0, email delivery of the notifications, the
+**Still open: declared support.** `require.php` is `>=8.0` but 4.0 needs 8.2, and both phpBB
+constraints exclude 4.0 (`<4.0.0`). They have not been changed, because lifting them is a
+compatibility claim and the points under "Not checked" are still unverified.
+
+**Not checked.** Email delivery of the notifications, the
 rewritten `acp_extensions` (extension catalogue and Composer handling), and a run on the current
 master rather than the three-week-old checkout. The 4.0 board also had other extensions installed;
 one of them (`tas2580/wiki`) breaks the UCP notification settings page on 4.0 because it overrides

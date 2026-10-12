@@ -11,6 +11,7 @@
 namespace phpbbmodders\knowledgebase\notification\type;
 
 require_once __DIR__ . '/kb_extensions_test.php';
+require_once dirname(__DIR__) . '/notification/type/avatar_compat.php';
 require_once dirname(__DIR__) . '/notification/type/need_approval.php';
 require_once dirname(__DIR__) . '/notification/type/approve.php';
 require_once dirname(__DIR__) . '/notification/type/disapprove.php';

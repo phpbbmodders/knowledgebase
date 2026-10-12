@@ -19,6 +19,8 @@ use phpbb\user_loader;
 
 class approve extends \phpbb\notification\type\base
 {
+	use avatar_compat;
+
 	/**
 	 * Notification option data (for outputting to the user)
 	 *
@@ -204,9 +206,9 @@ class approve extends \phpbb\notification\type\base
 	/**
 	 * Get the user's avatar
 	 */
-	public function get_avatar(): string
+	public function get_avatar()
 	{
-		return $this->user_loader->get_avatar($this->get_data('moderator'), false, true);
+		return $this->user_avatar((int) $this->get_data('moderator'));
 	}
 
 	/**

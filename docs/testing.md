@@ -1089,3 +1089,32 @@ preference combination, alternate search backends, other database and browser en
 install, upgrade, disable and purge lifecycle in that run. The seeded changelog forum is not proof
 of every changelog operation. The intended standard is visible, role-aware workflows with explicit
 failures and a clear list of what remains, never "all features passed".
+
+## phpBB 4.0 compatibility fixes - 10/12/2026
+
+A check against phpBB master (4.0.0-a3-dev) found three things, now fixed so the same code runs
+on 3.3.x and 4.0 (details in [phpbb-4.0-compatibility.md](phpbb-4.0-compatibility.md)): the three
+notification types returned the avatar as a string where 4.0 needs an array (a fatal `TypeError`),
+the plupload directories came from the `upload_path` setting that 4.0 removes, and two image size
+limits that 4.0 removes were read without a default.
+
+`kb_phpbb4_compat_test.php` (13 cases) simulates both cores by overriding only the version check:
+each type returns the loader's avatar unchanged in either shape, a group author gets `''` on 3.3.x
+and `[]` on 4.0, the 4.0 base class is recognised by its avatar helper, the upload path comes from
+`upload_path`, the 4.0 storage setting or the `files` default (including a trailing slash and
+empty values), and the image limits tolerate being absent. The full suite passes against the MySQL
+and PostgreSQL containers: 372 tests, 1028 assertions, nothing skipped.
+
+Claude checked it live on a copy of a local phpBB 4.0.0-a3-dev board (three weeks older than the
+master that was read) with the cap in `composer.json` lifted in the copy only. All three
+notification types, including a group author, build their display data after the fix (before it,
+each threw the `TypeError`); `get_upload_path()` returns `files` from the storage setting; a small
+image and an 8.6 MB file (uploaded in four chunks) both uploaded through the posting form; and
+every front-end page and ACP module still loaded. The old code also uploaded fine on 4.0 because
+the extension sets its own directories earlier in the request, so the upload-path change corrects
+a latent inconsistency rather than a break. On the 3.3.x test board the notification pages still
+render for a member with Knowledge Base notifications (8 of them for `kb_author1`) with no error.
+
+Not covered: email delivery of the notifications on 4.0, the 4.0 extension catalogue and Composer
+handling, and the current master (the live board was three weeks older). The declared phpBB and PHP
+constraints were left unchanged.

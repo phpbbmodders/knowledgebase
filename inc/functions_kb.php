@@ -2442,6 +2442,21 @@ class functions_kb
 	}
 
 	/**
+	 * The board's attachment upload directory, relative to the board root,
+	 * without a trailing slash.
+	 *
+	 * phpBB 3.3.x keeps it in the "upload_path" setting; phpBB 4.0 removes that
+	 * setting and keeps it in the attachment storage's "path" setting instead.
+	 * Falls back to "files", phpBB's default, when neither is set.
+	 */
+	public function get_upload_path(): string
+	{
+		$path = $this->config['upload_path'] ?? $this->config['storage\\attachment\\config\\path'] ?? '';
+
+		return rtrim((string) $path, '/') ?: 'files';
+	}
+
+	/**
 	 * @param string $ext
 	 * @param ?array $extensions
 	 * @return bool
