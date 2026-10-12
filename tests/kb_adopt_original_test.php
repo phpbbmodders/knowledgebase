@@ -98,7 +98,7 @@ class kb_adopt_original_test extends \PHPUnit\Framework\TestCase
 
 	private function migration(array $config = []): version_2_0_20
 	{
-		return new version_2_0_20(new \phpbb\config\config($config), $this->db, $this->createMock(\phpbb\db\tools\tools_interface::class), $this->root, 'php', 'phpbb_');
+		return new version_2_0_20(new \phpbb\config\config($config), $this->db, $this->createMock(\phpbb\db\tools\tools_interface::class), $this->root, 'php', 'phpbb_', []);
 	}
 
 	private function adopt(array $config = []): \phpbb\config\config
@@ -107,7 +107,6 @@ class kb_adopt_original_test extends \PHPUnit\Framework\TestCase
 		$migration->adopt_original_package();
 
 		$property = new \ReflectionProperty(\phpbb\db\migration\migration::class, 'config');
-		$property->setAccessible(true);
 
 		return $property->getValue($migration);
 	}
@@ -317,7 +316,7 @@ class kb_adopt_original_test extends \PHPUnit\Framework\TestCase
 	public function test_the_first_migration_is_skipped_on_a_board_that_ran_the_original($config, $skipped)
 	{
 		$this->connect('sqlite');
-		$migration = new version_1_0_0(new \phpbb\config\config($config), $this->db, $this->createMock(\phpbb\db\tools\tools_interface::class), '', 'php', 'phpbb_');
+		$migration = new version_1_0_0(new \phpbb\config\config($config), $this->db, $this->createMock(\phpbb\db\tools\tools_interface::class), '', 'php', 'phpbb_', []);
 
 		$this->assertSame($skipped, (bool) $migration->effectively_installed());
 	}

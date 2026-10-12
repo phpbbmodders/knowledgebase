@@ -31,7 +31,13 @@ if (!class_exists(\phpbb\controller\helper::class))
 	spl_autoload_register(function ($class) use ($root) {
 		if (strpos($class, 'phpbb\\') === 0)
 		{
-			require $root . '/' . str_replace('\\', '/', $class) . '.php';
+			// Like phpBB's real autoloader, stay quiet for a class that does not exist
+			// (class_exists() is used to tell phpBB versions apart).
+			$file = $root . '/' . str_replace('\\', '/', $class) . '.php';
+			if (is_file($file))
+			{
+				require $file;
+			}
 		}
 	});
 }
@@ -52,7 +58,6 @@ class kb_extensions_test extends \PHPUnit\Framework\TestCase
 	private function inject($name, $value)
 	{
 		$property = new \ReflectionProperty(acp_controller::class, $name);
-		$property->setAccessible(true);
 		$property->setValue($this->controller, $value);
 	}
 
@@ -92,7 +97,6 @@ class kb_extensions_test extends \PHPUnit\Framework\TestCase
 	private function invoke($name)
 	{
 		$method = new \ReflectionMethod(acp_controller::class, $name);
-		$method->setAccessible(true);
 		return $method->invoke($this->controller);
 	}
 

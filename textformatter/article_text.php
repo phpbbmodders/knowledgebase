@@ -149,8 +149,9 @@ class article_text
 		$parser->enable_bbcode('url');
 		$parser->set_vars([
 			'max_font_size'  => $this->config['max_post_font_size'],
-			'max_img_height' => $this->config['max_post_img_height'],
-			'max_img_width'  => $this->config['max_post_img_width'],
+			// phpBB 4.0 removes the two image size limits; no limit then.
+			'max_img_height' => (int) ($this->config['max_post_img_height'] ?? 0),
+			'max_img_width'  => (int) ($this->config['max_post_img_width'] ?? 0),
 			'max_smilies'    => $this->config['max_post_smilies'],
 			'max_urls'       => $this->config['max_post_urls'],
 		]);

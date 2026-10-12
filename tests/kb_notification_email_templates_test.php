@@ -11,6 +11,7 @@
 namespace phpbbmodders\knowledgebase\notification\type;
 
 require_once __DIR__ . '/kb_extensions_test.php';
+require_once dirname(__DIR__) . '/notification/type/avatar_compat.php';
 require_once dirname(__DIR__) . '/notification/type/need_approval.php';
 require_once dirname(__DIR__) . '/notification/type/approve.php';
 require_once dirname(__DIR__) . '/notification/type/disapprove.php';
@@ -36,5 +37,20 @@ class kb_notification_email_templates_test extends \PHPUnit\Framework\TestCase
 	public function notification_types()
 	{
 		return [[need_approval::class], [approve::class], [disapprove::class]];
+	}
+
+	/** @dataProvider email_templates */
+	public function test_each_email_names_the_board_without_calling_it_a_conference_and_ends_with_the_signature(string $file)
+	{
+		$text = file_get_contents(dirname(__DIR__) . '/language/en/email/' . $file);
+
+		$this->assertStringNotContainsStringIgnoringCase('conference', $text);
+		$this->assertStringStartsWith('Subject: ', $text);
+		$this->assertStringContainsString('{EMAIL_SIG}', $text);
+	}
+
+	public function email_templates(): array
+	{
+		return [['user_need_approval.txt'], ['article_approve.txt'], ['article_disapprove.txt']];
 	}
 }

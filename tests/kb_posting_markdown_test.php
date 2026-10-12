@@ -36,19 +36,16 @@ class kb_posting_markdown_test extends \PHPUnit\Framework\TestCase
 		$this->article_text = $this->getMockBuilder(\phpbbmodders\knowledgebase\textformatter\article_text::class)->disableOriginalConstructor()->getMock();
 		$this->controller = (new \ReflectionClass(posting::class))->newInstanceWithoutConstructor();
 		$property = new \ReflectionProperty(posting::class, 'article_text');
-		$property->setAccessible(true);
 		$property->setValue($this->controller, $this->article_text);
 		$language = $this->getMockBuilder(\phpbb\language\language::class)->disableOriginalConstructor()->getMock();
 		$language->method('lang')->willReturnArgument(0);
 		$property = new \ReflectionProperty(posting::class, 'language');
-		$property->setAccessible(true);
 		$property->setValue($this->controller, $language);
 	}
 
 	private function call(string $method, ...$args)
 	{
 		$reflection = new \ReflectionMethod(posting::class, $method);
-		$reflection->setAccessible(true);
 
 		return $reflection->invoke($this->controller, ...$args);
 	}

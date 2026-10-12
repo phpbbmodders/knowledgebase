@@ -3,7 +3,7 @@
 	"type": "phpbb-extension",
 	"description": "Knowledge Base",
 	"homepage": "https://www.phpbbmodders.com/",
-	"version": "2.0.22",
+	"version": "2.0.24",
 	"keywords": [
 		"phpbb",
 		"extension",
@@ -32,14 +32,14 @@
 		}
 	],
 	"require": {
-		"php": ">=8.0",
-		"phpbb/phpbb": ">=3.3.19 <4.0.0",
+		"php": ">=8.2",
+		"phpbb/phpbb": ">=3.3.19 <4.1.0",
 		"composer/installers": "~2.0"
 	},
 	"extra": {
 		"display-name": "Knowledge Base",
 		"soft-require": {
-			"phpbb/phpbb": ">=3.3.19,<4.0.0@dev"
+			"phpbb/phpbb": ">=3.3.19,<4.1.0@dev"
 		}
 	}
 }

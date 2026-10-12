@@ -27,11 +27,9 @@ class kb_approve_notification_test extends \PHPUnit\Framework\TestCase
 
 		$controller = (new \ReflectionClass(approve::class))->newInstanceWithoutConstructor();
 		$property = new \ReflectionProperty(approve::class, 'notification_manager');
-		$property->setAccessible(true);
 		$property->setValue($controller, $manager);
 
 		$method = new \ReflectionMethod(approve::class, 'delete_need_approval_notification');
-		$method->setAccessible(true);
 		$method->invoke($controller, 12);
 	}
 }

@@ -9,6 +9,10 @@ A knowledge base for phpBB: articles organised in categories, with attachments, 
 3. Enable the **Knowledge Base** extension
 4. Configure it under **Extensions → Knowledge Base**
 
+The Knowledge Base follows each member's board style. The flat article index
+and an optional colour stylesheet (a bundled one, or your own CSS file) are set
+on the same ACP page; see the [styling guide](docs/styling/README.md).
+
 Upgrading from the original `sheer/knowledgebase` extension? See
 [Upgrading from the original](docs/upgrading-from-original.md): your data carries
 over.

@@ -33,3 +33,16 @@ dd i {
 	margin-right: 2px;
 	margin-left: 2px;
 }
+
+/* Text for screen readers only: read out with the control it describes, not shown. */
+.kb-sr-only {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	margin: -1px;
+	padding: 0;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
+}

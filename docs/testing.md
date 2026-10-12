@@ -125,8 +125,8 @@ accounts:
   `kb_require_author_pm` override also caused rejection private messages.
   Approval/rejection PMs now default on through UCP notification preferences,
   and explicit opt-outs are respected instead of overridden. See
-  [author PM and forum testing](author-pm-and-forum-testing.md) for the current
-  browser checks and example comment/changelog threads.
+  [Author PMs, comments and changelog](#author-pms-comments-and-changelog---10112026)
+  for the current browser checks and example comment/changelog threads.
 - Deleting a draft left the counts unchanged. Deleting an approved article
   lowered both counts by one and removed its attachment row and stored file; a
   later download returned 404.
@@ -854,3 +854,383 @@ Only comments changed. Claude compared every touched file with its committed ver
 token, ignoring comments and whitespace, and found no difference; every other doc comment is
 identical, all files pass `php -l`, and the full suite passes against the MySQL and PostgreSQL
 containers (275 tests, 800 assertions). The live board still serves its pages.
+
+## Flat index layout and the alternative stylesheet picker - 10/12/2026
+
+The old "classic look" setting is split in two. Its layout (wrapping, compact tabs and
+tables) belongs to the flat article index and loads `phpbbmodders_knowledgebase_flat.css`;
+its colours became the bundled **Slate** alternative, chosen in a new ACP picker. Custom
+CSS files from `store/phpbbmodders_knowledgebase/stylesheets/` are listed in the same
+dropdown and served by `controller/stylesheet.php`. Migration `version_2_0_24` adds
+`kb_alt_style_enabled` (0) and `kb_alt_style` (`bundled:slate`) and removes
+`kb_classic_look` without mapping it. The article tables also moved into prosilver's
+forum-header box with `bg1`/`bg2` rows: in the native look the header text was white on a
+white page.
+
+`kb_alternative_style_test.php` (68 cases) covers: which bundled and custom files are
+listed (symbolic links, folders, oversized, badly named and non-CSS entries are not); names
+that could leave the folder, including encoded and absolute paths and a null byte; a custom
+folder that is itself a link; parsing of stored choices; what is active with the setting
+off, on, and after the file vanishes; the variables the page header gives the templates for
+each flat/colour combination; the controller's headers, 304 reply and 404s; what the ACP
+saves (the choice is kept while off, a forged choice never replaces it, switching on with an
+unavailable file is refused); the dropdown markup; and the migration. Removing the
+symbolic-link check or the double-dot rule makes the matching tests fail. The layout tests
+now check that the flat sheet has no colour declarations, that Slate has no layout
+declarations and is commented, and the load order of the sheets. The full suite passes
+against the MySQL and PostgreSQL containers: 345 tests, 959 assertions, nothing skipped.
+
+Claude checked it live on the SQLite test board and on throwaway MySQL 8.0 and PostgreSQL 16
+boards (fresh installs through the phpBB CLI installer, and an update from the previous
+code with the old setting switched on, then `db:migrate`). On all three, through the real
+ACP: no classic checkbox; the switch and dropdown present with Bundled and Custom groups;
+saving on, saving off (choice kept), refusing an unavailable choice (nothing changed), a
+forged choice ignored, and a custom file chosen; unsafe files not listed. On MySQL and
+PostgreSQL the front end loaded exactly the expected sheets for all six combinations of flat
+layout and bundled/custom colours, with the custom link after the board's own stylesheets;
+the custom file came back as `text/css`; ten unsafe requests (link, oversized, `..` name,
+wrong extension, folder, `../`, encoded `../`, absolute path, missing, empty) all returned
+404; and removing the chosen file made the page load only the base sheet while the ACP
+showed a warning and kept its controls. The update left the flat index setting unchanged on
+both. On SQLite, conditional requests returned 304.
+
+Screenshots in `docs/images/styling/` come from a headless Chromium script on the test
+board: three board styles (prosilver, Revolution, ProMinoDeux), hierarchical and flat,
+board colours and Slate, a phone width for each, and a custom selected-tab sheet. Computed
+colours matched expectations (own palette per style with no sheet, Slate's `#536482` with
+it, the custom green only on the selected tab) and no page scrolled sideways. The code box on
+the article page is a self-contained white box with dark text on all three styles.
+
+Not covered: the final tab shape and colour (waiting on Kailey), keyboard focus and hover
+states and print layout under Slate, board styles other than these three, a style that
+inherits from nothing, and right-to-left languages. The test board's nginx was not checked
+for serving `store/` (the extension serves custom files itself and never exposes the
+folder). Fresh SQLite installs were not repeated; the SQLite board was updated with
+`db:migrate`.
+
+## Sorting order setting: clear names, tooltips and screen-reader text - 10/12/2026
+
+The ACP "Sorting order" choices are now **Fixed** (was "forcibly"), **Selectable** and
+**Alphabetical**, each with a one-sentence explanation. The explanation is the
+tooltip on the choice and is also read out with the radio button through `aria-describedby`
+(a visually hidden span, not `display: none`). The three radios sit in a `radiogroup` labelled
+by "Sorting order:"; the old label pointed at the first radio only. The ACP's key
+`ALPHABET` ("alphabetic navigation") was the same key the reader pages use for the A-Z row,
+so it was renamed `KB_SORT_ALPHABET` and `FORCIBLY`/`SELECTABLE` became `KB_SORT_FIXED`/
+`KB_SORT_SELECTABLE`. On the reader side, the alphabetical navigation is now a labelled
+`navigation` landmark, every letter link has a "Articles starting with X" tooltip, and the
+selected letter's link carries `aria-current`.
+
+`kb_acp_sort_type_test.php` (7 cases) checks the names and explanations, that the old keys are
+gone, the group, label, tooltip and description wiring of each radio, the hidden-text CSS,
+and the navigation markup. Claude checked the real ACP page in headless Chromium: the group is
+named "Sorting order:" and described by its explanation, each radio has a matching label,
+tooltip and description, and the text is 1 px wide (hidden but present). On the reader page
+with alphabetical navigation switched on, the landmark is labelled, all 26 letters have the
+tooltip, only the chosen letter is marked current and the move arrows are absent. The setting
+was put back to Fixed afterwards. A screen reader itself was not run.
+
+## Announcement forum: one choice instead of a checkbox and a forum - 10/12/2026
+
+"Announce new articles in a forum" was a checkbox that revealed a forum select, while the
+changelog forum was a select with a "None (disabled)" choice. Both now work the changelog way:
+one select per setting, "None (disabled)" first and the default. Choosing a forum switches
+announcements on (`kb_anounce` 1 and `kb_forum_id`); choosing None switches them off (both 0), so
+the two can no longer disagree (before, a ticked box with no forum made the posting page report a
+configuration warning). The prefix options appear when a forum is chosen. A board that had kept a
+forum while announcements were off now shows None, matching what it does. The old checkbox text
+was adjusted: "If enabled, ... you choose below" became "A topic ... in the forum you choose
+whenever a new article is added. Choose None (disabled) to turn announcements off." Both selects
+now have a label bound to them. Fresh installs already default both to 0 (None).
+
+`kb_acp_announcement_forum_test.php` (7 cases) covers saving (a forum turns it on; None, nothing,
+a negative id and non-numeric input turn it off), the page markup and the wording.
+Claude drove the real ACP on fresh MySQL 8.0 and PostgreSQL 16 boards and on the SQLite test
+board: defaults 0/0/0 in the database, both selects start on None with the prefix options hidden,
+no checkbox, choosing a forum reveals the prefix options, saving writes the forum and the
+on-flag, choosing None hides them and saves 0 for both, and a reload shows what was saved. The
+SQLite board's own values were put back afterwards.
+
+## Author PMs, comments and changelog - 10/11/2026
+
+Recorded from a Codex session (pull request #45, merged). The behaviour:
+
+- The English navigation and page title say **Knowledge Base**.
+- Approval and rejection private messages default on in the UCP notification preferences. Members
+  can switch either off independently; an explicit saved opt-out stays in effect, and a missing
+  preference uses the default. The former ACP forced-delivery option is gone; migration
+  `version_2_0_23` removes its configuration key (`kb_require_author_pm`) and leaves every user's
+  preferences alone. A moderator's existing option to skip messaging is unchanged.
+- The custom PM method supports approval and rejection only; other notification types do not gain
+  PM delivery.
+
+Checked on the disposable SQLite board with visible Chromium and the seeded author, reader and
+moderator accounts; twelve workflow checks passed:
+
+- navigation and heading say Knowledge Base;
+- both author PM choices are checked with no saved preference;
+- default-on approval delivers a real PM that shows in the author's inbox;
+- the reader opens the generated public comments thread, posts a comment the author sees, and
+  sees the author's reply;
+- the moderator reads the private submission changelog; the reader is denied the changelog forum,
+  topic and reply form; the moderator appends a private reply;
+- saved UCP opt-outs persist and stop both approval and rejection PMs; re-enabling delivers a real
+  rejection PM;
+- an author edit appends a revision entry and body diff to the same changelog topic.
+
+The ACP configuration form renders without the old author-PM control, and disabling and
+re-enabling the extension applied the migration without purging article data (the migration
+record exists and the key is absent). The PHPUnit run at the time was 277 tests with 16
+database-dependent cases skipped, so it made no MySQL/PostgreSQL claim. Claude later ran the full
+suite on MySQL 8.0 and PostgreSQL 16: 277 tests, 805 assertions, nothing skipped.
+
+Example threads from that run (local IDs, not stable after a reset): article 267 "Comments and
+changelog verified walkthrough", comments topic 18, changelog topic 17, at
+`http://localhost:8092/knowledgebase/article?k=267`, `viewtopic.php?t=18` and `viewtopic.php?t=17`.
+Log in as the seeded moderator for the private changelog. The comments hold a reader question and
+an author reply; the changelog holds the submission entry, a moderator reply and a revision diff.
+The fixture grants changelog access to KB Team and administrators, so this proves an ordinary
+reader is denied, not every possible group combination. Approval reasons go to the author; they
+are not appended to the changelog (observed, not changed).
+
+The browser scripts were exploratory (`/tmp/playwright-test-kb-comments-pm.js` and
+`/tmp/playwright-test-kb-changelog-revision.js`, since lost) and wrote content to the disposable
+board, so never run such scripts against a real board. Harness corrections made on the way (native
+forum Submit naming, the required assignment/review order, phpBB's generic denial container, a
+read-only retry for a redirect race) were not application fixes.
+
+## Fixture and browser testing method - 10/11/2026
+
+A handoff from Codex's local fixture and browser run, not a claim that every feature passes. The
+PHPUnit and database suites above remain the primary checks; do not substitute this for them.
+
+**Setup.** The fixture tooling is `/home/william/Desktop/repos/seed-forum` (seed script
+`bin/seed-kb-fixtures.php`, runner config `config/local.yml`, inventory
+`docs/knowledgebase-fixtures.md`). The disposable board is
+`/home/william/Desktop/repos/seeded-board/kb` (SQLite `store/sqlite.db`) at
+`http://localhost:8092/knowledgebase`, with the extension bind-mounted from this checkout (the
+mount is lost on reboot and must be recreated with `sudo mount --bind`). After the final reset in
+that run the board held 265 articles, 37 categories, four main trees six levels deep, three team
+groups, 41 pending revisions, two private draft edits, five custom fields and eight attachment
+rows. Outgoing mail is disabled. Fixture attachment files are written to the extension's mounted
+`files/` directory, which is not wholly disposable.
+
+**Resetting.** Confirm the runner config targets the disposable board; never `--reset` a working
+or production board. Stop all browser sessions first (a browser using SQLite during installation
+once caused a lock failure). From `seed-forum`: `php -l bin/seed-kb-fixtures.php`,
+`git diff --check -- bin/seed-kb-fixtures.php`, `bin/reset-board.sh --validate`, then
+`bin/reset-board.sh --reset`. Check installer output and live HTTP, browser and database state,
+not just the exit status, and log in again afterwards because old cookies, ACP SIDs and form
+tokens belong to the old installation. For a display-only change use
+`bin/reset-board.sh --purge-cache` instead of a full reset.
+
+**Browser method.** Visible or headless Chromium through the Playwright skill
+(`node <skill>/run.js script.js`), one browser context per role (guest, reader, both authors,
+moderator, admin). The public fixture password for `kb_reader`, `kb_author1`, `kb_author2`,
+`kb_moderator` and `admin` is `KbTest1234!`; keep the board local and never commit session state
+or form tokens. For the ACP, follow the real ACP link from the logged-in board and re-authenticate;
+a bare `/adm/index.php` does not establish the session. Wait until a phpBB form is more than a
+second older than its hidden `creation_time` before submitting, or it fails as a false login or
+form error. Make changes through the real controls, then check SQLite rows and files independently;
+use `.timeout 5000` for read-only SQLite queries and never write expected results into the
+database. The scripts in `/tmp` were exploratory and have since been lost; inspect prerequisites
+and mutations before reusing any like them.
+
+**What the run exercised (153 browser checks, 2 initial failures).** Every category as a reader
+with all breadcrumbs (four roots, sibling branches, empty categories, deep leaves); reader posting
+denial, draft privacy, author permissions, read-only categories, team-only contribution and
+category-scoped moderation; all ten queue options with paging; named BBCode and Markdown articles,
+group-authored articles, a Markdown anchor, keyword search and custom-field filtering; upload,
+required-field errors, private draft, submission, assignment, team review, reason enforcement,
+approval, private further edit, revision comparison and approval, deactivation, reactivation,
+group and co-author publication, rejection and deletion; attachment gates per role and article
+status, image loading, thumbnails and removal on delete; copy-link and the print view; desktop,
+tablet and phone widths with overflow checks; every ACP module, saving the configuration, the
+hierarchical and flat views, and a configuration save without its CSRF token being refused; a
+disposable deep category (copied permissions and default team) renamed, moved across trees and
+deleted; a disposable custom field and value added, toggled and deleted; an attachment extension
+added, disabled and re-enabled; the Operations Team permission editor and mask; deleting and
+recreating the native search index; cleaning the deliberately missing attachment row; and tree
+interval, depth, field-assignment and counter checks. Approval and rejection bell notifications,
+PMs and emails were observed through a temporary Mailpit container on `127.0.0.1` only, which the
+final reset removed; pending-review email delivery was not confirmed and must not be described as
+passing. Codex's visual report and per-suite JSON lived under
+`/home/william/Documents/Codex/2026-10-09/look-at-home-william-desktop-repos/kb-browser/`; treat
+those screenshots as historical views from before the final reset.
+
+**Two defects found and fixed (pull request #44).** (1) Preview cleared the selected custom-field
+values and cross-listed categories, so Submit then failed the required-field checks;
+`controller/posting.php` redisplayed submitted selections only for `$submit`, not `$preview`. (2)
+Advanced Search disabled category options for a reader who could browse them, because
+`controller/search.php` called `make_category_select(0, [], false)`, whose default permission is
+the contribution right `kb_u_add`; search now builds its options after the existing read and
+search checks without contribution ACL. Do not give a reader posting permission to make a test
+pass. The regression script is `tests/browser/kb_selection_regressions.js` (seven checks: Preview
+on a new and an existing article, cleared optional choices, category choice on desktop and phone,
+real search results, reader posting denial, guest denial); run it with
+`node <skill>/run.js tests/browser/kb_selection_regressions.js`, with `KB_TEST_URL`,
+`KB_STATE_DIR` and `KB_ARTIFACT_DIR` overriding the URL, saved role states and output folder.
+The article custom-field layout was also corrected in `controller/article.php` (each nonempty field
+ends in a line break; empty fields add none), with six browser checks at 1440, 768 and 390 px.
+
+**Avoiding false failures and false passes.** Uploaded images are outside `.content`; inspect
+`img.postimage`. The print button uses its rendered label and icon, not an invented title; check
+the clipboard for copy-link. Match real localized text and capitalization (field toggling shows
+"make required", cleanup says "successfully synchronized"). The search page has two `#keywords`
+elements; use the search form's input. A no-match term must respect the word-length limit, since a
+longer word gives a validation message, not an empty result. When indexing, wait for the finished
+index and cleared progress, not the first nonzero count. Separate real defects from harness
+errors: fix a bad selector and rerun, and never relabel a real failure as a pass.
+
+**Not covered.** Bulk extra-file deletion (needs a separately isolated upload directory), permission
+writes and ACL_NEVER inheritance, category deletion with article and subcategory moves, every
+upload type, size and count boundary, stale-edit conflicts, revision rejection, every notification
+preference combination, alternate search backends, other database and browser engines, and the
+install, upgrade, disable and purge lifecycle in that run. The seeded changelog forum is not proof
+of every changelog operation. The intended standard is visible, role-aware workflows with explicit
+failures and a clear list of what remains, never "all features passed".
+
+## phpBB 4.0 compatibility fixes - 10/12/2026
+
+A check against phpBB master (4.0.0-a3-dev) found three things, now fixed so the same code runs
+on 3.3.x and 4.0 (details in [phpbb-4.0-compatibility.md](phpbb-4.0-compatibility.md)): the three
+notification types returned the avatar as a string where 4.0 needs an array (a fatal `TypeError`),
+the plupload directories came from the `upload_path` setting that 4.0 removes, and two image size
+limits that 4.0 removes were read without a default.
+
+`kb_phpbb4_compat_test.php` (13 cases) simulates both cores by overriding only the version check:
+each type returns the loader's avatar unchanged in either shape, a group author gets `''` on 3.3.x
+and `[]` on 4.0, the 4.0 base class is recognised by its avatar helper, the upload path comes from
+`upload_path`, the 4.0 storage setting or the `files` default (including a trailing slash and
+empty values), and the image limits tolerate being absent. The full suite passes against the MySQL
+and PostgreSQL containers: 372 tests, 1028 assertions, nothing skipped.
+
+Claude checked it live on a copy of a local phpBB 4.0.0-a3-dev board (three weeks older than the
+master that was read) with the cap in `composer.json` lifted in the copy only. All three
+notification types, including a group author, build their display data after the fix (before it,
+each threw the `TypeError`); `get_upload_path()` returns `files` from the storage setting; a small
+image and an 8.6 MB file (uploaded in four chunks) both uploaded through the posting form; and
+every front-end page and ACP module still loaded. The old code also uploaded fine on 4.0 because
+the extension sets its own directories earlier in the request, so the upload-path change corrects
+a latent inconsistency rather than a break. On the 3.3.x test board the notification pages still
+render for a member with Knowledge Base notifications (8 of them for `kb_author1`) with no error.
+
+Not covered: email delivery of the notifications on 4.0, the 4.0 extension catalogue and Composer
+handling, and the current master (the live board was three weeks older). The declared phpBB and PHP
+constraints were left unchanged.
+
+## PHP 8.2 minimum - 10/12/2026
+
+`composer.json` now requires PHP `>=8.2` (it said `>=8.0`), and `ext.php` refuses to enable the
+extension below the same version; its check now compares against `MIN_PHP_VERSION` instead of a
+second hard-coded number, through `ext::php_version_meets_minimum()`. This is a policy choice. The
+extension uses nothing specific to 8.1 or 8.2: all 126 PHP files linted clean and the 372 unit tests
+passed on PHP 8.0.30 (Docker `php:8.0-cli`; the 17 database cases skip there for lack of drivers)
+before the change. phpBB 4.0 needs 8.2 itself and the only CI job that runs (see the note under "PHP 8.5") uses
+PHP 8.2, so the stated floor is the version CI tests. A 3.3.x board on PHP 8.0 or 8.1 can no longer enable it.
+
+`kb_declared_support_test.php` (14 cases) keeps the claims from drifting: the Composer and
+`ext.php` minimums are the same; eight PHP version strings are judged correctly (8.0, 8.1 and an
+8.2 development build refused, 8.2.0 and later accepted); the PHP running the tests passes; the CI
+matrix starts at the declared minimum, has at least three versions and includes the primary one;
+the phpBB requirement and soft requirement carry the same minimum and the same `<4.0.0` cap; and the
+compatibility notes state the same floor. The full suite passes against the MySQL and PostgreSQL
+containers (386 tests, 1052 assertions, nothing skipped), and a fresh MySQL board enabled the
+extension and recorded version 2.0.24. The phpBB cap was not changed.
+
+## Running on phpBB 4.0 and allowing it in the constraints - 10/12/2026
+
+`composer.json` now allows phpBB 4.0.x: the requirement is `>=3.3.19 <4.1.0` and the soft requirement
+`>=3.3.19,<4.1.0@dev` (both said `<4.0.0`). To back that, the extension was run, with the constraints
+exactly as shipped, on a local phpBB 4.0.0-a3-dev board (three weeks older than the master that was
+read) and checked end to end. It found three more problems, all fixed so one code base serves 3.3.x
+and 4.0:
+
+- Every icon was drawn blank, because 4.0 uses Font Awesome 6 and needs different markup. All icons
+  now come from `inc/icon.php` through the template function `KbIconClass()` (a tagged Twig
+  extension, `inc/twig_icon.php`); 3.3.x output is unchanged.
+- The article page returned a 500: the text renderer service passes `configure_user()` its arguments
+  in the 3.3.x order and 4.0 declares them in another. `textformatter/renderer.php` accepts any order.
+- An uploaded file's recorded size was that of its last chunk, on every version; it is now the merged
+  file's size.
+
+New tests: `kb_icon_test.php` (11 cases: 3.3.x classes identical to the old markup, 4.0 markup, the four
+renamed outline icons, a free-typed icon name passed through, the Twig function rendered through a real
+Twig environment and its service tag, and no hand-written icon class left in any template or PHP
+file) and `kb_renderer_argument_order_test.php` (7 cases: all six argument orders reach the parent
+correctly, and the service definition). The migration tests now pass the seventh constructor
+argument 4.0 added, the test autoloader stays quiet for a class that does not exist (as the real one
+does), and three tests that build their schema with a 3.3.x-only class skip themselves on 4.0.
+
+The whole suite now also runs against the 4.0 core classes (`PHPBB_ROOT_PATH` set to the 4.0 board's
+root): 404 tests, no failures, 28 skipped (16 database cases without a database, 12 that use the
+3.3.x-only schema tools). Against the 3.3.x core with the MySQL and PostgreSQL containers it is 404 tests,
+1092 assertions, nothing skipped.
+
+On the 4.0 board, with a real browser: all 178 visible icons across the front-end and ACP pages draw
+(all 391 on the 3.3.x board); every page and ACP module returns 200; the ACP settings work and save,
+flat index and Slate load the right sheets, a custom stylesheet is served as `text/css` with
+`nosniff` and unsafe names get 404; articles submit and render (Markdown headings, code box), the
+alphabetical navigation has its landmark and 26 tooltips; approval and rejection notifications show
+in the bell and the notification list with avatars; a small image and a 9 MB file uploaded in nine
+chunks both succeed with the right size. Fresh MySQL and PostgreSQL boards on 3.3.x still render every
+page with every icon drawn.
+
+Not covered: email delivery of notifications on 4.0, the 4.0 extension catalogue and Composer
+handling, the current master (the board was three weeks older), and the approve/deny review flow
+beyond building its notifications (the approve page needs a review-team assignment first).
+
+## The remaining 4.0 checks - 10/12/2026
+
+The points left open in the 4.0 run were checked on a tree built from the current phpBB master (`a57d60d`,
+4.0.0-a3-dev) and installed through the real `seed-forum` reset (`reset-board.sh --reset`, with an
+extra config that points at that tree and has no nginx site). The installer enabled the extension with
+the shipped constraints, ran the 33 migrations, and the two seed scripts produced the usual inventory (265
+articles, 37 categories); every front-end page returned 200 with all its icons drawn.
+
+- **Review flow, in a browser:** a regular author submitted an article (the required custom fields had to be
+  chosen first); the moderator was notified; the moderator assigned it to a team, a team member reviewed it
+  and it was approved, with the status moving 0, 1, 2; the author received the approval notification and a
+  private message, and the approved article page and notification list rendered.
+- **Email:** with a local SMTP sink as the board's mail server and email notification preferences ticked,
+  the pending-article email (to the moderator) and the approval email (to the author) were delivered. 4.0
+  queues mail and sends it from cron, so the messages arrived after the queue interval, not during the
+  request. The pending-article email read "at the conference"; the template now says "on", and a test checks
+  that none of the three email templates uses that word and each starts with a subject and ends with the
+  signature.
+- **Extensions manager:** the ACP listing and the details page load and show the right version and
+  requirements; disable, enable, purge and enable again behave as expected (data kept across disable,
+  everything removed by purge, a clean reinstall after).
+
+The `seed-forum` reset itself worked on 4.0 once given a 4.0 source tree; only its download step is 3.3.x-only.
+Not covered: the 4.0 catalogue and Composer-based installation from the ACP, and later 4.0 builds.
+
+## ACP configuration page: no chmod warnings - 10/12/2026
+
+Opening the Knowledge Base configuration page printed two PHP warnings, `chmod(): Operation not
+permitted`, for the upload folder and its `plupload` sub-folder. The page called `chmod(..., 0777)` on
+both every time, and `chmod()` fails with a warning on a folder the web server user does not own even
+when its mode is already fine (here the folders were `0777` but owned by another user). The page now
+leaves a folder alone when it is already writable and only tries to open it up when it is not, without a
+warning if that is not allowed either; the write test that follows still reports a folder that
+cannot be written.
+
+`kb_acp_upload_directory_test.php` (4 cases) covers a writable folder keeping its mode, a read-only
+folder being opened up, a folder owned by someone else that is already writable (`/tmp`) and one that cannot be
+opened up (`/usr`) both raising no warning; the last two fail with the old unconditional `chmod()`.
+The configuration page showed no warning on the 3.3.x test board and on the current-master 4.0 board, and
+the suite passes on both cores (411 tests; 3.3.x with MySQL and PostgreSQL, nothing skipped).
+
+## PHP 8.5 - 10/12/2026
+
+PHP 8.2 stays the minimum (it is the oldest branch still getting security fixes and the one phpBB 4.0
+needs), and 8.5 is now listed in the CI matrix next to 8.2, 8.3 and 8.4 because the maintainers' hosting
+runs 8.5.x. In practice only the primary 8.2 job runs in CI: the database jobs are switched off in
+`.github/workflows/tests.yml` (`RUN_MYSQL_JOBS: 0` and the others), and the matrix only expands for
+those, so 8.3 to 8.5 are covered by local runs (8.4 is this machine's PHP, 8.5 in Docker), not by CI. On PHP 8.5.11 (Docker `php:8.5-cli`) all 126 PHP files lint clean and the unit suite passes
+(411 tests, 18 skipped: 17 database cases without a database driver, and one that needs a user who
+cannot write everywhere). The only deprecation notices come from phpBB 3.3.19 itself and its Twig
+(dynamic properties in the SQLite driver, implicit nullable parameters); none come from this
+extension. `ReflectionProperty::setAccessible()` is deprecated in 8.5 and has had no effect since 8.1, so
+the tests no longer call it. A test that expected `/usr` to be unwritable now skips when the tests run as
+root, as they do in a container.

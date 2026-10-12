@@ -68,7 +68,6 @@ class kb_acp_search_backend_confirm_test extends \PHPUnit\Framework\TestCase
 		foreach ($values as $name => $value)
 		{
 			$property = new \ReflectionProperty(acp_controller::class, $name);
-			$property->setAccessible(true);
 			$property->setValue($controller, $value);
 		}
 

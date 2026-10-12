@@ -39,7 +39,6 @@ class kb_contact_group_test extends \PHPUnit\Framework\TestCase
 		foreach (['db' => $db, 'config' => new \phpbb\config\config($config), 'group_helper' => $group_helper, 'phpbb_root_path' => './../', 'php_ext' => 'php'] as $name => $value)
 		{
 			$property = new \ReflectionProperty(functions_kb::class, $name);
-			$property->setAccessible(true);
 			$property->setValue($kb, $value);
 		}
 

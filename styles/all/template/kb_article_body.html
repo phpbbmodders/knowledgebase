@@ -53,30 +53,30 @@
 				{% if (not S_APPROVED or S_HAS_REVISION) and S_CAN_APPROVE %}
 					<li>
 						<a href="{{ U_APPROVE_ART }}" title="{{ S_HAS_REVISION ? lang('KB_STATUS_REVISION') : lang('NEED_APPROVE') }}"
-							class="button button-icon-only"><i class="icon fa-check fa-fw icon-orange"
+							class="button button-icon-only"><i class="{{ KbIconClass('check', 'icon-orange') }}"
 								aria-hidden="true"></i><span class="sr-only">{{ S_HAS_REVISION ? lang('KB_STATUS_REVISION') : lang('NEED_APPROVE') }}</span></a>
 					</li>
 				{% endif %}
 				{% if S_CAN_EDIT %}
 					<li>
 						<a href="{{ U_EDIT_ART }}" title="{{ lang('EDIT') }}" class="button button-icon-only">
-							<i class="icon fa-pencil fa-fw icon-blue" aria-hidden="true"></i><span class="sr-only">{{ lang('EDIT') }}</span></a>
+							<i class="{{ KbIconClass('pencil', 'icon-blue') }}" aria-hidden="true"></i><span class="sr-only">{{ lang('EDIT') }}</span></a>
 					</li>
 				{% endif %}
 				{% if S_CAN_DELETE %}
 					<li>
 						<a href="{{ U_DELETE_ART }}" title="{{ lang('DELETE') }}" class="button button-icon-only">
-							<i class="icon fa-times fa-fw icon-red" aria-hidden="true"></i><span class="sr-only">{{ lang('DELETE') }}</span></a>
+							<i class="{{ KbIconClass('times', 'icon-red') }}" aria-hidden="true"></i><span class="sr-only">{{ lang('DELETE') }}</span></a>
 					</li>
 				{% endif %}
 				<li>
 					<a href="{{ U_PRINT }}" title="{{ lang('PRINT') }}" class="button button-icon-only">
-						<i class="icon fa-print fa-fw icon-blue" aria-hidden="true"></i><span class="sr-only">{{ lang('PRINT') }}</span></a>
+						<i class="{{ KbIconClass('print', 'icon-blue') }}" aria-hidden="true"></i><span class="sr-only">{{ lang('PRINT') }}</span></a>
 				</li>
 				{% if U_COMMENTS %}
 					<li>
 						<a href="{{ U_COMMENTS }}" title="{{ lang('LEAVE_COMMENTS') }}" class="button button-icon-only">
-							<i class="icon fa-reply fa-fw icon-orange" aria-hidden="true"></i><span class="sr-only">{{ lang('LEAVE_COMMENTS') }}</span></a>
+							<i class="{{ KbIconClass('reply', 'icon-orange') }}" aria-hidden="true"></i><span class="sr-only">{{ lang('LEAVE_COMMENTS') }}</span></a>
 					</li>
 				{% endif %}
 			</ul>
@@ -87,7 +87,7 @@
 		</div>
 		<div class="back2top">
 			<a href="#top" class="top" title="{{ lang('BACK_TO_TOP') }}">
-				<i class="icon fa-chevron-circle-up fa-fw icon-gray" aria-hidden="true"></i><span class="sr-only">{{ lang('BACK_TO_TOP') }}</span></a>
+				<i class="{{ KbIconClass('chevron-circle-up', 'icon-gray') }}" aria-hidden="true"></i><span class="sr-only">{{ lang('BACK_TO_TOP') }}</span></a>
 		</div>
 	</div>
 </div>
@@ -96,7 +96,7 @@
 		id="jumpbox">
 	<span title="{{ lang('GO') }}" class="button button-secondary dropdown-trigger dropdown-select dropdown-toggle">
 		<span>{{ lang('GO') }}</span>
-		<span class="caret"><i class="icon fa-sort-down fa-fw" aria-hidden="true"></i></span>
+		<span class="caret"><i class="{{ KbIconClass('sort-down') }}" aria-hidden="true"></i></span>
 	</span>
 		<div class="dropdown">
 			<div class="pointer">

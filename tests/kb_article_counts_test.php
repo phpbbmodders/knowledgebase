@@ -45,7 +45,6 @@ class kb_article_counts_test extends \PHPUnit\Framework\TestCase
 		foreach (['db' => $db, 'config' => $config, 'cache' => $cache, 'log' => $log, 'user' => $user, 'phpbb_root_path' => getenv('PHPBB_ROOT_PATH') . '/', 'php_ext' => 'php', 'articles_table' => 'articles', 'categories_table' => 'categories', 'attachments_table' => 'attachments', 'article_categories_table' => 'article_categories', 'article_field_values_table' => 'article_field_values'] as $name => $value)
 		{
 			$property = new \ReflectionProperty(functions_kb::class, $name);
-			$property->setAccessible(true);
 			$property->setValue($kb, $value);
 		}
 		$kb->kb_move_article(1, 'title', 1, 2, 1);

@@ -18,6 +18,8 @@ use phpbb\user_loader;
 
 class need_approval extends \phpbb\notification\type\base
 {
+	use avatar_compat;
+
 	/**
 	 * Notification option data (for outputting to the user)
 	 *
@@ -299,9 +301,9 @@ class need_approval extends \phpbb\notification\type\base
 	 *
 	 * @return string
 	 */
-	public function get_avatar(): string
+	public function get_avatar()
 	{
-		return $this->is_group_author() ? '' : $this->user_loader->get_avatar($this->get_data('author_id'), false, true);
+		return $this->is_group_author() ? $this->no_avatar() : $this->user_avatar((int) $this->get_data('author_id'));
 	}
 
 	/**

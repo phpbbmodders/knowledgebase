@@ -29,7 +29,9 @@ use phpbb\request\request_interface;
 use phpbb\template\template;
 use phpbb\user;
 use RuntimeException;
+use phpbbmodders\knowledgebase\inc\alternative_styles;
 use phpbbmodders\knowledgebase\inc\field\kb_field_type_factory;
+use phpbbmodders\knowledgebase\inc\icon;
 use phpbbmodders\knowledgebase\inc\functions_kb;
 use phpbbmodders\knowledgebase\search\kb_search_backend_factory;
 
@@ -120,6 +122,9 @@ class acp_controller
 	/** @var string */
 	protected string $kb_groups_table;
 
+	/** @var alternative_styles */
+	protected alternative_styles $alt_styles;
+
 	/** @var string */
 	protected string $upload_dir;
 
@@ -156,6 +161,7 @@ class acp_controller
 	 * @param string                    $options_table
 	 * @param string                    $kb_users_table
 	 * @param string                    $kb_groups_table
+	 * @param alternative_styles        $alt_styles
 	 */
 	public function __construct(
 		driver_interface $db, config $config, db_text $config_text, helper $helper, manager $ext_manager,
@@ -165,7 +171,7 @@ class acp_controller
 		kb_field_type_factory $field_factory,
 		string $phpbb_root_path, string $php_ext, string $articles_table, string $categories_table,
 		string $logs_table, string $attachments_table, string $options_table, string $kb_users_table,
-		string $kb_groups_table
+		string $kb_groups_table, alternative_styles $alt_styles
 	)
 	{
 		$this->db = $db;
@@ -195,6 +201,7 @@ class acp_controller
 		$this->options_table = $options_table;
 		$this->kb_users_table = $kb_users_table;
 		$this->kb_groups_table = $kb_groups_table;
+		$this->alt_styles = $alt_styles;
 
 		$this->upload_dir = $this->ext_manager->get_extension_path('phpbbmodders/knowledgebase', true) . 'files/';
 	}
@@ -230,8 +237,8 @@ class acp_controller
 		$dirIsWritable = false;
 		if ($diru_exists && $dirp_exists)
 		{
-			chmod($this->upload_dir, 0777);
-			chmod($plupload_dir, 0777);
+			$this->make_directory_writable($this->upload_dir);
+			$this->make_directory_writable($plupload_dir);
 			if (is_writable($this->upload_dir))
 			{
 				$tempFile = tempnam($this->upload_dir, 'tmp');
@@ -267,15 +274,22 @@ class acp_controller
 		}
 		$this->db->sql_freeresult($result);
 
+		// Announcements are on exactly when a forum is chosen. A board that kept a
+		// forum while switching them off reads as "None" here, matching what it does.
+		$announce_forum_id = $this->config['kb_anounce'] ? (int) $this->config['kb_forum_id'] : 0;
+
 		$this->template->assign_vars([
 			'S_NOT_WRITABLE'           => !$dirIsWritable,
 			'S_EXT_GROUP_SIZE_OPTIONS' => size_select_options($identifier),
 			'MAX_ATTACHMENTS'          => $this->config['kb_max_attachments'],
 			'EXTGROUP_FILESIZE'        => $max_filesize,
-			'ADVANCED_FORM_ON'         => $this->config['kb_anounce'] ? 'checked="checked"' : '',
-			'ADVANCED_FORM'            => $this->config['kb_anounce'] ? '' : 'none',
+			'ADVANCED_FORM'            => $announce_forum_id ? '' : 'none',
 			'FLAT_INDEX_ON'            => $this->config['kb_flat_index'] ? 'checked="checked"' : '',
-			'CLASSIC_LOOK_ON'          => $this->config['kb_classic_look'] ? 'checked="checked"' : '',
+			'ALT_STYLE_ON'             => $this->config['kb_alt_style_enabled'] ? 'checked="checked"' : '',
+			'ALT_STYLE_DISPLAY'        => $this->config['kb_alt_style_enabled'] ? '' : 'none',
+			'S_ALT_STYLE_OPTIONS'      => $this->alternative_style_options((string) $this->config['kb_alt_style']),
+			'ALT_STYLE_MISSING'        => $this->config['kb_alt_style_enabled'] ? htmlspecialchars($this->alt_styles->missing_choice(), ENT_COMPAT, 'UTF-8') : '',
+			'ALT_STYLE_DIRECTORY'      => $this->alt_styles->custom_directory_label(),
 			'PER_PAGE'                 => $this->config['kb_articles_per_page'] ?? 10,
 			'DESCRIPTION_MAX_LENGTH'   => $this->kb->get_description_max_length(),
 			'DESCRIPTION_COLUMN_LENGTH' => functions_kb::DESCRIPTION_COLUMN_LENGTH,
@@ -285,7 +299,7 @@ class acp_controller
 			// own - without prepending one, "leave unset to disable"
 			// (the help text under both fields) was never actually
 			// possible once any forum had been selected.
-			'S_FORUM_POST'             => '<option value="0"' . (!$this->config['kb_forum_id'] ? ' selected="selected"' : '') . '>' . $this->language->lang('KB_NONE_DISABLED') . '</option>' . make_forum_select($this->config['kb_forum_id'], 0, true, true, false),
+			'S_FORUM_POST'             => '<option value="0"' . (!$announce_forum_id ? ' selected="selected"' : '') . '>' . $this->language->lang('KB_NONE_DISABLED') . '</option>' . make_forum_select($announce_forum_id, 0, true, true, false),
 			'S_CHANGELOG_FORUM_POST'   => '<option value="0"' . (!$this->config['kb_changelog_forum_id'] ? ' selected="selected"' : '') . '>' . $this->language->lang('KB_NONE_DISABLED') . '</option>' . make_forum_select($this->config['kb_changelog_forum_id'], 0, true, true, false),
 			'S_CONTACT_GROUP_OPTIONS'  => $contact_group_options,
 			'S_FORUM_PREFIX'           => $this->config_text->get('kb_forum_prefix'),
@@ -312,6 +326,8 @@ class acp_controller
 			trigger_error($this->language->lang('KB_FONT_ICON_INVALID') . adm_back_link($this->u_action), E_USER_WARNING);
 		}
 
+		$this->validate_alternative_style();
+
 		// Max file size
 		$max_filesize = (int) $this->request->variable('max_filesize', 0);
 		$size_select = $this->request->variable('size_select', 'b');
@@ -320,10 +336,9 @@ class acp_controller
 		// Save config value
 		$this->config->set('kb_font_icon', $kb_font_icon);
 
-		$this->config->set('kb_anounce', $this->request->variable('anounce', 0));
 		$this->config->set('kb_flat_index', $this->request->variable('flat_index', 0));
-		$this->config->set('kb_classic_look', $this->request->variable('classic_look', 0) ? 1 : 0);
-		$this->config->set('kb_forum_id', $this->request->variable('forum_id', 0));
+		$this->save_alternative_style();
+		$this->save_announcement_forum();
 		$this->config->set('kb_changelog_forum_id', $this->request->variable('changelog_forum_id', 0));
 		$this->config_text->set('kb_forum_prefix', utf8_normalize_nfc($this->request->variable('forum_prefix', '', true)));
 		$this->config_text->set('kb_topic_prefix', utf8_normalize_nfc($this->request->variable('topic_prefix', '', true)));
@@ -339,6 +354,115 @@ class acp_controller
 		$this->config_text->set('kb_team_groups', json_encode($team_groups));
 
 		$this->config->set('kb_contact_group', $this->valid_contact_group($this->request->variable('contact_group', 0)));
+	}
+
+	/**
+	 * Make sure the web server can write to a directory.
+	 *
+	 * A directory that is already writable is left alone: chmod() fails with a
+	 * warning on a directory the web server user does not own, even when its
+	 * mode is already fine, and the old unconditional chmod() printed that
+	 * warning on every visit to the configuration page. Only a directory that
+	 * is not writable is changed, and if that is not allowed either the write
+	 * test that follows reports it.
+	 *
+	 * @param string $directory
+	 * @return void
+	 */
+	protected function make_directory_writable(string $directory): void
+	{
+		if (!is_writable($directory))
+		{
+			@chmod($directory, 0777);
+			clearstatcache(true, $directory);
+		}
+	}
+
+	/**
+	 * Save the forum new articles are announced in.
+	 *
+	 * Choosing a forum switches announcements on and "None" switches them off,
+	 * so the two settings can never disagree (before, an enabled checkbox with
+	 * no forum made the posting page report a configuration warning).
+	 */
+	protected function save_announcement_forum(): void
+	{
+		$forum_id = max(0, (int) $this->request->variable('forum_id', 0));
+
+		$this->config->set('kb_forum_id', $forum_id);
+		$this->config->set('kb_anounce', $forum_id ? 1 : 0);
+	}
+
+	/**
+	 * The options of the alternative stylesheet dropdown, in two groups.
+	 *
+	 * Bundled stylesheets are named by a language string (KB_ALT_STYLE_<SLUG>)
+	 * or, without one, by their file name; custom ones by their file name.
+	 *
+	 * @param string $selected The remembered choice, "bundled:<slug>" or "custom:<file>"
+	 * @return string The <optgroup> markup, every label escaped
+	 */
+	protected function alternative_style_options(string $selected): string
+	{
+		$groups = [];
+		foreach ($this->alt_styles->bundled() as $slug)
+		{
+			$key = 'KB_ALT_STYLE_' . strtoupper($slug);
+			$label = $this->language->is_set($key) ? $this->language->lang($key) : $slug;
+			$groups['KB_ALT_STYLE_BUNDLED_GROUP'][alternative_styles::BUNDLED . ':' . $slug] = $label;
+		}
+		foreach ($this->alt_styles->custom() as $name)
+		{
+			$groups['KB_ALT_STYLE_CUSTOM_GROUP'][alternative_styles::CUSTOM . ':' . $name] = $name;
+		}
+
+		$html = '';
+		foreach ($groups as $group_key => $choices)
+		{
+			$html .= '<optgroup label="' . htmlspecialchars($this->language->lang($group_key), ENT_COMPAT, 'UTF-8') . '">';
+			foreach ($choices as $value => $label)
+			{
+				$html .= '<option value="' . htmlspecialchars($value, ENT_COMPAT, 'UTF-8') . '"' . ($value === $selected ? ' selected="selected"' : '') . '>'
+					. htmlspecialchars($label, ENT_COMPAT, 'UTF-8') . '</option>';
+			}
+			$html .= '</optgroup>';
+		}
+
+		return $html;
+	}
+
+	/**
+	 * Refuse a configuration save that switches alternative styling on with a
+	 * stylesheet that is not available. Called before anything is saved.
+	 *
+	 * With alternative styling off the dropdown is not checked: the remembered
+	 * choice is kept whatever was submitted (see save_alternative_style()).
+	 */
+	protected function validate_alternative_style(): void
+	{
+		if ($this->request->variable('alt_style_enabled', 0)
+			&& !$this->alt_styles->is_available($this->request->variable('alt_style', '')))
+		{
+			trigger_error($this->language->lang('KB_ALT_STYLE_INVALID') . adm_back_link($this->u_action), E_USER_WARNING);
+		}
+	}
+
+	/**
+	 * Save the alternative styling switch and the chosen stylesheet.
+	 *
+	 * The choice is remembered while the switch is off, so turning it back on
+	 * restores it. A submitted choice that is not available never replaces the
+	 * remembered one.
+	 */
+	protected function save_alternative_style(): void
+	{
+		$this->config->set('kb_alt_style_enabled', $this->request->variable('alt_style_enabled', 0) ? 1 : 0);
+
+		$choice = $this->request->variable('alt_style', '');
+		if ($this->alt_styles->is_available($choice))
+		{
+			$this->config->set('kb_alt_style', $choice);
+		}
 	}
 
 	/**
@@ -1116,10 +1240,10 @@ class acp_controller
 	{
 		return match ($status)
 		{
-			functions_kb::STATUS_ACTIVE => '<i class="icon fa-thumbs-o-up fa-fw acp-icon-settings" title="' . $this->language->lang('KB_STATUS_ACTIVE') . '"></i>',
-			functions_kb::STATUS_REVIEWED => '<i class="icon fa-eye fa-fw acp-icon-resync" title="' . $this->language->lang('KB_STATUS_REVIEWED') . '"></i>',
-			functions_kb::STATUS_INACTIVE => '<i class="icon fa-eye-slash fa-fw acp-icon-resync" title="' . $this->language->lang('KB_STATUS_INACTIVE') . '"></i>',
-			default => '<i class="icon fa fa-exclamation-triangle fa-fw acp-icon-resync" aria-hidden="true" title="' . $this->language->lang('KB_STATUS_NEW') . '"></i>',
+			functions_kb::STATUS_ACTIVE => '<i class="' . icon::classes('thumbs-o-up', 'acp-icon-settings') . '" title="' . $this->language->lang('KB_STATUS_ACTIVE') . '"></i>',
+			functions_kb::STATUS_REVIEWED => '<i class="' . icon::classes('eye', 'acp-icon-resync') . '" title="' . $this->language->lang('KB_STATUS_REVIEWED') . '"></i>',
+			functions_kb::STATUS_INACTIVE => '<i class="' . icon::classes('eye-slash', 'acp-icon-resync') . '" title="' . $this->language->lang('KB_STATUS_INACTIVE') . '"></i>',
+			default => '<i class="' . icon::classes('exclamation-triangle', 'acp-icon-resync') . '" aria-hidden="true" title="' . $this->language->lang('KB_STATUS_NEW') . '"></i>',
 		};
 	}
 

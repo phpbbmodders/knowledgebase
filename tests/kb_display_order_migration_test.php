@@ -29,6 +29,10 @@ class kb_display_order_migration_test extends \PHPUnit\Framework\TestCase
 	{
 		if ($engine === 'sqlite')
 		{
+			if (!class_exists(\phpbb\db\tools\sqlite3::class))
+			{
+				$this->markTestSkipped('phpBB 4.0 replaced these schema tools with Doctrine; these migrations were run on a real 4.0 board instead.');
+			}
 			$this->db = new \phpbb\db\driver\sqlite3();
 			$this->assertTrue($this->db->sql_connect(':memory:', '', '', ''));
 			$this->tools = new \phpbb\db\tools\sqlite3($this->db);
@@ -59,7 +63,7 @@ class kb_display_order_migration_test extends \PHPUnit\Framework\TestCase
 	private function create_tables(): void
 	{
 		$config = new \phpbb\config\config([]);
-		$schema = (new version_1_0_0($config, $this->db, $this->tools, '', 'php', 'phpbb_'))->update_schema()['add_tables'];
+		$schema = (new version_1_0_0($config, $this->db, $this->tools, '', 'php', 'phpbb_', []))->update_schema()['add_tables'];
 		foreach (['phpbb_kb_articles', 'phpbb_kb_categories'] as $table)
 		{
 			$this->tools->sql_create_table($table, $schema[$table]);
@@ -72,7 +76,7 @@ class kb_display_order_migration_test extends \PHPUnit\Framework\TestCase
 		// Strict MySQL wants a value for every NOT NULL column, so fill each
 		// column the first migration defines with an empty value of its type.
 		$config = new \phpbb\config\config([]);
-		$columns = (new version_1_0_0($config, $this->db, $this->tools, '', 'php', 'phpbb_'))->update_schema()['add_tables']['phpbb_kb_articles']['COLUMNS'];
+		$columns = (new version_1_0_0($config, $this->db, $this->tools, '', 'php', 'phpbb_', []))->update_schema()['add_tables']['phpbb_kb_articles']['COLUMNS'];
 		$row = [];
 		foreach ($columns as $name => $definition)
 		{
@@ -101,7 +105,7 @@ class kb_display_order_migration_test extends \PHPUnit\Framework\TestCase
 
 	private function migrate(): void
 	{
-		(new version_1_0_2(new \phpbb\config\config([]), $this->db, $this->tools, '', 'php', 'phpbb_'))->set_display_order();
+		(new version_1_0_2(new \phpbb\config\config([]), $this->db, $this->tools, '', 'php', 'phpbb_', []))->set_display_order();
 	}
 
 	/** @dataProvider engines */

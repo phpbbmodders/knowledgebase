@@ -24,13 +24,13 @@
 			{% if S_CAN_ADD %}
 				<a href="{{ U_ADD_ARTICLE }}" class="button"
 					title="{{ lang('ADD_ARTICLE') }}"><span>{{ lang('ADD_ARTICLE') }}</span>
-					<i class="icon fa-file-text-o fa-fw" aria-hidden="true"></i>
+					<i class="{{ KbIconClass('file-text-o') }}" aria-hidden="true"></i>
 				</a>
 			{% endif %}
 			{% if S_CAN_ADD_REDIRECT %}
 				<a href="{{ U_ADD_REDIRECT }}" class="button"
 					title="{{ lang('KB_SUBMIT_REDIRECT') }}"><span>{{ lang('KB_SUBMIT_REDIRECT') }}</span>
-					<i class="icon fa-external-link fa-fw" aria-hidden="true"></i>
+					<i class="{{ KbIconClass('external-link') }}" aria-hidden="true"></i>
 				</a>
 			{% endif %}
 		</div>
@@ -42,9 +42,9 @@
 					<input class="inputbox search tiny" name="keywords" id="search_keywords" size="20"
 						placeholder="{{ lang('SEARCH_IN_CAT') }}" type="search">
 					<button class="button button-search" type="submit" title="{{ lang('SEARCH') }}">
-						<i class="icon fa-search fa-fw" aria-hidden="true"></i><span class="sr-only">{{ lang('SEARCH') }}</span></button>
+						<i class="{{ KbIconClass('search') }}" aria-hidden="true"></i><span class="sr-only">{{ lang('SEARCH') }}</span></button>
 					<a href="{{ U_KB_SEARCH }}" class="button button-search-end" title="{{ lang('SEARCH_ADV') }}">
-						<i class="icon fa-cog fa-fw" aria-hidden="true"></i><span class="sr-only">{{ lang('SEARCH_ADV') }}</span></a>
+						<i class="{{ KbIconClass('cog') }}" aria-hidden="true"></i><span class="sr-only">{{ lang('SEARCH_ADV') }}</span></a>
 					<input type="hidden" name="sf" value="articles">
 					<input type="hidden" name="cid" value="{{ CATEGORY_ID }}">
 				</fieldset>
@@ -78,12 +78,14 @@
 
 {% if S_ALPHABET %}
 	<div class="panel">
-		<div id="alphabet" class="inner">
+		<div id="alphabet" class="inner" role="navigation" aria-label="{{ lang('ALPHABET_NAV') }}">
 			<strong>{{ ALPHA_URLS }}</strong>
 			<a href="{{ U_RESET_FILTER }}"><strong class="red">[{{ lang('RESET_FILTER') }}]</strong></a>
 		</div>
 	</div>
 {% endif %}
+<div class="forumbg forumbg-table kb-listing">
+<div class="inner">
 <table class="table1 kb-index-table">
 	<thead>
 	<tr>
@@ -95,12 +97,12 @@
 	</thead>
 	<tbody>
 	{% for art_row in loops.art_row %}
-		<tr id="{{ art_row.ID }}">
+		<tr id="{{ art_row.ID }}" class="{{ loop.index is odd ? 'bg1' : 'bg2' }}">
 			<td>
 				<a href="{{ art_row.U_ARTICLE }}">{{ art_row.ARTICLE_TITLE }}</a>
-				{% if art_row.S_CROSS_LISTED %}<i class="icon fa-tag fa-fw" aria-hidden="true"
+				{% if art_row.S_CROSS_LISTED %}<i class="{{ KbIconClass('tag') }}" aria-hidden="true"
 						title="{{ lang('KB_CROSS_LISTED') }}"></i>{% endif %}
-				{% if art_row.S_IS_REDIRECT %}<i class="icon fa-external-link fa-fw" aria-hidden="true"
+				{% if art_row.S_IS_REDIRECT %}<i class="{{ KbIconClass('external-link') }}" aria-hidden="true"
 						title="{{ lang('KB_IS_REDIRECT') }}"></i>{% endif %}
 				{% if art_row.ARTICLE_DESCRIPTION %}<br>{{ art_row.ARTICLE_DESCRIPTION }}{% endif %}
 			</td>
@@ -112,45 +114,47 @@
 						<li><a href="{{ art_row.U_ARTICLE }}"
 							title="{% if art_row.STATUS == 3 %}{{ lang('KB_STATUS_INACTIVE') }}{% else %}{{ lang('NEED_APPROVE') }}{% endif %}"
 							class="button button-icon-only"><i
-								class="icon fa-{% if art_row.STATUS == 3 %}eye-slash{% else %}check{% endif %} fa-fw orange"
+								class="{{ KbIconClass(art_row.STATUS == 3 ? 'eye-slash' : 'check', 'orange') }}"
 								aria-hidden="true"></i><span class="sr-only">{% if art_row.STATUS == 3 %}{{ lang('KB_STATUS_INACTIVE') }}{% else %}{{ lang('NEED_APPROVE') }}{% endif %}</span></a></li>{% endif %}
 					{% if S_CAN_MOVE %}
 						<li><a href="{{ art_row.U_MOVE_UP }}" title="{{ lang('KB_MOVE_UP') }}"
-							class="button button-icon-only"><i class="icon fa-arrow-up fa-fw green"
+							class="button button-icon-only"><i class="{{ KbIconClass('arrow-up', 'green') }}"
 								aria-hidden="true"></i><span class="sr-only">{{ lang('KB_MOVE_UP') }}</span></a></li>
 						<li><a href="{{ art_row.U_MOVE_DOWN }}" title="{{ lang('KB_MOVE_DOWN') }}"
-							class="button button-icon-only"><i class="icon fa-arrow-down fa-fw green"
+							class="button button-icon-only"><i class="{{ KbIconClass('arrow-down', 'green') }}"
 								aria-hidden="true"></i><span class="sr-only">{{ lang('KB_MOVE_DOWN') }}</span></a></li>{% endif %}
 					{% if art_row.S_CAN_DELETE %}
 						<li><a href="{{ art_row.U_DELETE }}" title="{{ lang('DELETE') }}"
-							class="button button-icon-only"><i class="icon fa-times fa-fw red"
+							class="button button-icon-only"><i class="{{ KbIconClass('times', 'red') }}"
 								aria-hidden="true"></i><span class="sr-only">{{ lang('DELETE') }}</span></a></li>{% endif %}
 					{% if art_row.S_CAN_EDIT %}
 						<li><a href="{{ art_row.U_EDIT_ART }}" title="{{ lang('EDIT') }}"
-							class="button button-icon-only"><i class="icon fa-pencil fa-fw blue"
+							class="button button-icon-only"><i class="{{ KbIconClass('pencil', 'blue') }}"
 								aria-hidden="true"></i><span class="sr-only">{{ lang('EDIT') }}</span></a></li>{% endif %}
 				</ul>
 			</td>
 		</tr>
 	{% endfor %}
 	{% if not loops.art_row|length %}
-		<tr>
+		<tr class="bg1">
 			<td colspan="4" style="text-align: center;">{{ lang('NO_ARTICLES') }}</td>
 		</tr>
 	{% endif %}
 	</tbody>
 </table>
+</div>
+</div>
 <div class="action-bar bar-bottom">
 	{% if S_CAN_ADD or S_CAN_ADD_REDIRECT %}
 		<div class="buttons">
 			{% if S_CAN_ADD %}
 				<a href="{{ U_ADD_ARTICLE }}" class="button" title="{{ lang('ADD_ARTICLE') }}">
-					<span>{{ lang('ADD_ARTICLE') }}</span> <i class="icon fa-file-text-o fa-fw" aria-hidden="true"></i>
+					<span>{{ lang('ADD_ARTICLE') }}</span> <i class="{{ KbIconClass('file-text-o') }}" aria-hidden="true"></i>
 				</a>
 			{% endif %}
 			{% if S_CAN_ADD_REDIRECT %}
 				<a href="{{ U_ADD_REDIRECT }}" class="button" title="{{ lang('KB_SUBMIT_REDIRECT') }}">
-					<span>{{ lang('KB_SUBMIT_REDIRECT') }}</span> <i class="icon fa-external-link fa-fw" aria-hidden="true"></i>
+					<span>{{ lang('KB_SUBMIT_REDIRECT') }}</span> <i class="{{ KbIconClass('external-link') }}" aria-hidden="true"></i>
 				</a>
 			{% endif %}
 		</div>
@@ -177,7 +181,7 @@
 		<span title="{{ lang('JUMP_TO') }}"
 			class="button button-secondary dropdown-trigger dropdown-select dropdown-toggle">
 			<span>{{ lang('JUMP_TO') }}</span>
-			<span class="caret"><i class="icon fa-sort-down fa-fw" aria-hidden="true"></i></span>
+			<span class="caret"><i class="{{ KbIconClass('sort-down') }}" aria-hidden="true"></i></span>
 		</span>
 			<div class="dropdown">
 				<div class="pointer">

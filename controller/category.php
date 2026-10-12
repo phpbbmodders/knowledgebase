@@ -225,8 +225,9 @@ class category
 			$url = [];
 			foreach ($alphabet as $letter)
 			{
-				$b_letter = ($first_letter === $letter) ? '<span class="alphabet">' . $letter . '</span>' : $letter;
-				$url[] = '<a href="' . $this->helper->route('phpbbmodders_knowledgebase_category', ['id' => $cat_id, 'l' => $letter]) . '">' . $b_letter . '</a>';
+				$is_current = ($first_letter === $letter);
+				$b_letter = $is_current ? '<span class="alphabet">' . $letter . '</span>' : $letter;
+				$url[] = '<a href="' . $this->helper->route('phpbbmodders_knowledgebase_category', ['id' => $cat_id, 'l' => $letter]) . '" title="' . $this->language->lang('KB_ALPHABET_LETTER', $letter) . '"' . ($is_current ? ' aria-current="true"' : '') . '>' . $b_letter . '</a>';
 			}
 			$sql_where .= " AND a.article_title LIKE '" . $this->db->sql_escape($first_letter) . "%'";
 

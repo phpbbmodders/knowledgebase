@@ -134,8 +134,27 @@ services:
             - '@auth'
             - '@template'
             - '%core.php_ext%'
+            - '@phpbbmodders.knowledgebase.alternative_styles'
         tags:
             - { name: event.listener }
+
+    phpbbmodders.knowledgebase.alternative_styles:
+        class: phpbbmodders\knowledgebase\inc\alternative_styles
+        arguments:
+            - '@config'
+            - '%core.root_path%ext/phpbbmodders/knowledgebase/'
+            - '%core.root_path%'
+
+    phpbbmodders.knowledgebase.twig.icon:
+        class: phpbbmodders\knowledgebase\inc\twig_icon
+        tags:
+            - { name: twig.extension }
+
+    phpbbmodders.knowledgebase.controller.stylesheet:
+        class: phpbbmodders\knowledgebase\controller\stylesheet
+        arguments:
+            - '@phpbbmodders.knowledgebase.alternative_styles'
+            - '@request'
 
     phpbbmodders.knowledgebase.text_formatter.factory:
         class: phpbbmodders\knowledgebase\textformatter\factory
@@ -159,7 +178,7 @@ services:
             - '@dispatcher'
 
     phpbbmodders.knowledgebase.text_formatter.renderer:
-        class: phpbb\textformatter\s9e\renderer
+        class: phpbbmodders\knowledgebase\textformatter\renderer
         arguments:
             - '@cache.driver'
             - '%text_formatter.cache.dir%'
@@ -167,8 +186,11 @@ services:
             - '@phpbbmodders.knowledgebase.text_formatter.factory'
             - '@dispatcher'
         calls:
+            # The mention helper exists only on phpBB 4.0; the call is left out where it does not.
+            - [configure_mention_helper, ['@?text_formatter.s9e.mention_helper']]
             - [configure_quote_helper, ['@text_formatter.s9e.quote_helper']]
             - [configure_smilies_path, ['@config', '@path_helper']]
+            # Argument order differs between 3.3.x and 4.0; the renderer class copes with either.
             - [configure_user, ['@user', '@config', '@auth']]
 
     phpbbmodders.knowledgebase.article_text:
@@ -253,6 +275,7 @@ services:
             - '%tables.kb_options_table%'
             - '%tables.kb_users_table%'
             - '%tables.kb_groups_table%'
+            - '@phpbbmodders.knowledgebase.alternative_styles'
 
     phpbbmodders.knowledgebase.controller.set_order:
         class: phpbbmodders\knowledgebase\controller\set_order

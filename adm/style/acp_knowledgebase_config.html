@@ -21,7 +21,7 @@
 			<dd>
 				<input name="kb_font_icon" id="kb_font_icon" placeholder="book" type="text" size="20" maxlength="50"
 					value="{{ KB_FONT_ICON }}"/>
-				<i class="icon acp-icon fa-{{ KB_FONT_ICON }} fa-2x"></i>
+				<i class="{{ KbIconClass(KB_FONT_ICON, 'acp-icon fa-2x') }}"></i>
 			</dd>
 		</dl>
 	</fieldset>
@@ -29,23 +29,15 @@
 		<legend>{{ lang('ACP_KNOWLEDGE_BASE_CONFIGURE') }}</legend>
 		<dl>
 			<dt>
-				<label for="anounce">{{ lang('ANOUNCE') }}{{ lang('COLON') }}</label><br>
+				<label for="forum_id">{{ lang('ANOUNCE') }}{{ lang('COLON') }}</label><br>
 				<span>{{ lang('ANOUNCE_EXPLAIN') }}</span>
 			</dt>
 			<dd>
-				<input name="anounce" id="anounce" type="checkbox" value="1"
-					onClick="if (document.getElementById) { toggle_form_advanced = document.getElementById('form_advanced').style; } else { alert('Upgrade your browser!'); return; } if (toggle_form_advanced.display === 'none') { toggle_form_advanced.display = ''; } else { toggle_form_advanced.display = 'none'; }"
-					{{ ADVANCED_FORM_ON }}/>
+				<select name="forum_id" id="forum_id" aria-controls="form_advanced"
+					onchange="document.getElementById('form_advanced').style.display = this.value === '0' ? 'none' : '';">{{ S_FORUM_POST }}</select>
 			</dd>
 		</dl>
 		<div id="form_advanced" style="display: {{ ADVANCED_FORM }};">
-			<dl>
-				<dt>
-					<label>{{ lang('FORUM') }}{{ lang('COLON') }}</label><br>
-					<span>{{ lang('KB_FORUM_EXPLAIN') }}</span>
-				</dt>
-				<dd><label><select name="forum_id">{{ S_FORUM_POST }}</select></label></dd>
-			</dl>
 			<dl>
 				<dt>
 					<label for="forum_prefix">{{ lang('FORUM_PREFIX') }}{{ lang('COLON') }}</label><br>
@@ -69,10 +61,10 @@
 		</div>
 		<dl>
 			<dt>
-				<label>{{ lang('KB_CHANGELOG_FORUM') }}{{ lang('COLON') }}</label><br>
+				<label for="changelog_forum_id">{{ lang('KB_CHANGELOG_FORUM') }}{{ lang('COLON') }}</label><br>
 				<span>{{ lang('KB_CHANGELOG_FORUM_EXPLAIN') }}</span>
 			</dt>
-			<dd><label><select name="changelog_forum_id">{{ S_CHANGELOG_FORUM_POST }}</select></label></dd>
+			<dd><select name="changelog_forum_id" id="changelog_forum_id">{{ S_CHANGELOG_FORUM_POST }}</select></dd>
 		</dl>
 		<dl>
 			<dt>
@@ -85,13 +77,31 @@
 		</dl>
 		<dl>
 			<dt>
-				<label for="classic_look">{{ lang('KB_CLASSIC_LOOK') }}{{ lang('COLON') }}</label><br>
-				<span>{{ lang('KB_CLASSIC_LOOK_EXPLAIN') }}</span>
+				<label for="alt_style_enabled">{{ lang('KB_ALT_STYLE_ENABLE') }}{{ lang('COLON') }}</label><br>
+				<span>{{ lang('KB_ALT_STYLE_ENABLE_EXPLAIN') }}</span>
 			</dt>
 			<dd>
-				<input name="classic_look" id="classic_look" type="checkbox" value="1" {{ CLASSIC_LOOK_ON }}/>
+				<input name="alt_style_enabled" id="alt_style_enabled" type="checkbox" value="1"
+					onClick="document.getElementById('alt_style_options').style.display = this.checked ? '' : 'none';"
+					{{ ALT_STYLE_ON }}/>
 			</dd>
 		</dl>
+		<div id="alt_style_options" style="display: {{ ALT_STYLE_DISPLAY }};">
+			{% if ALT_STYLE_MISSING %}
+				<div class="errorbox">
+					<p>{{ lang('KB_ALT_STYLE_MISSING', ALT_STYLE_MISSING) }}</p>
+				</div>
+			{% endif %}
+			<dl>
+				<dt>
+					<label for="alt_style">{{ lang('KB_ALT_STYLE') }}{{ lang('COLON') }}</label><br>
+					<span>{{ lang('KB_ALT_STYLE_EXPLAIN', ALT_STYLE_DIRECTORY) }}</span>
+				</dt>
+				<dd>
+					<select name="alt_style" id="alt_style">{{ S_ALT_STYLE_OPTIONS }}</select>
+				</dd>
+			</dl>
+		</div>
 		<dl>
 			<dt>
 				<label for="articles_per_page">{{ lang('PER_PAGE') }}{{ lang('COLON') }}</label><br>
@@ -114,22 +124,27 @@
 		</dl>
 		<dl>
 			<dt>
-				<label for="sort_type">{{ lang('SORT_TYPE') }}{{ lang('COLON') }}</label><br>
-				<span>{{ lang('SORT_TYPE_EXPLAIN') }}</span>
+				<label id="sort_type_label">{{ lang('SORT_TYPE') }}{{ lang('COLON') }}</label><br>
+				<span id="sort_type_explain">{{ lang('SORT_TYPE_EXPLAIN') }}</span>
 			</dt>
 			<dd>
-				<label>
-					<input type="radio" class="radio" id="sort_type" name="sort_type" value="0" {% if S_FORCIBLY %}
-						checked="checked" {% endif %}/> {{ lang('FORCIBLY') }}
-				</label>
-				<label>
-					<input type="radio" class="radio" name="sort_type" value="1" {% if S_SELECTABLE %}
-						checked="checked" {% endif %}/> {{ lang('SELECTABLE') }}
-				</label>
-				<label>
-					<input type="radio" class="radio" name="sort_type" value="-1" {% if S_ALPHABET %}
-						checked="checked" {% endif %}/> {{ lang('ALPHABET') }}
-				</label>
+				<div role="radiogroup" aria-labelledby="sort_type_label" aria-describedby="sort_type_explain">
+					<label for="sort_type_fixed" title="{{ lang('KB_SORT_FIXED_EXPLAIN')|e('html_attr') }}">
+						<input type="radio" class="radio" id="sort_type_fixed" name="sort_type" value="0"
+							aria-describedby="sort_type_fixed_help" {% if S_FORCIBLY %}checked="checked" {% endif %}/> {{ lang('KB_SORT_FIXED') }}
+					</label>
+					<span id="sort_type_fixed_help" class="kb-sr-only">{{ lang('KB_SORT_FIXED_EXPLAIN') }}</span>
+					<label for="sort_type_selectable" title="{{ lang('KB_SORT_SELECTABLE_EXPLAIN')|e('html_attr') }}">
+						<input type="radio" class="radio" id="sort_type_selectable" name="sort_type" value="1"
+							aria-describedby="sort_type_selectable_help" {% if S_SELECTABLE %}checked="checked" {% endif %}/> {{ lang('KB_SORT_SELECTABLE') }}
+					</label>
+					<span id="sort_type_selectable_help" class="kb-sr-only">{{ lang('KB_SORT_SELECTABLE_EXPLAIN') }}</span>
+					<label for="sort_type_alphabet" title="{{ lang('KB_SORT_ALPHABET_EXPLAIN')|e('html_attr') }}">
+						<input type="radio" class="radio" id="sort_type_alphabet" name="sort_type" value="-1"
+							aria-describedby="sort_type_alphabet_help" {% if S_ALPHABET %}checked="checked" {% endif %}/> {{ lang('KB_SORT_ALPHABET') }}
+					</label>
+					<span id="sort_type_alphabet_help" class="kb-sr-only">{{ lang('KB_SORT_ALPHABET_EXPLAIN') }}</span>
+				</div>
 			</dd>
 		</dl>
 	</fieldset>

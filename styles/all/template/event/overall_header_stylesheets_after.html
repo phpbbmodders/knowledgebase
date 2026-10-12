@@ -1,6 +1,13 @@
 {% if S_KNOWLEDGEBASE %}
 	{% INCLUDECSS '@phpbbmodders_knowledgebase/phpbbmodders_knowledgebase.css' %}
-	{% if S_KB_CLASSIC_LOOK %}
-		{% INCLUDECSS '@phpbbmodders_knowledgebase/phpbbmodders_knowledgebase_classic.css' %}
+	{% if S_KB_FLAT_INDEX %}
+		{% INCLUDECSS '@phpbbmodders_knowledgebase/phpbbmodders_knowledgebase_flat.css' %}
+	{% endif %}
+	{% if KB_ALT_STYLE_BUNDLED_FILE %}
+		{% INCLUDECSS '@phpbbmodders_knowledgebase/' ~ KB_ALT_STYLE_BUNDLED_FILE %}
+	{% endif %}
+	{% if U_KB_ALT_STYLE_CUSTOM %}
+		{# The board's own stylesheets are already printed above, so this link wins on equal specificity. #}
+		<link href="{{ U_KB_ALT_STYLE_CUSTOM }}" rel="stylesheet">
 	{% endif %}
 {% endif %}

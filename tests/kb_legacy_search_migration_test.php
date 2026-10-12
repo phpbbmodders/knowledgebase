@@ -26,6 +26,10 @@ class kb_legacy_search_migration_test extends \PHPUnit\Framework\TestCase
 
 	protected function setUp(): void
 	{
+		if (!class_exists(\phpbb\db\tools\sqlite3::class))
+		{
+			$this->markTestSkipped('phpBB 4.0 replaced these schema tools with Doctrine; these migrations were run on a real 4.0 board instead.');
+		}
 		$this->db = new \phpbb\db\driver\sqlite3();
 		$this->assertTrue($this->db->sql_connect(':memory:', '', '', ''));
 		$this->tools = new \phpbb\db\tools\sqlite3($this->db);
