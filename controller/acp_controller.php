@@ -273,13 +273,16 @@ class acp_controller
 		}
 		$this->db->sql_freeresult($result);
 
+		// Announcements are on exactly when a forum is chosen. A board that kept a
+		// forum while switching them off reads as "None" here, matching what it does.
+		$announce_forum_id = $this->config['kb_anounce'] ? (int) $this->config['kb_forum_id'] : 0;
+
 		$this->template->assign_vars([
 			'S_NOT_WRITABLE'           => !$dirIsWritable,
 			'S_EXT_GROUP_SIZE_OPTIONS' => size_select_options($identifier),
 			'MAX_ATTACHMENTS'          => $this->config['kb_max_attachments'],
 			'EXTGROUP_FILESIZE'        => $max_filesize,
-			'ADVANCED_FORM_ON'         => $this->config['kb_anounce'] ? 'checked="checked"' : '',
-			'ADVANCED_FORM'            => $this->config['kb_anounce'] ? '' : 'none',
+			'ADVANCED_FORM'            => $announce_forum_id ? '' : 'none',
 			'FLAT_INDEX_ON'            => $this->config['kb_flat_index'] ? 'checked="checked"' : '',
 			'ALT_STYLE_ON'             => $this->config['kb_alt_style_enabled'] ? 'checked="checked"' : '',
 			'ALT_STYLE_DISPLAY'        => $this->config['kb_alt_style_enabled'] ? '' : 'none',
@@ -295,7 +298,7 @@ class acp_controller
 			// own - without prepending one, "leave unset to disable"
 			// (the help text under both fields) was never actually
 			// possible once any forum had been selected.
-			'S_FORUM_POST'             => '<option value="0"' . (!$this->config['kb_forum_id'] ? ' selected="selected"' : '') . '>' . $this->language->lang('KB_NONE_DISABLED') . '</option>' . make_forum_select($this->config['kb_forum_id'], 0, true, true, false),
+			'S_FORUM_POST'             => '<option value="0"' . (!$announce_forum_id ? ' selected="selected"' : '') . '>' . $this->language->lang('KB_NONE_DISABLED') . '</option>' . make_forum_select($announce_forum_id, 0, true, true, false),
 			'S_CHANGELOG_FORUM_POST'   => '<option value="0"' . (!$this->config['kb_changelog_forum_id'] ? ' selected="selected"' : '') . '>' . $this->language->lang('KB_NONE_DISABLED') . '</option>' . make_forum_select($this->config['kb_changelog_forum_id'], 0, true, true, false),
 			'S_CONTACT_GROUP_OPTIONS'  => $contact_group_options,
 			'S_FORUM_PREFIX'           => $this->config_text->get('kb_forum_prefix'),
@@ -332,10 +335,9 @@ class acp_controller
 		// Save config value
 		$this->config->set('kb_font_icon', $kb_font_icon);
 
-		$this->config->set('kb_anounce', $this->request->variable('anounce', 0));
 		$this->config->set('kb_flat_index', $this->request->variable('flat_index', 0));
 		$this->save_alternative_style();
-		$this->config->set('kb_forum_id', $this->request->variable('forum_id', 0));
+		$this->save_announcement_forum();
 		$this->config->set('kb_changelog_forum_id', $this->request->variable('changelog_forum_id', 0));
 		$this->config_text->set('kb_forum_prefix', utf8_normalize_nfc($this->request->variable('forum_prefix', '', true)));
 		$this->config_text->set('kb_topic_prefix', utf8_normalize_nfc($this->request->variable('topic_prefix', '', true)));
@@ -351,6 +353,21 @@ class acp_controller
 		$this->config_text->set('kb_team_groups', json_encode($team_groups));
 
 		$this->config->set('kb_contact_group', $this->valid_contact_group($this->request->variable('contact_group', 0)));
+	}
+
+	/**
+	 * Save the forum new articles are announced in.
+	 *
+	 * Choosing a forum switches announcements on and "None" switches them off,
+	 * so the two settings can never disagree (before, an enabled checkbox with
+	 * no forum made the posting page report a configuration warning).
+	 */
+	protected function save_announcement_forum(): void
+	{
+		$forum_id = max(0, (int) $this->request->variable('forum_id', 0));
+
+		$this->config->set('kb_forum_id', $forum_id);
+		$this->config->set('kb_anounce', $forum_id ? 1 : 0);
 	}
 
 	/**

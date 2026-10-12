@@ -29,23 +29,15 @@
 		<legend>{{ lang('ACP_KNOWLEDGE_BASE_CONFIGURE') }}</legend>
 		<dl>
 			<dt>
-				<label for="anounce">{{ lang('ANOUNCE') }}{{ lang('COLON') }}</label><br>
+				<label for="forum_id">{{ lang('ANOUNCE') }}{{ lang('COLON') }}</label><br>
 				<span>{{ lang('ANOUNCE_EXPLAIN') }}</span>
 			</dt>
 			<dd>
-				<input name="anounce" id="anounce" type="checkbox" value="1"
-					onClick="if (document.getElementById) { toggle_form_advanced = document.getElementById('form_advanced').style; } else { alert('Upgrade your browser!'); return; } if (toggle_form_advanced.display === 'none') { toggle_form_advanced.display = ''; } else { toggle_form_advanced.display = 'none'; }"
-					{{ ADVANCED_FORM_ON }}/>
+				<select name="forum_id" id="forum_id" aria-controls="form_advanced"
+					onchange="document.getElementById('form_advanced').style.display = this.value === '0' ? 'none' : '';">{{ S_FORUM_POST }}</select>
 			</dd>
 		</dl>
 		<div id="form_advanced" style="display: {{ ADVANCED_FORM }};">
-			<dl>
-				<dt>
-					<label>{{ lang('FORUM') }}{{ lang('COLON') }}</label><br>
-					<span>{{ lang('KB_FORUM_EXPLAIN') }}</span>
-				</dt>
-				<dd><label><select name="forum_id">{{ S_FORUM_POST }}</select></label></dd>
-			</dl>
 			<dl>
 				<dt>
 					<label for="forum_prefix">{{ lang('FORUM_PREFIX') }}{{ lang('COLON') }}</label><br>
@@ -69,10 +61,10 @@
 		</div>
 		<dl>
 			<dt>
-				<label>{{ lang('KB_CHANGELOG_FORUM') }}{{ lang('COLON') }}</label><br>
+				<label for="changelog_forum_id">{{ lang('KB_CHANGELOG_FORUM') }}{{ lang('COLON') }}</label><br>
 				<span>{{ lang('KB_CHANGELOG_FORUM_EXPLAIN') }}</span>
 			</dt>
-			<dd><label><select name="changelog_forum_id">{{ S_CHANGELOG_FORUM_POST }}</select></label></dd>
+			<dd><select name="changelog_forum_id" id="changelog_forum_id">{{ S_CHANGELOG_FORUM_POST }}</select></dd>
 		</dl>
 		<dl>
 			<dt>

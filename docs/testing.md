@@ -929,3 +929,24 @@ tooltip and description, and the text is 1 px wide (hidden but present). On the 
 with alphabetic navigation switched on, the landmark is labelled, all 26 letters have the
 tooltip, only the chosen letter is marked current and the move arrows are absent. The setting
 was put back to Fixed afterwards. A screen reader itself was not run.
+
+## Announcement forum: one choice instead of a checkbox and a forum - 10/12/2026
+
+"Announce new articles in a forum" was a checkbox that revealed a forum select, while the
+changelog forum was a select with a "None (disabled)" choice. Both now work the changelog way:
+one select per setting, "None (disabled)" first and the default. Choosing a forum switches
+announcements on (`kb_anounce` 1 and `kb_forum_id`); choosing None switches them off (both 0), so
+the two can no longer disagree (before, a ticked box with no forum made the posting page report a
+configuration warning). The prefix options appear when a forum is chosen. A board that had kept a
+forum while announcements were off now shows None, matching what it does. The old checkbox text
+was adjusted: "If enabled, ... you choose below" became "A topic ... in the forum you choose
+whenever a new article is added. Choose None (disabled) to turn announcements off." Both selects
+now have a label bound to them. Fresh installs already default both to 0 (None).
+
+`kb_acp_announcement_forum_test.php` (7 cases) covers saving (a forum turns it on; None, nothing,
+a negative id and non-numeric input turn it off), the page markup and the wording.
+Claude drove the real ACP on fresh MySQL 8.0 and PostgreSQL 16 boards and on the SQLite test
+board: defaults 0/0/0 in the database, both selects start on None with the prefix options hidden,
+no checkbox, choosing a forum reveals the prefix options, saving writes the forum and the
+on-flag, choosing None hides them and saves 0 for both, and a reload shows what was saved. The
+SQLite board's own values were put back afterwards.
