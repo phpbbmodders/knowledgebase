@@ -19,7 +19,7 @@ if (empty($lang) || !is_array($lang))
 
 $lang = array_merge($lang, [
 	'ALPHABET'                             => 'A-B-C-D-E-F-G-H-I-J-K-L-M-N-O-P-Q-R-S-T-U-V-W-X-Y-Z',
-	'ALPHABET_NAV'                         => 'Alphabetical order:',
+	'ALPHABET_NAV'                         => 'Browse by letter:',
 	'KB_ALPHABET_LETTER'                   => 'Articles starting with %s',
 	'ADD_ARTICLE'                          => 'Add article',
 	'APPROVE'                              => 'Approve',
