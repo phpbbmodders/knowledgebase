@@ -911,13 +911,13 @@ folder). Fresh SQLite installs were not repeated; the SQLite board was updated w
 ## Sorting order setting: clear names, tooltips and screen-reader text - 10/12/2026
 
 The ACP "Sorting order" choices are now **Fixed** (was "forcibly"), **Selectable** and
-**Alphabetic navigation**, each with a one-sentence explanation. The explanation is the
+**Alphabetical navigation**, each with a one-sentence explanation. The explanation is the
 tooltip on the choice and is also read out with the radio button through `aria-describedby`
 (a visually hidden span, not `display: none`). The three radios sit in a `radiogroup` labelled
 by "Sorting order:"; the old label pointed at the first radio only. The ACP's key
 `ALPHABET` ("alphabetic navigation") was the same key the reader pages use for the A-Z row,
 so it was renamed `KB_SORT_ALPHABET` and `FORCIBLY`/`SELECTABLE` became `KB_SORT_FIXED`/
-`KB_SORT_SELECTABLE`. On the reader side, the alphabetic navigation is now a labelled
+`KB_SORT_SELECTABLE`. On the reader side, the alphabetical navigation is now a labelled
 `navigation` landmark, every letter link has a "Articles starting with X" tooltip, and the
 selected letter's link carries `aria-current`.
 
@@ -926,7 +926,7 @@ gone, the group, label, tooltip and description wiring of each radio, the hidden
 and the navigation markup. Claude checked the real ACP page in headless Chromium: the group is
 named "Sorting order:" and described by its explanation, each radio has a matching label,
 tooltip and description, and the text is 1 px wide (hidden but present). On the reader page
-with alphabetic navigation switched on, the landmark is labelled, all 26 letters have the
+with alphabetical navigation switched on, the landmark is labelled, all 26 letters have the
 tooltip, only the chosen letter is marked current and the move arrows are absent. The setting
 was put back to Fixed afterwards. A screen reader itself was not run.
 
@@ -1171,7 +1171,7 @@ On the 4.0 board, with a real browser: all 178 visible icons across the front-en
 (all 391 on the 3.3.x board); every page and ACP module returns 200; the ACP settings work and save,
 flat index and Slate load the right sheets, a custom stylesheet is served as `text/css` with
 `nosniff` and unsafe names get 404; articles submit and render (Markdown headings, code box), the
-alphabetic navigation has its landmark and 26 tooltips; approval and rejection notifications show
+alphabetical navigation has its landmark and 26 tooltips; approval and rejection notifications show
 in the bell and the notification list with avatars; a small image and a 9 MB file uploaded in nine
 chunks both succeed with the right size. Fresh MySQL and PostgreSQL boards on 3.3.x still render every
 page with every icon drawn.
