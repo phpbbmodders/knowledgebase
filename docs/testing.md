@@ -907,3 +907,25 @@ inherits from nothing, and right-to-left languages. The test board's nginx was n
 for serving `store/` (the extension serves custom files itself and never exposes the
 folder). Fresh SQLite installs were not repeated; the SQLite board was updated with
 `db:migrate`.
+
+## Sorting order setting: clear names, tooltips and screen-reader text - 10/12/2026
+
+The ACP "Sorting order" choices are now **Fixed** (was "forcibly"), **Selectable** and
+**Alphabetic navigation**, each with a one-sentence explanation. The explanation is the
+tooltip on the choice and is also read out with the radio button through `aria-describedby`
+(a visually hidden span, not `display: none`). The three radios sit in a `radiogroup` labelled
+by "Sorting order:"; the old label pointed at the first radio only. The ACP's key
+`ALPHABET` ("alphabetic navigation") was the same key the reader pages use for the A-Z row,
+so it was renamed `KB_SORT_ALPHABET` and `FORCIBLY`/`SELECTABLE` became `KB_SORT_FIXED`/
+`KB_SORT_SELECTABLE`. On the reader side, the alphabetic navigation is now a labelled
+`navigation` landmark, every letter link has a "Articles starting with X" tooltip, and the
+selected letter's link carries `aria-current`.
+
+`kb_acp_sort_type_test.php` (7 cases) checks the names and explanations, that the old keys are
+gone, the group, label, tooltip and description wiring of each radio, the hidden-text CSS,
+and the navigation markup. Claude checked the real ACP page in headless Chromium: the group is
+named "Sorting order:" and described by its explanation, each radio has a matching label,
+tooltip and description, and the text is 1 px wide (hidden but present). On the reader page
+with alphabetic navigation switched on, the landmark is labelled, all 26 letters have the
+tooltip, only the chosen letter is marked current and the move arrows are absent. The setting
+was put back to Fixed afterwards. A screen reader itself was not run.

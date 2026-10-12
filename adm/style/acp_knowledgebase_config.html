@@ -132,22 +132,27 @@
 		</dl>
 		<dl>
 			<dt>
-				<label for="sort_type">{{ lang('SORT_TYPE') }}{{ lang('COLON') }}</label><br>
-				<span>{{ lang('SORT_TYPE_EXPLAIN') }}</span>
+				<label id="sort_type_label">{{ lang('SORT_TYPE') }}{{ lang('COLON') }}</label><br>
+				<span id="sort_type_explain">{{ lang('SORT_TYPE_EXPLAIN') }}</span>
 			</dt>
 			<dd>
-				<label>
-					<input type="radio" class="radio" id="sort_type" name="sort_type" value="0" {% if S_FORCIBLY %}
-						checked="checked" {% endif %}/> {{ lang('FORCIBLY') }}
-				</label>
-				<label>
-					<input type="radio" class="radio" name="sort_type" value="1" {% if S_SELECTABLE %}
-						checked="checked" {% endif %}/> {{ lang('SELECTABLE') }}
-				</label>
-				<label>
-					<input type="radio" class="radio" name="sort_type" value="-1" {% if S_ALPHABET %}
-						checked="checked" {% endif %}/> {{ lang('ALPHABET') }}
-				</label>
+				<div role="radiogroup" aria-labelledby="sort_type_label" aria-describedby="sort_type_explain">
+					<label for="sort_type_fixed" title="{{ lang('KB_SORT_FIXED_EXPLAIN')|e('html_attr') }}">
+						<input type="radio" class="radio" id="sort_type_fixed" name="sort_type" value="0"
+							aria-describedby="sort_type_fixed_help" {% if S_FORCIBLY %}checked="checked" {% endif %}/> {{ lang('KB_SORT_FIXED') }}
+					</label>
+					<span id="sort_type_fixed_help" class="kb-sr-only">{{ lang('KB_SORT_FIXED_EXPLAIN') }}</span>
+					<label for="sort_type_selectable" title="{{ lang('KB_SORT_SELECTABLE_EXPLAIN')|e('html_attr') }}">
+						<input type="radio" class="radio" id="sort_type_selectable" name="sort_type" value="1"
+							aria-describedby="sort_type_selectable_help" {% if S_SELECTABLE %}checked="checked" {% endif %}/> {{ lang('KB_SORT_SELECTABLE') }}
+					</label>
+					<span id="sort_type_selectable_help" class="kb-sr-only">{{ lang('KB_SORT_SELECTABLE_EXPLAIN') }}</span>
+					<label for="sort_type_alphabet" title="{{ lang('KB_SORT_ALPHABET_EXPLAIN')|e('html_attr') }}">
+						<input type="radio" class="radio" id="sort_type_alphabet" name="sort_type" value="-1"
+							aria-describedby="sort_type_alphabet_help" {% if S_ALPHABET %}checked="checked" {% endif %}/> {{ lang('KB_SORT_ALPHABET') }}
+					</label>
+					<span id="sort_type_alphabet_help" class="kb-sr-only">{{ lang('KB_SORT_ALPHABET_EXPLAIN') }}</span>
+				</div>
 			</dd>
 		</dl>
 	</fieldset>
