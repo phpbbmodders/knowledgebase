@@ -47,7 +47,7 @@ class kb_acp_sort_type_test extends \PHPUnit\Framework\TestCase
 		return [
 			'fixed'      => ['KB_SORT_FIXED', 'KB_SORT_FIXED_EXPLAIN', 'Fixed'],
 			'selectable' => ['KB_SORT_SELECTABLE', 'KB_SORT_SELECTABLE_EXPLAIN', 'Selectable'],
-			'alphabetic' => ['KB_SORT_ALPHABET', 'KB_SORT_ALPHABET_EXPLAIN', 'Alphabetical navigation'],
+			'alphabetic' => ['KB_SORT_ALPHABET', 'KB_SORT_ALPHABET_EXPLAIN', 'Alphabetical'],
 		];
 	}
 

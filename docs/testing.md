@@ -911,7 +911,7 @@ folder). Fresh SQLite installs were not repeated; the SQLite board was updated w
 ## Sorting order setting: clear names, tooltips and screen-reader text - 10/12/2026
 
 The ACP "Sorting order" choices are now **Fixed** (was "forcibly"), **Selectable** and
-**Alphabetical navigation**, each with a one-sentence explanation. The explanation is the
+**Alphabetical**, each with a one-sentence explanation. The explanation is the
 tooltip on the choice and is also read out with the radio button through `aria-describedby`
 (a visually hidden span, not `display: none`). The three radios sit in a `radiogroup` labelled
 by "Sorting order:"; the old label pointed at the first radio only. The ACP's key
