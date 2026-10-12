@@ -38,12 +38,10 @@ class kb_notification_permissions_test extends \PHPUnit\Framework\TestCase
 		$db->method('sql_in_set')->willReturnCallback(fn($column, $values) => $column . ' IN (' . implode(',', array_map('intval', $values)) . ')');
 		$notification = (new \ReflectionClass($class))->newInstanceWithoutConstructor();
 		$property = new \ReflectionProperty($class, 'db');
-		$property->setAccessible(true);
 		$property->setValue($notification, $db);
 		$user = $this->getMockBuilder(\phpbb\user::class)->disableOriginalConstructor()->getMock();
 		$user->data = ['user_id' => 2, 'user_type' => 0];
 		$property = new \ReflectionProperty($class, 'user');
-		$property->setAccessible(true);
 		$property->setValue($notification, $user);
 		$notification->set_tables('options', 'kb_users', 'kb_groups');
 		$this->assertSame([2], array_map('intval', $notification->check_permission('kb_m_approve', 1)));

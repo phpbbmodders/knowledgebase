@@ -24,7 +24,6 @@ class kb_description_test extends \PHPUnit\Framework\TestCase
 		foreach (['config' => new \phpbb\config\config($config), 'language' => $language] as $name => $value)
 		{
 			$property = new \ReflectionProperty(functions_kb::class, $name);
-			$property->setAccessible(true);
 			$property->setValue($kb, $value);
 		}
 

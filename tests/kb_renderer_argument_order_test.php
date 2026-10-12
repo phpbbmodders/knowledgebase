@@ -41,7 +41,6 @@ class kb_renderer_argument_order_test extends \PHPUnit\Framework\TestCase
 		};
 		$renderer = (new \ReflectionClass(\phpbbmodders\knowledgebase\textformatter\renderer::class))->newInstanceWithoutConstructor();
 		$property = new \ReflectionProperty(\phpbb\textformatter\s9e\renderer::class, 'renderer');
-		$property->setAccessible(true);
 		$property->setValue($renderer, $stub);
 
 		$renderer->configure_user(...array_map(fn($name) => $services[$name], $order));

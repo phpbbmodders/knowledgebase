@@ -1220,3 +1220,15 @@ folder being opened up, a folder owned by someone else that is already writable 
 opened up (`/usr`) both raising no warning; the last two fail with the old unconditional `chmod()`.
 The configuration page showed no warning on the 3.3.x test board and on the current-master 4.0 board, and
 the suite passes on both cores (411 tests; 3.3.x with MySQL and PostgreSQL, nothing skipped).
+
+## PHP 8.5 - 10/12/2026
+
+PHP 8.2 stays the minimum (it is the oldest branch still getting security fixes and the one phpBB 4.0
+needs), and 8.5 is now in the CI matrix next to 8.2, 8.3 and 8.4 because the maintainers' hosting runs
+8.5.x. On PHP 8.5.11 (Docker `php:8.5-cli`) all 126 PHP files lint clean and the unit suite passes
+(411 tests, 18 skipped: 17 database cases without a database driver, and one that needs a user who
+cannot write everywhere). The only deprecation notices come from phpBB 3.3.19 itself and its Twig
+(dynamic properties in the SQLite driver, implicit nullable parameters); none come from this
+extension. `ReflectionProperty::setAccessible()` is deprecated in 8.5 and has had no effect since 8.1, so
+the tests no longer call it. A test that expected `/usr` to be unwritable now skips when the tests run as
+root, as they do in a container.

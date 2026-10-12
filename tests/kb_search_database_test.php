@@ -78,13 +78,11 @@ class kb_search_database_test extends \PHPUnit\Framework\TestCase
 		foreach (['db' => $this->db, 'config' => $this->config, 'language' => $language, 'articles_table' => 'phpbb_kb_articles', 'search_results_table' => 'phpbb_kb_search_results', 'article_categories_table' => 'phpbb_kb_article_categories', 'search_query' => $this->class === kb_fulltext_mysql::class ? 'migration' : '+migration', 'split_words' => ['migration']] as $name => $value)
 		{
 			$property = new \ReflectionProperty($backend, $name);
-			$property->setAccessible(true);
 			$property->setValue($backend, $value);
 		}
 		if ($this->class === kb_fulltext_postgres::class)
 		{
 			$property = new \ReflectionProperty($backend, 'tsearch_query');
-			$property->setAccessible(true);
 			$property->setValue($backend, 'migration');
 		}
 		return $backend;

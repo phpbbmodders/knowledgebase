@@ -25,7 +25,6 @@ class kb_acp_csrf_test extends \PHPUnit\Framework\TestCase
 	private function inject($name, $value)
 	{
 		$property = new \ReflectionProperty(acp_controller::class, $name);
-		$property->setAccessible(true);
 		$property->setValue($this->controller, $value);
 	}
 
@@ -106,7 +105,6 @@ class kb_acp_csrf_test extends \PHPUnit\Framework\TestCase
 		$GLOBALS['kb_test_valid_forms'][$key] = true;
 		$this->request_values($post ? ['submit'] : [], ['submit' => true, 'continue' => true, 'hash' => $key . '_valid']);
 		$method = new \ReflectionMethod(acp_controller::class, 'validate_batch_request');
-		$method->setAccessible(true);
 		$this->assertTrue($method->invoke($this->controller, $key));
 	}
 
@@ -172,7 +170,6 @@ class kb_acp_csrf_test extends \PHPUnit\Framework\TestCase
 		$template->method('assign_vars')->willReturnCallback(function ($values) use (&$vars) { $vars = $values; });
 		$this->inject('template', $template);
 		$method = new \ReflectionMethod(acp_controller::class, 'index_inprogress');
-		$method->setAccessible(true);
 		$method->invoke($this->controller, 'delete');
 		$this->assertStringContainsString('action=delete', $vars['U_CONTINUE_INDEXING']);
 		$this->assertArrayNotHasKey('U_ACTION', $vars);

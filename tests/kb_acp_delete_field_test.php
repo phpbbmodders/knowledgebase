@@ -66,7 +66,6 @@ class kb_acp_delete_field_test extends \PHPUnit\Framework\TestCase
 		foreach (['db' => $this->db, 'kb' => $kb, 'language' => $language, 'log' => $log, 'user' => $user, 'u_action' => 'acp&action=x'] as $name => $value)
 		{
 			$property = new \ReflectionProperty(acp_controller::class, $name);
-			$property->setAccessible(true);
 			$property->setValue($controller, $value);
 		}
 

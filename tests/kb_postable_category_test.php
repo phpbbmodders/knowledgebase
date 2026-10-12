@@ -40,7 +40,6 @@ class kb_postable_category_test extends \PHPUnit\Framework\TestCase
 		foreach (['db' => $this->db, 'categories_table' => 'phpbb_kb_categories'] as $name => $value)
 		{
 			$property = new \ReflectionProperty(functions_kb::class, $name);
-			$property->setAccessible(true);
 			$property->setValue($kb, $value);
 		}
 

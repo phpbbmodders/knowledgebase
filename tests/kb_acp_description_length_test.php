@@ -21,7 +21,6 @@ class kb_acp_description_length_test extends \PHPUnit\Framework\TestCase
 	{
 		$controller = (new \ReflectionClass(acp_controller::class))->newInstanceWithoutConstructor();
 		$method = new \ReflectionMethod(acp_controller::class, 'valid_description_max_length');
-		$method->setAccessible(true);
 
 		return $method->invoke($controller, $submitted);
 	}

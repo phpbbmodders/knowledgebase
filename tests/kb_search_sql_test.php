@@ -23,7 +23,6 @@ class kb_search_sql_test extends \PHPUnit\Framework\TestCase
 	private function inject($object, $name, $value)
 	{
 		$property = new \ReflectionProperty($object, $name);
-		$property->setAccessible(true);
 		$property->setValue($object, $value);
 	}
 

@@ -28,4 +28,4 @@ jobs:
       RUN_WINDOWS_JOBS: 0
 
       PRIMARY_PHP_VERSION: '8.2'
-      PHP_VERSION_MATRIX: '["8.2", "8.3", "8.4"]'
+      PHP_VERSION_MATRIX: '["8.2", "8.3", "8.4", "8.5"]'

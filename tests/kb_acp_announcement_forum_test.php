@@ -36,11 +36,9 @@ class kb_acp_announcement_forum_test extends \PHPUnit\Framework\TestCase
 		foreach (['request' => $request, 'config' => $config] as $name => $value)
 		{
 			$property = new \ReflectionProperty(acp_controller::class, $name);
-			$property->setAccessible(true);
 			$property->setValue($controller, $value);
 		}
 		$method = new \ReflectionMethod(acp_controller::class, 'save_announcement_forum');
-		$method->setAccessible(true);
 		$method->invoke($controller);
 
 		return $saved;

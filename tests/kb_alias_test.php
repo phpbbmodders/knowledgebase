@@ -44,7 +44,6 @@ class kb_alias_test extends \PHPUnit\Framework\TestCase
 		foreach (['helper' => $helper, 'request' => $request] as $name => $value)
 		{
 			$property = $reflection->getProperty($name);
-			$property->setAccessible(true);
 			$property->setValue($controller, $value);
 		}
 		$this->expectException(\RuntimeException::class);

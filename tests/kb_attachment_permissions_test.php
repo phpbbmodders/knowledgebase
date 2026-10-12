@@ -42,7 +42,6 @@ class kb_attachment_permissions_test extends \PHPUnit\Framework\TestCase
 		foreach (['db' => $db, 'auth' => $auth, 'request' => $request, 'kb' => $kb, 'language' => $language, 'articles_table' => 'articles', 'attachments_table' => 'attachments'] as $name => $value)
 		{
 			$property = new \ReflectionProperty(kb_file::class, $name);
-			$property->setAccessible(true);
 			$property->setValue($controller, $value);
 		}
 		try

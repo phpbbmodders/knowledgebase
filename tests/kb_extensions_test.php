@@ -58,7 +58,6 @@ class kb_extensions_test extends \PHPUnit\Framework\TestCase
 	private function inject($name, $value)
 	{
 		$property = new \ReflectionProperty(acp_controller::class, $name);
-		$property->setAccessible(true);
 		$property->setValue($this->controller, $value);
 	}
 
@@ -98,7 +97,6 @@ class kb_extensions_test extends \PHPUnit\Framework\TestCase
 	private function invoke($name)
 	{
 		$method = new \ReflectionMethod(acp_controller::class, $name);
-		$method->setAccessible(true);
 		return $method->invoke($this->controller);
 	}
 

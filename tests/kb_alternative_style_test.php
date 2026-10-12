@@ -375,7 +375,6 @@ class kb_alternative_style_test extends \PHPUnit\Framework\TestCase
 		foreach (['request' => $request, 'config' => $config_spy, 'language' => $language, 'alt_styles' => $this->styles($config), 'u_action' => 'x'] as $name => $value)
 		{
 			$property = new \ReflectionProperty(acp_controller::class, $name);
-			$property->setAccessible(true);
 			$property->setValue($controller, $value);
 		}
 
@@ -385,7 +384,6 @@ class kb_alternative_style_test extends \PHPUnit\Framework\TestCase
 	private function call(acp_controller $controller, string $method, ...$args)
 	{
 		$reflection = new \ReflectionMethod(acp_controller::class, $method);
-		$reflection->setAccessible(true);
 
 		return $reflection->invoke($controller, ...$args);
 	}

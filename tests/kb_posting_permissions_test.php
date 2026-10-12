@@ -52,7 +52,6 @@ class kb_posting_permissions_test extends \PHPUnit\Framework\TestCase
 		foreach (['auth' => $auth, 'request' => $request, 'kb' => $kb, 'db' => $db, 'search_factory' => $factory, 'language' => $language, 'log' => $log, 'logs_table' => 'logs', 'articles_table' => 'articles', 'categories_table' => 'categories', 'config' => new \phpbb\config\config(['kb_forum_id' => 1])] as $name => $value)
 		{
 			$property = new \ReflectionProperty(posting::class, $name);
-			$property->setAccessible(true);
 			$property->setValue($controller, $value);
 		}
 		try

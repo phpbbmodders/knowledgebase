@@ -45,7 +45,6 @@ class kb_phpbb4_compat_test extends \PHPUnit\Framework\TestCase
 		$type = (new \ReflectionClass(self::TEST_SUBCLASS[$class]))->newInstanceWithoutConstructor();
 		$type::$arrays = $arrays;
 		$property = new \ReflectionProperty($class, 'user_loader');
-		$property->setAccessible(true);
 		$property->setValue($type, $loader);
 		$type->set_initial_data(['notification_data' => serialize([
 			'moderator'   => $data['moderator'] ?? 0,
@@ -86,7 +85,6 @@ class kb_phpbb4_compat_test extends \PHPUnit\Framework\TestCase
 	public function test_the_four_oh_base_class_is_recognised_by_the_avatar_helper_it_gains()
 	{
 		$method = new \ReflectionMethod(approve::class, 'core_wants_avatar_arrays');
-		$method->setAccessible(true);
 		$type = (new \ReflectionClass(approve::class))->newInstanceWithoutConstructor();
 
 		$this->assertSame(property_exists(\phpbb\notification\type\base::class, 'avatar_helper'), $method->invoke($type));
@@ -98,7 +96,6 @@ class kb_phpbb4_compat_test extends \PHPUnit\Framework\TestCase
 	{
 		$kb = (new \ReflectionClass(functions_kb::class))->newInstanceWithoutConstructor();
 		$property = new \ReflectionProperty(functions_kb::class, 'config');
-		$property->setAccessible(true);
 		$property->setValue($kb, new \phpbb\config\config($config));
 
 		return $kb->get_upload_path();

@@ -78,6 +78,7 @@ class kb_declared_support_test extends \PHPUnit\Framework\TestCase
 
 		$this->assertSame(substr(ext::MIN_PHP_VERSION, 0, 3), $versions[0], 'the lowest PHP the tests run on is the lowest one claimed');
 		$this->assertGreaterThanOrEqual(3, count($versions));
+		$this->assertContains('8.5', $versions, 'the newest PHP the hosts run is tested too');
 		$this->assertSame(1, preg_match("/PRIMARY_PHP_VERSION: '([0-9.]+)'/", $workflow, $primary));
 		$this->assertContains($primary[1], $versions);
 	}

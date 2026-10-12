@@ -30,10 +30,8 @@ class kb_acp_contact_group_test extends \PHPUnit\Framework\TestCase
 
 		$controller = (new \ReflectionClass(acp_controller::class))->newInstanceWithoutConstructor();
 		$property = new \ReflectionProperty(acp_controller::class, 'db');
-		$property->setAccessible(true);
 		$property->setValue($controller, $db);
 		$method = new \ReflectionMethod(acp_controller::class, 'valid_contact_group');
-		$method->setAccessible(true);
 
 		return $method->invoke($controller, $submitted);
 	}

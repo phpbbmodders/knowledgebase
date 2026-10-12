@@ -29,7 +29,6 @@ class kb_ext_enableable_test extends \PHPUnit\Framework\TestCase
 
 		$ext = (new \ReflectionClass(ext::class))->newInstanceWithoutConstructor();
 		$property = new \ReflectionProperty(\phpbb\extension\base::class, 'container');
-		$property->setAccessible(true);
 		$property->setValue($ext, $container);
 
 		return $ext;

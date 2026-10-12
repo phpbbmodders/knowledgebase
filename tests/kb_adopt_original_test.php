@@ -107,7 +107,6 @@ class kb_adopt_original_test extends \PHPUnit\Framework\TestCase
 		$migration->adopt_original_package();
 
 		$property = new \ReflectionProperty(\phpbb\db\migration\migration::class, 'config');
-		$property->setAccessible(true);
 
 		return $property->getValue($migration);
 	}

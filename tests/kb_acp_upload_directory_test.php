@@ -34,7 +34,6 @@ class kb_acp_upload_directory_test extends \PHPUnit\Framework\TestCase
 	{
 		$controller = (new \ReflectionClass(acp_controller::class))->newInstanceWithoutConstructor();
 		$method = new \ReflectionMethod(acp_controller::class, 'make_directory_writable');
-		$method->setAccessible(true);
 		$method->invoke($controller, $directory);
 	}
 
@@ -67,6 +66,11 @@ class kb_acp_upload_directory_test extends \PHPUnit\Framework\TestCase
 
 	public function test_a_directory_that_cannot_be_opened_up_gives_no_warning_either()
 	{
+		if (is_writable('/usr'))
+		{
+			$this->markTestSkipped('Running as a user who can write everywhere, so there is no folder to test with.');
+		}
+
 		// /usr is root's and not writable: chmod() cannot work there and must stay silent (the write test reports it).
 		$this->make_writable('/usr');
 

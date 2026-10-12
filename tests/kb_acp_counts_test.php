@@ -36,7 +36,6 @@ class kb_acp_counts_test extends \PHPUnit\Framework\TestCase
 		foreach (['db' => $db, 'config' => $config, 'request' => $request, 'language' => $language, 'articles_table' => 'articles'] as $name => $value)
 		{
 			$property = new \ReflectionProperty(acp_controller::class, $name);
-			$property->setAccessible(true);
 			$property->setValue($controller, $value);
 		}
 		try
