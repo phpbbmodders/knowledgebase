@@ -84,6 +84,8 @@
 		</div>
 	</div>
 {% endif %}
+<div class="forumbg forumbg-table kb-listing">
+<div class="inner">
 <table class="table1 kb-index-table">
 	<thead>
 	<tr>
@@ -95,7 +97,7 @@
 	</thead>
 	<tbody>
 	{% for art_row in loops.art_row %}
-		<tr id="{{ art_row.ID }}">
+		<tr id="{{ art_row.ID }}" class="{{ loop.index is odd ? 'bg1' : 'bg2' }}">
 			<td>
 				<a href="{{ art_row.U_ARTICLE }}">{{ art_row.ARTICLE_TITLE }}</a>
 				{% if art_row.S_CROSS_LISTED %}<i class="icon fa-tag fa-fw" aria-hidden="true"
@@ -134,12 +136,14 @@
 		</tr>
 	{% endfor %}
 	{% if not loops.art_row|length %}
-		<tr>
+		<tr class="bg1">
 			<td colspan="4" style="text-align: center;">{{ lang('NO_ARTICLES') }}</td>
 		</tr>
 	{% endif %}
 	</tbody>
 </table>
+</div>
+</div>
 <div class="action-bar bar-bottom">
 	{% if S_CAN_ADD or S_CAN_ADD_REDIRECT %}
 		<div class="buttons">

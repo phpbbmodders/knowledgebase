@@ -1,0 +1,143 @@
+/*
+ * Knowledge Base - "Slate" alternative stylesheet (colours only).
+ *
+ * WHAT IT IS
+ * The muted blue-grey look of the original Knowledge Base, as a set of colour
+ * overrides. Switch it on in the ACP under Extensions > Knowledge Base >
+ * Configuration: tick "Use an alternative stylesheet", then choose it.
+ *
+ * It is also meant as the example to copy when you write your own. A custom
+ * alternative is a plain .css file placed in
+ * store/phpbbmodders_knowledgebase/stylesheets/ on the board; it then shows up
+ * in the same dropdown. Copy this file there, rename it, and keep only the
+ * sections you want to change - every section below stands on its own.
+ *
+ * WHAT IT DOES NOT DO
+ * It changes colours and nothing else. Spacing, wrapping and the shape of the
+ * tabs and tables belong to the "Flat article index" setting, which loads
+ * phpbbmodders_knowledgebase_flat.css. The two settings are independent: this
+ * sheet works with the flat index on or off.
+ *
+ * HOW IT LOADS
+ * After the board style's own stylesheets and after the extension's base
+ * sheet, so an override here wins over them when the selectors are equally
+ * specific. Selectors start from a kb-* hook class (kb-tabs, kb-tab,
+ * kb-tab-active, kb-listing) that the extension's templates add next to the
+ * board style's classes, which keeps forum pages untouched. Where a board
+ * style sets a colour with a longer selector, the override repeats the
+ * board's class names (for example ".tabs.kb-tabs") to outrank it, without
+ * !important.
+ *
+ * PALETTE
+ *   #536482  slate      selected tab, header bars
+ *   #8f9dab  grey-blue  other tabs
+ *   #7c8790  dark grey  tab under the pointer
+ *   #f2f5f7  mist       odd list rows, list backgrounds
+ *   #e8edf1  pale blue  row under the pointer
+ *   #cccccc  light grey row dividers
+ *   #ffffff  white      text on slate, even table rows
+ */
+
+/*
+ * SECTION 1 - Navigation tabs
+ * Hooks: .kb-tabs (the strip), .kb-tab (every tab), .kb-tab-active (the page
+ * you are on). prosilver paints tabs with a background colour on the link and
+ * a gradient on the selected one, so the gradient is cleared first or the
+ * flat colour would sit underneath it. border-color matches the fill so no
+ * outline of the board style's blue shows around a tab.
+ */
+.tabs.kb-tabs .kb-tab > a {
+	background: #8f9dab;
+	background-image: none;
+	border-color: #8f9dab;
+	color: #ffffff;
+}
+
+.tabs.kb-tabs .kb-tab > a:hover {
+	background: #7c8790;
+	background-image: none;
+	border-color: #7c8790;
+	color: #ffffff;
+}
+
+/* The selected tab keeps its colour under the pointer: it is not a link to go to. */
+.tabs.kb-tabs .kb-tab-active > a,
+.tabs.kb-tabs .kb-tab-active > a:hover {
+	background: #536482;
+	background-image: none;
+	border-color: #536482;
+	box-shadow: none;
+	color: #ffffff;
+}
+
+/*
+ * SECTION 2 - Header bars
+ * Hook: .kb-listing, put on every forum-style box the extension draws: the
+ * category list, the search results and the article tables. The box colour is
+ * the bar behind the column headings, so one rule recolours all three.
+ * background-image is cleared because boards paint this bar with a gradient.
+ */
+.forabg.kb-listing,
+.forumbg.kb-listing {
+	background-color: #536482;
+	background-image: none;
+}
+
+.kb-listing ul.topiclist li.header dt,
+.kb-listing ul.topiclist li.header dd,
+.kb-listing ul.topiclist li.header a,
+.kb-listing table.table1 thead th {
+	color: #ffffff;
+}
+
+/*
+ * SECTION 3 - Category and search-result lists (ul.topiclist)
+ * The list sits on a pale panel with a divider between rows. The row divider
+ * uses white on top and grey below, the same bevel prosilver draws.
+ */
+.kb-listing ul.topiclist.forums,
+.kb-listing ul.topiclist.topics {
+	background-color: #f2f5f7;
+	background-image: none;
+}
+
+.kb-listing ul.topiclist li.row {
+	border-top-color: #ffffff;
+	border-bottom-color: #cccccc;
+}
+
+.kb-listing ul.topiclist li.row:hover {
+	background-color: #e8edf1;
+}
+
+/*
+ * SECTION 4 - Article tables (category page, "Manage Your Articles", queue)
+ * The templates give rows the board style's own bg1 / bg2 stripe classes, so
+ * the stripes are recoloured here rather than invented. The cell colour is
+ * set on the row's cells because some boards colour the cells, not the row.
+ * tbody tr:hover comes last: it must outrank the stripe rules above it.
+ */
+.kb-listing table.table1 tbody tr.bg1,
+.kb-listing table.table1 tbody tr.bg1 td {
+	background-color: #ffffff;
+}
+
+.kb-listing table.table1 tbody tr.bg2,
+.kb-listing table.table1 tbody tr.bg2 td {
+	background-color: #f2f5f7;
+}
+
+.kb-listing table.table1 tbody tr:hover,
+.kb-listing table.table1 tbody tr:hover td {
+	background-color: #e8edf1;
+}
+
+/* Text inside the rows: the board style's blue-grey would clash with slate. */
+.kb-listing table.table1 td {
+	color: #333333;
+}
+
+/* Divider under each row; layout (thickness) belongs to the flat sheet. */
+.kb-listing table.table1 tbody td {
+	border-bottom-color: #cccccc;
+}

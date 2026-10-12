@@ -22,6 +22,7 @@ use phpbb\config\db_text;
 use phpbb\controller\helper;
 use phpbb\language\language;
 use phpbb\template\template;
+use phpbbmodders\knowledgebase\inc\alternative_styles;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
@@ -50,6 +51,9 @@ class listener implements EventSubscriberInterface
 	/* @var string */
 	protected string $php_ext;
 
+	/** @var alternative_styles */
+	protected alternative_styles $alt_styles;
+
 	/**
 	 * Constructor
 	 *
@@ -60,10 +64,11 @@ class listener implements EventSubscriberInterface
 	 * @param auth     $auth
 	 * @param template $template
 	 * @param string   $php_ext
+	 * @param alternative_styles $alt_styles
 	 */
 	public function __construct(
 		config $config, db_text $config_text, helper $helper, language $language, auth $auth, template $template,
-		string $php_ext
+		string $php_ext, alternative_styles $alt_styles
 	)
 	{
 		$this->config = $config;
@@ -73,6 +78,7 @@ class listener implements EventSubscriberInterface
 		$this->auth = $auth;
 		$this->template = $template;
 		$this->php_ext = $php_ext;
+		$this->alt_styles = $alt_styles;
 	}
 
 	/**
@@ -110,13 +116,52 @@ class listener implements EventSubscriberInterface
 	 */
 	public function add_page_header_link($event): void
 	{
-		$this->template->assign_vars([
+		$this->template->assign_vars(array_merge([
 			'KB_FONT_ICON' => $this->config['kb_font_icon'],
-			'S_KB_CLASSIC_LOOK' => (bool) $this->config['kb_classic_look'],
-			//      'S_KNOWLEDGEBASE_LINK_ENABLED' => !empty($this->config['kbase_enable']) && !empty($this->config['kbase_header_link']) && $this->auth->acl_get('u_manage_kb'),
-			//      'U_LIBRARY' => $this->helper->route('phpbbmodders_knowledgebase_index')
 			'U_LIBRARY'    => ($this->auth->acl_get('u_kb_view') || $this->auth->acl_get('a_manage_kb')) ? $this->helper->route('phpbbmodders_knowledgebase_index') : '',
-		]);
+		], $this->stylesheet_template_vars()));
+	}
+
+	/**
+	 * Template variables that decide which Knowledge Base stylesheets load.
+	 *
+	 * The flat index brings its own layout sheet. A chosen alternative
+	 * stylesheet is a bundled file (loaded through INCLUDECSS by its name
+	 * relative to the theme folder) or a custom file (loaded by the URL of the
+	 * stylesheet controller, versioned by the file's modification time so an
+	 * edited file is fetched again). An alternative that is off, unset or
+	 * missing contributes nothing, so the board's own style shows.
+	 *
+	 * @return array
+	 */
+	protected function stylesheet_template_vars(): array
+	{
+		$vars = [
+			'S_KB_FLAT_INDEX'            => (bool) $this->config['kb_flat_index'],
+			'KB_ALT_STYLE_BUNDLED_FILE'  => '',
+			'U_KB_ALT_STYLE_CUSTOM'      => '',
+		];
+
+		$active = $this->alt_styles->active();
+		if ($active === null)
+		{
+			return $vars;
+		}
+
+		[$kind, $name] = $active;
+		if ($kind === alternative_styles::BUNDLED)
+		{
+			$vars['KB_ALT_STYLE_BUNDLED_FILE'] = 'alternatives/' . $name . '.css';
+		}
+		else
+		{
+			$vars['U_KB_ALT_STYLE_CUSTOM'] = $this->helper->route('phpbbmodders_knowledgebase_stylesheet', [
+				'f' => $name,
+				'v' => (int) filemtime((string) $this->alt_styles->custom_file_path($name)),
+			]);
+		}
+
+		return $vars;
 	}
 
 	/**

@@ -1,0 +1,31 @@
+/*
+ * Example custom alternative stylesheet for the Knowledge Base: it recolours
+ * ONE thing, the selected navigation tab, and leaves everything else to the
+ * board style (or to the layout of the flat article index).
+ *
+ * To use it:
+ *   1. Copy this file to store/phpbbmodders_knowledgebase/stylesheets/selected-tab.css
+ *      on the board (create the folders if they are missing; the file name may
+ *      use letters, digits, dots, dashes and underscores and must end in .css).
+ *   2. In the ACP, open Extensions > Knowledge Base > Configuration, tick
+ *      "Use an alternative stylesheet", choose "selected-tab.css" under Custom
+ *      and submit.
+ *
+ * It loads after the board style's sheets and the extension's own, so rules
+ * with the same specificity win. Copy more sections from the bundled
+ * styles/all/theme/alternatives/slate.css to restyle more areas.
+ */
+
+/*
+ * The selected tab. ".tabs.kb-tabs .kb-tab-active > a" is as specific as the
+ * board style's own tab rules, which come earlier, so no !important is needed.
+ * background-image is cleared because boards paint the selected tab with a
+ * gradient that would otherwise cover the flat colour.
+ */
+.tabs.kb-tabs .kb-tab-active > a,
+.tabs.kb-tabs .kb-tab-active > a:hover {
+	background-color: #0b6e4f;
+	background-image: none;
+	border-color: #0b6e4f;
+	color: #ffffff;
+}

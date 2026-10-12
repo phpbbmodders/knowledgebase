@@ -12,8 +12,8 @@ namespace phpbbmodders\knowledgebase\migrations;
 
 require_once __DIR__ . '/kb_extensions_test.php';
 require_once dirname(__DIR__) . '/migrations/version_2_0_21.php';
-require_once dirname(__DIR__) . '/event/listener.php';
 
+/** The 2.0.21 migration that added the classic look setting; 2.0.24 later replaced it (see kb_alternative_style_test). */
 class kb_classic_look_test extends \PHPUnit\Framework\TestCase
 {
 	private function migration(array $config): version_2_0_21
@@ -33,39 +33,5 @@ class kb_classic_look_test extends \PHPUnit\Framework\TestCase
 	{
 		$this->assertFalse($this->migration([])->effectively_installed());
 		$this->assertTrue($this->migration(['kb_classic_look' => 1])->effectively_installed());
-	}
-
-	/** @dataProvider settings */
-	public function test_the_page_header_tells_the_templates_whether_the_classic_look_is_on($config, bool $expected)
-	{
-		$assigned = [];
-		$template = $this->createMock(\phpbb\template\template::class);
-		$template->method('assign_vars')->willReturnCallback(function ($vars) use (&$assigned) {
-			$assigned = $vars;
-		});
-		$auth = $this->createMock(\phpbb\auth\auth::class);
-		$auth->method('acl_get')->willReturn(false);
-
-		$listener = new \phpbbmodders\knowledgebase\event\listener(
-			new \phpbb\config\config($config + ['kb_font_icon' => 'book']),
-			$this->createMock(\phpbb\config\db_text::class),
-			$this->createMock(\phpbb\controller\helper::class),
-			$this->createMock(\phpbb\language\language::class),
-			$auth,
-			$template,
-			'php'
-		);
-		$listener->add_page_header_link(new \stdClass());
-
-		$this->assertSame($expected, $assigned['S_KB_CLASSIC_LOOK']);
-	}
-
-	public function settings(): array
-	{
-		return [
-			'on'          => [['kb_classic_look' => '1'], true],
-			'off'         => [['kb_classic_look' => '0'], false],
-			'not set yet' => [[], false],
-		];
 	}
 }

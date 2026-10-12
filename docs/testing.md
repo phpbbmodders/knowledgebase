@@ -854,3 +854,56 @@ Only comments changed. Claude compared every touched file with its committed ver
 token, ignoring comments and whitespace, and found no difference; every other doc comment is
 identical, all files pass `php -l`, and the full suite passes against the MySQL and PostgreSQL
 containers (275 tests, 800 assertions). The live board still serves its pages.
+
+## Flat index layout and the alternative stylesheet picker - 10/12/2026
+
+The old "classic look" setting is split in two. Its layout (wrapping, compact tabs and
+tables) belongs to the flat article index and loads `phpbbmodders_knowledgebase_flat.css`;
+its colours became the bundled **Slate** alternative, chosen in a new ACP picker. Custom
+CSS files from `store/phpbbmodders_knowledgebase/stylesheets/` are listed in the same
+dropdown and served by `controller/stylesheet.php`. Migration `version_2_0_24` adds
+`kb_alt_style_enabled` (0) and `kb_alt_style` (`bundled:slate`) and removes
+`kb_classic_look` without mapping it. The article tables also moved into prosilver's
+forum-header box with `bg1`/`bg2` rows: in the native look the header text was white on a
+white page.
+
+`kb_alternative_style_test.php` (68 cases) covers: which bundled and custom files are
+listed (symbolic links, folders, oversized, badly named and non-CSS entries are not); names
+that could leave the folder, including encoded and absolute paths and a null byte; a custom
+folder that is itself a link; parsing of stored choices; what is active with the setting
+off, on, and after the file vanishes; the variables the page header gives the templates for
+each flat/colour combination; the controller's headers, 304 reply and 404s; what the ACP
+saves (the choice is kept while off, a forged choice never replaces it, switching on with an
+unavailable file is refused); the dropdown markup; and the migration. Removing the
+symbolic-link check or the double-dot rule makes the matching tests fail. The layout tests
+now check that the flat sheet has no colour declarations, that Slate has no layout
+declarations and is commented, and the load order of the sheets. The full suite passes
+against the MySQL and PostgreSQL containers: 345 tests, 959 assertions, nothing skipped.
+
+Claude checked it live on the SQLite test board and on throwaway MySQL 8.0 and PostgreSQL 16
+boards (fresh installs through the phpBB CLI installer, and an update from the previous
+code with the old setting switched on, then `db:migrate`). On all three, through the real
+ACP: no classic checkbox; the switch and dropdown present with Bundled and Custom groups;
+saving on, saving off (choice kept), refusing an unavailable choice (nothing changed), a
+forged choice ignored, and a custom file chosen; unsafe files not listed. On MySQL and
+PostgreSQL the front end loaded exactly the expected sheets for all six combinations of flat
+layout and bundled/custom colours, with the custom link after the board's own stylesheets;
+the custom file came back as `text/css`; ten unsafe requests (link, oversized, `..` name,
+wrong extension, folder, `../`, encoded `../`, absolute path, missing, empty) all returned
+404; and removing the chosen file made the page load only the base sheet while the ACP
+showed a warning and kept its controls. The update left the flat index setting unchanged on
+both. On SQLite, conditional requests returned 304.
+
+Screenshots in `docs/images/styling/` come from a headless Chromium script on the test
+board: three board styles (prosilver, Revolution, ProMinoDeux), hierarchical and flat,
+board colours and Slate, a phone width for each, and a custom selected-tab sheet. Computed
+colours matched expectations (own palette per style with no sheet, Slate's `#536482` with
+it, the custom green only on the selected tab) and no page scrolled sideways. The code box on
+the article page is a self-contained white box with dark text on all three styles.
+
+Not covered: the final tab shape and colour (waiting on Kailey), keyboard focus and hover
+states and print layout under Slate, board styles other than these three, a style that
+inherits from nothing, and right-to-left languages. The test board's nginx was not checked
+for serving `store/` (the extension serves custom files itself and never exposes the
+folder). Fresh SQLite installs were not repeated; the SQLite board was updated with
+`db:migrate`.

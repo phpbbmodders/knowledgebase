@@ -34,6 +34,13 @@ phpbbmodders_knowledgebase_posting:
     path: /knowledgebase/posting
     defaults: { _controller: phpbbmodders.knowledgebase.controller.posting:post_article }
 
+# A custom alternative stylesheet from the board's store folder, picked in the
+# ACP; the file name travels in the "f" query parameter like every other
+# route here.
+phpbbmodders_knowledgebase_stylesheet:
+    path: /knowledgebase/stylesheet
+    defaults: { _controller: phpbbmodders.knowledgebase.controller.stylesheet:serve }
+
 phpbbmodders_knowledgebase_search:
     path: /knowledgebase/search
     defaults: { _controller: phpbbmodders.knowledgebase.controller.search:main }

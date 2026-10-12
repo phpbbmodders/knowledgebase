@@ -3,9 +3,46 @@
 Recorded 10/11/2026 for Claude or another contributor to continue if usage
 limits interrupt the conversation.
 
+## Implementation Status (10/12/2026)
+
+William authorized implementation on 10/12/2026 with these decisions: the
+Classic layout folds into Flat index and its colours become an option in the
+new stylesheet picker; custom stylesheets from the board's `store/` folder are
+in the first version; the test board needs no upgrade mapping, only testing on
+every supported database; the tab shape and colours wait on Kailey's decision
+(a day or two) and do not block the rest.
+
+Done (migration `version_2_0_24`, version 2.0.24):
+
+- Flat index (`kb_flat_index`, unchanged) now loads
+  `phpbbmodders_knowledgebase_flat.css`, the Classic tab and table layout with
+  no colours of its own.
+- `kb_classic_look` and `phpbbmodders_knowledgebase_classic.css` are gone. The
+  colours became the bundled **Slate** alternative,
+  `styles/all/theme/alternatives/slate.css`, a commented colour-only example.
+  "Slate" is a working name; it is one language key (`KB_ALT_STYLE_SLATE`).
+- ACP: the **Use an alternative stylesheet** switch reveals a **Stylesheet**
+  dropdown (Bundled and Custom groups). The choice is remembered while the
+  switch is off; an unavailable choice is refused when switching on; a vanished
+  file falls back to the board style with an ACP warning.
+- Custom CSS from `store/phpbbmodders_knowledgebase/stylesheets/` is discovered
+  and served by `controller/stylesheet.php` (strict names, no symbolic links,
+  256 KiB limit, `text/css` with `nosniff`, ETag/304).
+- The article tables now sit in prosilver's forum-header box and use its
+  `bg1`/`bg2` row classes. Before, the native look had white header text on a
+  white page, so the headings were invisible; they now follow each board style.
+- Guide with screenshots: [README.md](README.md).
+
+Not done, still open: the final tab shape, and whether the selected tab takes
+the board's forum-header colours (the proposal below and
+[docs/tabs](../tabs/README.md)); both wait on Kailey. The base sheet's
+remaining fixed colours (status badges, the copy-button and code box, grey
+borders) were reviewed: they are self-contained badges or neutral greys and
+were left as they are.
+
 ## Authorization And Status
 
-**Discussion-only.** William requested this document, not implementation.
+**Superseded by the implementation status above.** This was a discussion-only record when written.
 Get an explicit instruction to implement before changing production CSS,
 templates, controllers, migrations or board settings. No production styling
 changes have been implemented. William subsequently authorized a temporary

@@ -22,6 +22,8 @@
 	{% endif %}
 </form>
 
+<div class="forumbg forumbg-table kb-listing">
+<div class="inner">
 <table class="table1 kb-index-table">
 	<thead>
 	<tr>
@@ -32,7 +34,7 @@
 	</thead>
 	<tbody>
 	{% for art_row in loops.art_row %}
-		<tr>
+		<tr class="{{ loop.index is odd ? 'bg1' : 'bg2' }}">
 			<td><a href="{{ art_row.U_ARTICLE }}">{{ art_row.ARTICLE_TITLE }}</a>{% if art_row.CATEGORY %}<br><small>{{ art_row.CATEGORY }}</small>{% endif %}</td>
 			<td class="kb-index-author">{{ art_row.ARTICLE_AUTHOR }}<br>{{ art_row.ARTICLE_DATE }}</td>
 			<td class="kb-index-author">
@@ -80,12 +82,14 @@
 		</tr>
 	{% endfor %}
 	{% if not loops.art_row|length %}
-		<tr>
+		<tr class="bg1">
 			<td colspan="3">{{ lang('NO_ARTICLES') }}</td>
 		</tr>
 	{% endif %}
 	</tbody>
 </table>
+</div>
+</div>
 
 <div class="action-bar bar-bottom">
 	<div class="pagination">

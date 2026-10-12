@@ -85,13 +85,31 @@
 		</dl>
 		<dl>
 			<dt>
-				<label for="classic_look">{{ lang('KB_CLASSIC_LOOK') }}{{ lang('COLON') }}</label><br>
-				<span>{{ lang('KB_CLASSIC_LOOK_EXPLAIN') }}</span>
+				<label for="alt_style_enabled">{{ lang('KB_ALT_STYLE_ENABLE') }}{{ lang('COLON') }}</label><br>
+				<span>{{ lang('KB_ALT_STYLE_ENABLE_EXPLAIN') }}</span>
 			</dt>
 			<dd>
-				<input name="classic_look" id="classic_look" type="checkbox" value="1" {{ CLASSIC_LOOK_ON }}/>
+				<input name="alt_style_enabled" id="alt_style_enabled" type="checkbox" value="1"
+					onClick="document.getElementById('alt_style_options').style.display = this.checked ? '' : 'none';"
+					{{ ALT_STYLE_ON }}/>
 			</dd>
 		</dl>
+		<div id="alt_style_options" style="display: {{ ALT_STYLE_DISPLAY }};">
+			{% if ALT_STYLE_MISSING %}
+				<div class="errorbox">
+					<p>{{ lang('KB_ALT_STYLE_MISSING', ALT_STYLE_MISSING) }}</p>
+				</div>
+			{% endif %}
+			<dl>
+				<dt>
+					<label for="alt_style">{{ lang('KB_ALT_STYLE') }}{{ lang('COLON') }}</label><br>
+					<span>{{ lang('KB_ALT_STYLE_EXPLAIN', ALT_STYLE_DIRECTORY) }}</span>
+				</dt>
+				<dd>
+					<select name="alt_style" id="alt_style">{{ S_ALT_STYLE_OPTIONS }}</select>
+				</dd>
+			</dl>
+		</div>
 		<dl>
 			<dt>
 				<label for="articles_per_page">{{ lang('PER_PAGE') }}{{ lang('COLON') }}</label><br>

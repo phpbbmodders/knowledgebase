@@ -134,8 +134,22 @@ services:
             - '@auth'
             - '@template'
             - '%core.php_ext%'
+            - '@phpbbmodders.knowledgebase.alternative_styles'
         tags:
             - { name: event.listener }
+
+    phpbbmodders.knowledgebase.alternative_styles:
+        class: phpbbmodders\knowledgebase\inc\alternative_styles
+        arguments:
+            - '@config'
+            - '%core.root_path%ext/phpbbmodders/knowledgebase/'
+            - '%core.root_path%'
+
+    phpbbmodders.knowledgebase.controller.stylesheet:
+        class: phpbbmodders\knowledgebase\controller\stylesheet
+        arguments:
+            - '@phpbbmodders.knowledgebase.alternative_styles'
+            - '@request'
 
     phpbbmodders.knowledgebase.text_formatter.factory:
         class: phpbbmodders\knowledgebase\textformatter\factory
@@ -253,6 +267,7 @@ services:
             - '%tables.kb_options_table%'
             - '%tables.kb_users_table%'
             - '%tables.kb_groups_table%'
+            - '@phpbbmodders.knowledgebase.alternative_styles'
 
     phpbbmodders.knowledgebase.controller.set_order:
         class: phpbbmodders\knowledgebase\controller\set_order
