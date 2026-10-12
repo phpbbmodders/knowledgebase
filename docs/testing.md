@@ -1118,3 +1118,22 @@ render for a member with Knowledge Base notifications (8 of them for `kb_author1
 Not covered: email delivery of the notifications on 4.0, the 4.0 extension catalogue and Composer
 handling, and the current master (the live board was three weeks older). The declared phpBB and PHP
 constraints were left unchanged.
+
+## PHP 8.2 minimum - 10/12/2026
+
+`composer.json` now requires PHP `>=8.2` (it said `>=8.0`), and `ext.php` refuses to enable the
+extension below the same version; its check now compares against `MIN_PHP_VERSION` instead of a
+second hard-coded number, through `ext::php_version_meets_minimum()`. This is a policy choice. The
+extension uses nothing specific to 8.1 or 8.2: all 126 PHP files linted clean and the 372 unit tests
+passed on PHP 8.0.30 (Docker `php:8.0-cli`; the 17 database cases skip there for lack of drivers)
+before the change. phpBB 4.0 needs 8.2 itself and the CI matrix runs only 8.2, 8.3 and 8.4, so the
+stated floor now matches what is tested. A 3.3.x board on PHP 8.0 or 8.1 can no longer enable it.
+
+`kb_declared_support_test.php` (14 cases) keeps the claims from drifting: the Composer and
+`ext.php` minimums are the same; eight PHP version strings are judged correctly (8.0, 8.1 and an
+8.2 development build refused, 8.2.0 and later accepted); the PHP running the tests passes; the CI
+matrix starts at the declared minimum, has at least three versions and includes the primary one;
+the phpBB requirement and soft requirement carry the same minimum and the same `<4.0.0` cap; and the
+compatibility notes state the same floor. The full suite passes against the MySQL and PostgreSQL
+containers (386 tests, 1052 assertions, nothing skipped), and a fresh MySQL board enabled the
+extension and recorded version 2.0.24. The phpBB cap was not changed.

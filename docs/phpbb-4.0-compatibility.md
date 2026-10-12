@@ -11,7 +11,8 @@ From `composer.json`:
 - `require.phpbb/phpbb`: `>=3.3.19 <4.0.0`
 - `extra.soft-require.phpbb/phpbb`: `>=3.3.19,<4.0.0@dev` — phpBB 4.0 and its
   dev builds are explicitly excluded today.
-- `require.php`: `>=8.0`
+- `require.php`: `>=8.2` (also enforced when the extension is enabled, by `ext.php`; it matches phpBB
+  4.0's own PHP floor and the oldest version the CI matrix tests)
 
 phpBB 4.0.x is still in development, so specifics below are marked
 verified vs. pending as they're confirmed against real code/changelog
@@ -135,9 +136,13 @@ rendered, and an article submitted through the posting form was saved without er
    `max_post_img_height`, which 4.0 removes with Flash and image links; a missing value now counts
    as no limit. `enable_bbcode('flash')` stays; it does nothing once the BBCode is gone.
 
-**Still open: declared support.** `require.php` is `>=8.0` but 4.0 needs 8.2, and both phpBB
-constraints exclude 4.0 (`<4.0.0`). They have not been changed, because lifting them is a
-compatibility claim and the points under "Not checked" are still unverified.
+**Declared support.** The PHP floor was raised from 8.0 to 8.2 on 10/12/2026. The extension uses
+nothing specific to 8.1 or 8.2 (it linted clean and passed its unit tests on PHP 8.0.30), so this is
+a policy choice, not a technical need: phpBB 4.0 requires PHP 8.2 itself and CI runs only 8.2, 8.3
+and 8.4, so the stated floor now equals what is actually tested. A 3.3.x board on PHP 8.0 or 8.1
+can no longer enable this extension. The two phpBB constraints still exclude 4.0
+(`>=3.3.19 <4.0.0`, soft `>=3.3.19,<4.0.0@dev`); they have not been loosened, because lifting them
+is a compatibility claim and the points under "Not checked" are still unverified.
 
 **Not checked.** Email delivery of the notifications, the
 rewritten `acp_extensions` (extension catalogue and Composer handling), and a run on the current
