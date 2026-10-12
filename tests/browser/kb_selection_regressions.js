@@ -120,7 +120,7 @@ async function assertFields(page) {
         });
         await check('Search fix does not grant reader posting permission', r, async () => {
             await r.goto(base + '/knowledgebase/posting?id=8');
-            await expect(r.locator('body')).toContainText('You can not add articles');
+            await expect(r.locator('body')).toContainText('You cannot add articles');
         });
         await check('Search fix does not grant guest Knowledgebase access', g, async () => {
             await g.goto(base + '/knowledgebase/search');
