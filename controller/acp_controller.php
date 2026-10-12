@@ -237,8 +237,8 @@ class acp_controller
 		$dirIsWritable = false;
 		if ($diru_exists && $dirp_exists)
 		{
-			chmod($this->upload_dir, 0777);
-			chmod($plupload_dir, 0777);
+			$this->make_directory_writable($this->upload_dir);
+			$this->make_directory_writable($plupload_dir);
 			if (is_writable($this->upload_dir))
 			{
 				$tempFile = tempnam($this->upload_dir, 'tmp');
@@ -354,6 +354,28 @@ class acp_controller
 		$this->config_text->set('kb_team_groups', json_encode($team_groups));
 
 		$this->config->set('kb_contact_group', $this->valid_contact_group($this->request->variable('contact_group', 0)));
+	}
+
+	/**
+	 * Make sure the web server can write to a directory.
+	 *
+	 * A directory that is already writable is left alone: chmod() fails with a
+	 * warning on a directory the web server user does not own, even when its
+	 * mode is already fine, and the old unconditional chmod() printed that
+	 * warning on every visit to the configuration page. Only a directory that
+	 * is not writable is changed, and if that is not allowed either the write
+	 * test that follows reports it.
+	 *
+	 * @param string $directory
+	 * @return void
+	 */
+	protected function make_directory_writable(string $directory): void
+	{
+		if (!is_writable($directory))
+		{
+			@chmod($directory, 0777);
+			clearstatcache(true, $directory);
+		}
 	}
 
 	/**

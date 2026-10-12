@@ -1204,3 +1204,19 @@ articles, 37 categories); every front-end page returned 200 with all its icons d
 
 The `seed-forum` reset itself worked on 4.0 once given a 4.0 source tree; only its download step is 3.3.x-only.
 Not covered: the 4.0 catalogue and Composer-based installation from the ACP, and later 4.0 builds.
+
+## ACP configuration page: no chmod warnings - 10/12/2026
+
+Opening the Knowledge Base configuration page printed two PHP warnings, `chmod(): Operation not
+permitted`, for the upload folder and its `plupload` sub-folder. The page called `chmod(..., 0777)` on
+both every time, and `chmod()` fails with a warning on a folder the web server user does not own even
+when its mode is already fine (here the folders were `0777` but owned by another user). The page now
+leaves a folder alone when it is already writable and only tries to open it up when it is not, without a
+warning if that is not allowed either; the write test that follows still reports a folder that
+cannot be written.
+
+`kb_acp_upload_directory_test.php` (4 cases) covers a writable folder keeping its mode, a read-only
+folder being opened up, a folder owned by someone else that is already writable (`/tmp`) and one that cannot be
+opened up (`/usr`) both raising no warning; the last two fail with the old unconditional `chmod()`.
+The configuration page showed no warning on the 3.3.x test board and on the current-master 4.0 board, and
+the suite passes on both cores (411 tests; 3.3.x with MySQL and PostgreSQL, nothing skipped).
