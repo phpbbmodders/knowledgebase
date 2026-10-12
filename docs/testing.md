@@ -125,8 +125,8 @@ accounts:
   `kb_require_author_pm` override also caused rejection private messages.
   Approval/rejection PMs now default on through UCP notification preferences,
   and explicit opt-outs are respected instead of overridden. See
-  [author PM and forum testing](author-pm-and-forum-testing.md) for the current
-  browser checks and example comment/changelog threads.
+  [Author PMs, comments and changelog](#author-pms-comments-and-changelog---10112026)
+  for the current browser checks and example comment/changelog threads.
 - Deleting a draft left the counts unchanged. Deleting an approved article
   lowered both counts by one and removed its attachment row and stored file; a
   later download returned 404.
@@ -950,3 +950,142 @@ board: defaults 0/0/0 in the database, both selects start on None with the prefi
 no checkbox, choosing a forum reveals the prefix options, saving writes the forum and the
 on-flag, choosing None hides them and saves 0 for both, and a reload shows what was saved. The
 SQLite board's own values were put back afterwards.
+
+## Author PMs, comments and changelog - 10/11/2026
+
+Recorded from a Codex session (pull request #45, merged). The behaviour:
+
+- The English navigation and page title say **Knowledge Base**.
+- Approval and rejection private messages default on in the UCP notification preferences. Members
+  can switch either off independently; an explicit saved opt-out stays in effect, and a missing
+  preference uses the default. The former ACP forced-delivery option is gone; migration
+  `version_2_0_23` removes its configuration key (`kb_require_author_pm`) and leaves every user's
+  preferences alone. A moderator's existing option to skip messaging is unchanged.
+- The custom PM method supports approval and rejection only; other notification types do not gain
+  PM delivery.
+
+Checked on the disposable SQLite board with visible Chromium and the seeded author, reader and
+moderator accounts; twelve workflow checks passed:
+
+- navigation and heading say Knowledge Base;
+- both author PM choices are checked with no saved preference;
+- default-on approval delivers a real PM that shows in the author's inbox;
+- the reader opens the generated public comments thread, posts a comment the author sees, and
+  sees the author's reply;
+- the moderator reads the private submission changelog; the reader is denied the changelog forum,
+  topic and reply form; the moderator appends a private reply;
+- saved UCP opt-outs persist and stop both approval and rejection PMs; re-enabling delivers a real
+  rejection PM;
+- an author edit appends a revision entry and body diff to the same changelog topic.
+
+The ACP configuration form renders without the old author-PM control, and disabling and
+re-enabling the extension applied the migration without purging article data (the migration
+record exists and the key is absent). The PHPUnit run at the time was 277 tests with 16
+database-dependent cases skipped, so it made no MySQL/PostgreSQL claim. Claude later ran the full
+suite on MySQL 8.0 and PostgreSQL 16: 277 tests, 805 assertions, nothing skipped.
+
+Example threads from that run (local IDs, not stable after a reset): article 267 "Comments and
+changelog verified walkthrough", comments topic 18, changelog topic 17, at
+`http://localhost:8092/knowledgebase/article?k=267`, `viewtopic.php?t=18` and `viewtopic.php?t=17`.
+Log in as the seeded moderator for the private changelog. The comments hold a reader question and
+an author reply; the changelog holds the submission entry, a moderator reply and a revision diff.
+The fixture grants changelog access to KB Team and administrators, so this proves an ordinary
+reader is denied, not every possible group combination. Approval reasons go to the author; they
+are not appended to the changelog (observed, not changed).
+
+The browser scripts were exploratory (`/tmp/playwright-test-kb-comments-pm.js` and
+`/tmp/playwright-test-kb-changelog-revision.js`, since lost) and wrote content to the disposable
+board, so never run such scripts against a real board. Harness corrections made on the way (native
+forum Submit naming, the required assignment/review order, phpBB's generic denial container, a
+read-only retry for a redirect race) were not application fixes.
+
+## Fixture and browser testing method - 10/11/2026
+
+A handoff from Codex's local fixture and browser run, not a claim that every feature passes. The
+PHPUnit and database suites above remain the primary checks; do not substitute this for them.
+
+**Setup.** The fixture tooling is `/home/william/Desktop/repos/seed-forum` (seed script
+`bin/seed-kb-fixtures.php`, runner config `config/local.yml`, inventory
+`docs/knowledgebase-fixtures.md`). The disposable board is
+`/home/william/Desktop/repos/seeded-board/kb` (SQLite `store/sqlite.db`) at
+`http://localhost:8092/knowledgebase`, with the extension bind-mounted from this checkout (the
+mount is lost on reboot and must be recreated with `sudo mount --bind`). After the final reset in
+that run the board held 265 articles, 37 categories, four main trees six levels deep, three team
+groups, 41 pending revisions, two private draft edits, five custom fields and eight attachment
+rows. Outgoing mail is disabled. Fixture attachment files are written to the extension's mounted
+`files/` directory, which is not wholly disposable.
+
+**Resetting.** Confirm the runner config targets the disposable board; never `--reset` a working
+or production board. Stop all browser sessions first (a browser using SQLite during installation
+once caused a lock failure). From `seed-forum`: `php -l bin/seed-kb-fixtures.php`,
+`git diff --check -- bin/seed-kb-fixtures.php`, `bin/reset-board.sh --validate`, then
+`bin/reset-board.sh --reset`. Check installer output and live HTTP, browser and database state,
+not just the exit status, and log in again afterwards because old cookies, ACP SIDs and form
+tokens belong to the old installation. For a display-only change use
+`bin/reset-board.sh --purge-cache` instead of a full reset.
+
+**Browser method.** Visible or headless Chromium through the Playwright skill
+(`node <skill>/run.js script.js`), one browser context per role (guest, reader, both authors,
+moderator, admin). The public fixture password for `kb_reader`, `kb_author1`, `kb_author2`,
+`kb_moderator` and `admin` is `KbTest1234!`; keep the board local and never commit session state
+or form tokens. For the ACP, follow the real ACP link from the logged-in board and re-authenticate;
+a bare `/adm/index.php` does not establish the session. Wait until a phpBB form is more than a
+second older than its hidden `creation_time` before submitting, or it fails as a false login or
+form error. Make changes through the real controls, then check SQLite rows and files independently;
+use `.timeout 5000` for read-only SQLite queries and never write expected results into the
+database. The scripts in `/tmp` were exploratory and have since been lost; inspect prerequisites
+and mutations before reusing any like them.
+
+**What the run exercised (153 browser checks, 2 initial failures).** Every category as a reader
+with all breadcrumbs (four roots, sibling branches, empty categories, deep leaves); reader posting
+denial, draft privacy, author permissions, read-only categories, team-only contribution and
+category-scoped moderation; all ten queue options with paging; named BBCode and Markdown articles,
+group-authored articles, a Markdown anchor, keyword search and custom-field filtering; upload,
+required-field errors, private draft, submission, assignment, team review, reason enforcement,
+approval, private further edit, revision comparison and approval, deactivation, reactivation,
+group and co-author publication, rejection and deletion; attachment gates per role and article
+status, image loading, thumbnails and removal on delete; copy-link and the print view; desktop,
+tablet and phone widths with overflow checks; every ACP module, saving the configuration, the
+hierarchical and flat views, and a configuration save without its CSRF token being refused; a
+disposable deep category (copied permissions and default team) renamed, moved across trees and
+deleted; a disposable custom field and value added, toggled and deleted; an attachment extension
+added, disabled and re-enabled; the Operations Team permission editor and mask; deleting and
+recreating the native search index; cleaning the deliberately missing attachment row; and tree
+interval, depth, field-assignment and counter checks. Approval and rejection bell notifications,
+PMs and emails were observed through a temporary Mailpit container on `127.0.0.1` only, which the
+final reset removed; pending-review email delivery was not confirmed and must not be described as
+passing. Codex's visual report and per-suite JSON lived under
+`/home/william/Documents/Codex/2026-10-09/look-at-home-william-desktop-repos/kb-browser/`; treat
+those screenshots as historical views from before the final reset.
+
+**Two defects found and fixed (pull request #44).** (1) Preview cleared the selected custom-field
+values and cross-listed categories, so Submit then failed the required-field checks;
+`controller/posting.php` redisplayed submitted selections only for `$submit`, not `$preview`. (2)
+Advanced Search disabled category options for a reader who could browse them, because
+`controller/search.php` called `make_category_select(0, [], false)`, whose default permission is
+the contribution right `kb_u_add`; search now builds its options after the existing read and
+search checks without contribution ACL. Do not give a reader posting permission to make a test
+pass. The regression script is `tests/browser/kb_selection_regressions.js` (seven checks: Preview
+on a new and an existing article, cleared optional choices, category choice on desktop and phone,
+real search results, reader posting denial, guest denial); run it with
+`node <skill>/run.js tests/browser/kb_selection_regressions.js`, with `KB_TEST_URL`,
+`KB_STATE_DIR` and `KB_ARTIFACT_DIR` overriding the URL, saved role states and output folder.
+The article custom-field layout was also corrected in `controller/article.php` (each nonempty field
+ends in a line break; empty fields add none), with six browser checks at 1440, 768 and 390 px.
+
+**Avoiding false failures and false passes.** Uploaded images are outside `.content`; inspect
+`img.postimage`. The print button uses its rendered label and icon, not an invented title; check
+the clipboard for copy-link. Match real localized text and capitalization (field toggling shows
+"make required", cleanup says "successfully synchronized"). The search page has two `#keywords`
+elements; use the search form's input. A no-match term must respect the word-length limit, since a
+longer word gives a validation message, not an empty result. When indexing, wait for the finished
+index and cleared progress, not the first nonzero count. Separate real defects from harness
+errors: fix a bad selector and rerun, and never relabel a real failure as a pass.
+
+**Not covered.** Bulk extra-file deletion (needs a separately isolated upload directory), permission
+writes and ACL_NEVER inheritance, category deletion with article and subcategory moves, every
+upload type, size and count boundary, stale-edit conflicts, revision rejection, every notification
+preference combination, alternate search backends, other database and browser engines, and the
+install, upgrade, disable and purge lifecycle in that run. The seeded changelog forum is not proof
+of every changelog operation. The intended standard is visible, role-aware workflows with explicit
+failures and a clear list of what remains, never "all features passed".

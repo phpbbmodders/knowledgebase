@@ -232,6 +232,6 @@ Do not delete unrelated `files/` content or local config.
 Naming, author-PM preferences and comments/changelog testing are complete and
 merged separately in [PR #45](https://github.com/phpbbmodders/knowledgebase/pull/45).
 Do not redo those changes or count their checks as styling verification.
-Related evidence: `docs/author-pm-and-forum-testing.md` and
-`docs/testing-methodology-for-claude.md`. Verify current Git and board state
+Related evidence: the Author PMs, comments and changelog and Fixture and browser testing
+method sections of [`docs/testing.md`](../testing.md). Verify current Git and board state
 before resuming; an old report or configured URL is not current runtime proof.
