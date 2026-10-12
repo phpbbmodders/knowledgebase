@@ -170,12 +170,26 @@ the extension can be enabled on 4.0.x; it was enabled on a 4.0.0-a3-dev board wi
 as shipped. 4.0 is still a development release, so "supported" here means "checked as below", not a
 promise about later 4.0 builds.
 
-**Not checked.** Email delivery of the notifications, the rewritten `acp_extensions` (extension
-catalogue and Composer handling), and a run on the current master rather than the three-week-old
-checkout. The 4.0 board also had other extensions installed; one of them (`tas2580/wiki`) breaks the
-UCP notification settings page on 4.0 because it overrides the notification base constructor, which
-gained two arguments. The Knowledge Base types do not override it and are unaffected. No new core
-event is needed for any of this.
+**Checked later the same day** (the points first left open):
+
+- **Current master.** A fresh tree built from `a57d60d` itself (the master that was read, 4.0.0-a3-dev), installed
+  through the real `seed-forum` reset: the installer enabled the extension with the constraints as shipped,
+  all 33 migrations ran, and every front-end page and icon behaved as on the older checkout.
+- **Review flow.** Submit as an author, assign to a team, review, approve: each step works on 4.0 and the
+  author gets the approval notification and a private message.
+- **Email.** With the board pointed at a local SMTP sink, the pending-article email reached the moderator
+  and the approval email reached the author, through 4.0's queued sending (the queue runs on cron, about
+  a minute apart). One wording slip turned up: the pending-article email said "at the conference"; it now says
+  "on" the board.
+- **Extensions manager.** The ACP list shows the extension as enabled; its details page shows version 2.0.24,
+  `>=3.3.19,<4.1.0@dev` for phpBB and `>=8.2` for PHP. Disable keeps the data, enable restores it, purge
+  removes the tables, settings, modules and notification types, and enabling again installs cleanly.
+
+**Still not checked.** 4.0's extension catalogue and Composer-based installation of extensions from the
+ACP (it needs network access to a catalogue), and later 4.0 builds. The 4.0 board also had other extensions
+installed; one of them (`tas2580/wiki`) breaks the UCP notification settings page on 4.0 because it overrides
+the notification base constructor, which gained two arguments. The Knowledge Base types do not override it
+and are unaffected. No new core event is needed for any of this.
 
 ## Reference material
 

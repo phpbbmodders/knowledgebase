@@ -1,0 +1,9 @@
+
+
+
+
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+Possibly have Claude create a small test extension that includes everything we might ever need to convert, then migrate it to a new vendor namespace and implement comprehensive CI testing to verify the entire conversion process. This would be in the spirt of phpbb skelton or acme extensions

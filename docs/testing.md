@@ -1179,3 +1179,28 @@ page with every icon drawn.
 Not covered: email delivery of notifications on 4.0, the 4.0 extension catalogue and Composer
 handling, the current master (the board was three weeks older), and the approve/deny review flow
 beyond building its notifications (the approve page needs a review-team assignment first).
+
+## The remaining 4.0 checks - 10/12/2026
+
+The points left open in the 4.0 run were checked on a tree built from the current phpBB master (`a57d60d`,
+4.0.0-a3-dev) and installed through the real `seed-forum` reset (`reset-board.sh --reset`, with an
+extra config that points at that tree and has no nginx site). The installer enabled the extension with
+the shipped constraints, ran the 33 migrations, and the two seed scripts produced the usual inventory (265
+articles, 37 categories); every front-end page returned 200 with all its icons drawn.
+
+- **Review flow, in a browser:** a regular author submitted an article (the required custom fields had to be
+  chosen first); the moderator was notified; the moderator assigned it to a team, a team member reviewed it
+  and it was approved, with the status moving 0, 1, 2; the author received the approval notification and a
+  private message, and the approved article page and notification list rendered.
+- **Email:** with a local SMTP sink as the board's mail server and email notification preferences ticked,
+  the pending-article email (to the moderator) and the approval email (to the author) were delivered. 4.0
+  queues mail and sends it from cron, so the messages arrived after the queue interval, not during the
+  request. The pending-article email read "at the conference"; the template now says "on", and a test checks
+  that none of the three email templates uses that word and each starts with a subject and ends with the
+  signature.
+- **Extensions manager:** the ACP listing and the details page load and show the right version and
+  requirements; disable, enable, purge and enable again behave as expected (data kept across disable,
+  everything removed by purge, a clean reinstall after).
+
+The `seed-forum` reset itself worked on 4.0 once given a 4.0 source tree; only its download step is 3.3.x-only.
+Not covered: the 4.0 catalogue and Composer-based installation from the ACP, and later 4.0 builds.
