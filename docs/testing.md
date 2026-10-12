@@ -1126,8 +1126,8 @@ extension below the same version; its check now compares against `MIN_PHP_VERSIO
 second hard-coded number, through `ext::php_version_meets_minimum()`. This is a policy choice. The
 extension uses nothing specific to 8.1 or 8.2: all 126 PHP files linted clean and the 372 unit tests
 passed on PHP 8.0.30 (Docker `php:8.0-cli`; the 17 database cases skip there for lack of drivers)
-before the change. phpBB 4.0 needs 8.2 itself and the CI matrix runs only 8.2, 8.3 and 8.4, so the
-stated floor now matches what is tested. A 3.3.x board on PHP 8.0 or 8.1 can no longer enable it.
+before the change. phpBB 4.0 needs 8.2 itself and the only CI job that runs (see the note under "PHP 8.5") uses
+PHP 8.2, so the stated floor is the version CI tests. A 3.3.x board on PHP 8.0 or 8.1 can no longer enable it.
 
 `kb_declared_support_test.php` (14 cases) keeps the claims from drifting: the Composer and
 `ext.php` minimums are the same; eight PHP version strings are judged correctly (8.0, 8.1 and an
@@ -1224,8 +1224,10 @@ the suite passes on both cores (411 tests; 3.3.x with MySQL and PostgreSQL, noth
 ## PHP 8.5 - 10/12/2026
 
 PHP 8.2 stays the minimum (it is the oldest branch still getting security fixes and the one phpBB 4.0
-needs), and 8.5 is now in the CI matrix next to 8.2, 8.3 and 8.4 because the maintainers' hosting runs
-8.5.x. On PHP 8.5.11 (Docker `php:8.5-cli`) all 126 PHP files lint clean and the unit suite passes
+needs), and 8.5 is now listed in the CI matrix next to 8.2, 8.3 and 8.4 because the maintainers' hosting
+runs 8.5.x. In practice only the primary 8.2 job runs in CI: the database jobs are switched off in
+`.github/workflows/tests.yml` (`RUN_MYSQL_JOBS: 0` and the others), and the matrix only expands for
+those, so 8.3 to 8.5 are covered by local runs (8.4 is this machine's PHP, 8.5 in Docker), not by CI. On PHP 8.5.11 (Docker `php:8.5-cli`) all 126 PHP files lint clean and the unit suite passes
 (411 tests, 18 skipped: 17 database cases without a database driver, and one that needs a user who
 cannot write everywhere). The only deprecation notices come from phpBB 3.3.19 itself and its Twig
 (dynamic properties in the SQLite driver, implicit nullable parameters); none come from this
