@@ -41,7 +41,7 @@ class kb_search_database_test extends \PHPUnit\Framework\TestCase
 		{
 			$this->query('DROP TABLE IF EXISTS ' . $table);
 		}
-		$old = new \phpbbmodders\knowledgebase\migrations\version_1_0_0($this->config, $this->db, $this->tools, '', 'php', 'phpbb_');
+		$old = new \phpbbmodders\knowledgebase\migrations\version_1_0_0($this->config, $this->db, $this->tools, '', 'php', 'phpbb_', []);
 		$schema = $old->update_schema()['add_tables'];
 		foreach (['phpbb_kb_articles', 'phpbb_kb_search_results', 'phpbb_kb_src_wrdmtch'] as $table)
 		{
@@ -155,7 +155,7 @@ class kb_search_database_test extends \PHPUnit\Framework\TestCase
 		$this->assertFalse($this->db->get_transaction());
 		$this->query('ALTER TABLE phpbb_kb_src_wrdmtch ADD COLUMN descr_match INTEGER NOT NULL DEFAULT 0');
 		$this->query('INSERT INTO phpbb_kb_src_wrdmtch (article_id, word_id, title_match, descr_match) VALUES (1, 1, 0, 0)');
-		$repair = new \phpbbmodders\knowledgebase\migrations\version_2_0_15($this->config, $this->db, $this->tools, '', 'php', 'phpbb_');
+		$repair = new \phpbbmodders\knowledgebase\migrations\version_2_0_15($this->config, $this->db, $this->tools, '', 'php', 'phpbb_', []);
 		$this->tools->perform_schema_changes($repair->update_schema());
 		$this->query('INSERT INTO phpbb_kb_src_wrdmtch (article_id, word_id, title_match, descr_match) VALUES (1, 1, 0, 1)');
 		$this->tools->perform_schema_changes($repair->update_schema());

@@ -20,7 +20,7 @@ class kb_description_migration_test extends \PHPUnit\Framework\TestCase
 		$db = $this->createMock(\phpbb\db\driver\driver_interface::class);
 		$tools = $this->createMock(\phpbb\db\tools\tools_interface::class);
 
-		return new version_2_0_18(new \phpbb\config\config($config), $db, $tools, '', 'php', 'phpbb_');
+		return new version_2_0_18(new \phpbb\config\config($config), $db, $tools, '', 'php', 'phpbb_', []);
 	}
 
 	public function test_it_adds_the_limit_at_the_column_width_and_records_the_version()

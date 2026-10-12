@@ -31,7 +31,13 @@ if (!class_exists(\phpbb\controller\helper::class))
 	spl_autoload_register(function ($class) use ($root) {
 		if (strpos($class, 'phpbb\\') === 0)
 		{
-			require $root . '/' . str_replace('\\', '/', $class) . '.php';
+			// Like phpBB's real autoloader, stay quiet for a class that does not exist
+			// (class_exists() is used to tell phpBB versions apart).
+			$file = $root . '/' . str_replace('\\', '/', $class) . '.php';
+			if (is_file($file))
+			{
+				require $file;
+			}
 		}
 	});
 }

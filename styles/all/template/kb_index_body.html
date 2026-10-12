@@ -9,9 +9,9 @@
 					<input class="inputbox search tiny" name="keywords" id="search_keywords" size="20"
 						placeholder="{{ lang('SEARCH') }}" type="search">
 					<button class="button button-search" type="submit" title="{{ lang('SEARCH') }}">
-						<i class="icon fa-search fa-fw" aria-hidden="true"></i><span class="sr-only">{{ lang('SEARCH') }}</span></button>
+						<i class="{{ KbIconClass('search') }}" aria-hidden="true"></i><span class="sr-only">{{ lang('SEARCH') }}</span></button>
 					<a href="{{ U_KB_SEARCH }}" class="button button-search-end" title="{{ lang('SEARCH_ADV') }}">
-						<i class="icon fa-cog fa-fw" aria-hidden="true"></i><span class="sr-only">{{ lang('SEARCH_ADV') }}</span></a>
+						<i class="{{ KbIconClass('cog') }}" aria-hidden="true"></i><span class="sr-only">{{ lang('SEARCH_ADV') }}</span></a>
 					<input type="hidden" name="sf" value="articles">
 				</fieldset>
 			</form>
@@ -26,7 +26,7 @@
 		id="jumpbox">
 	<span title="{{ lang('GO') }}" class="button button-secondary dropdown-trigger dropdown-select dropdown-toggle">
 		<span>{{ lang('GO') }}</span>
-		<span class="caret"><i class="icon fa-sort-down fa-fw" aria-hidden="true"></i></span>
+		<span class="caret"><i class="{{ KbIconClass('sort-down') }}" aria-hidden="true"></i></span>
 	</span>
 		<div class="dropdown">
 			<div class="pointer">

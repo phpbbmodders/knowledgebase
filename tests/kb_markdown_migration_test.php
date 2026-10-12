@@ -22,6 +22,10 @@ class kb_markdown_migration_test extends \PHPUnit\Framework\TestCase
 
 	protected function setUp(): void
 	{
+		if (!class_exists(\phpbb\db\tools\sqlite3::class))
+		{
+			$this->markTestSkipped('phpBB 4.0 replaced these schema tools with Doctrine; these migrations were run on a real 4.0 board instead.');
+		}
 		$this->db = new \phpbb\db\driver\sqlite3();
 		$this->assertTrue($this->db->sql_connect(':memory:', '', '', ''));
 		$this->tools = new \phpbb\db\tools\sqlite3($this->db);
@@ -39,7 +43,7 @@ class kb_markdown_migration_test extends \PHPUnit\Framework\TestCase
 
 	private function migration(): version_2_0_16
 	{
-		return new version_2_0_16(new \phpbb\config\config(['kb_version' => '2.0.15']), $this->db, $this->tools, '', 'php', 'phpbb_');
+		return new version_2_0_16(new \phpbb\config\config(['kb_version' => '2.0.15']), $this->db, $this->tools, '', 'php', 'phpbb_', []);
 	}
 
 	public function test_it_adds_the_markdown_flag_to_the_article_and_both_copies_of_its_text()

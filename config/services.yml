@@ -145,6 +145,11 @@ services:
             - '%core.root_path%ext/phpbbmodders/knowledgebase/'
             - '%core.root_path%'
 
+    phpbbmodders.knowledgebase.twig.icon:
+        class: phpbbmodders\knowledgebase\inc\twig_icon
+        tags:
+            - { name: twig.extension }
+
     phpbbmodders.knowledgebase.controller.stylesheet:
         class: phpbbmodders\knowledgebase\controller\stylesheet
         arguments:
@@ -173,7 +178,7 @@ services:
             - '@dispatcher'
 
     phpbbmodders.knowledgebase.text_formatter.renderer:
-        class: phpbb\textformatter\s9e\renderer
+        class: phpbbmodders\knowledgebase\textformatter\renderer
         arguments:
             - '@cache.driver'
             - '%text_formatter.cache.dir%'
@@ -181,8 +186,11 @@ services:
             - '@phpbbmodders.knowledgebase.text_formatter.factory'
             - '@dispatcher'
         calls:
+            # The mention helper exists only on phpBB 4.0; the call is left out where it does not.
+            - [configure_mention_helper, ['@?text_formatter.s9e.mention_helper']]
             - [configure_quote_helper, ['@text_formatter.s9e.quote_helper']]
             - [configure_smilies_path, ['@config', '@path_helper']]
+            # Argument order differs between 3.3.x and 4.0; the renderer class copes with either.
             - [configure_user, ['@user', '@config', '@auth']]
 
     phpbbmodders.knowledgebase.article_text:

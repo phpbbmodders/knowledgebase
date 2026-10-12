@@ -21,7 +21,7 @@
 			<dd>
 				<input name="kb_font_icon" id="kb_font_icon" placeholder="book" type="text" size="20" maxlength="50"
 					value="{{ KB_FONT_ICON }}"/>
-				<i class="icon acp-icon fa-{{ KB_FONT_ICON }} fa-2x"></i>
+				<i class="{{ KbIconClass(KB_FONT_ICON, 'acp-icon fa-2x') }}"></i>
 			</dd>
 		</dl>
 	</fieldset>

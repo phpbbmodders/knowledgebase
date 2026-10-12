@@ -90,9 +90,9 @@ class kb_declared_support_test extends \PHPUnit\Framework\TestCase
 
 		$this->assertSame('>=' . ext::MIN_PHPBB_VERSION, explode(' ', $hard)[0]);
 		$this->assertSame('>=' . ext::MIN_PHPBB_VERSION, explode(',', $soft)[0]);
-		// Both caps exclude the same upper bound, so one cannot be loosened without the other.
-		$this->assertSame('<4.0.0', explode(' ', $hard)[1]);
-		$this->assertSame('<4.0.0@dev', explode(',', $soft)[1]);
+		// Both caps allow phpBB 3.3.x and 4.0.x and stop at the same bound, so one cannot be changed without the other.
+		$this->assertSame('<4.1.0', explode(' ', $hard)[1]);
+		$this->assertSame('<4.1.0@dev', explode(',', $soft)[1]);
 	}
 
 	public function test_the_compatibility_notes_state_the_same_php_floor()

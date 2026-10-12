@@ -61,7 +61,7 @@ class kb_markdown_rendering_test extends \PHPUnit\Framework\TestCase
 
 			public function __construct($config, $db, $tools, $root, $ext, $prefix, $helper)
 			{
-				parent::__construct($config, $db, $tools, $root, $ext, $prefix);
+				parent::__construct($config, $db, $tools, $root, $ext, $prefix, []);
 				$this->helper = $helper;
 			}
 

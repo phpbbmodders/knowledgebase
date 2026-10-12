@@ -18,7 +18,7 @@ class kb_classic_look_test extends \PHPUnit\Framework\TestCase
 {
 	private function migration(array $config): version_2_0_21
 	{
-		return new version_2_0_21(new \phpbb\config\config($config), $this->createMock(\phpbb\db\driver\driver_interface::class), $this->createMock(\phpbb\db\tools\tools_interface::class), '', 'php', 'phpbb_');
+		return new version_2_0_21(new \phpbb\config\config($config), $this->createMock(\phpbb\db\driver\driver_interface::class), $this->createMock(\phpbb\db\tools\tools_interface::class), '', 'php', 'phpbb_', []);
 	}
 
 	public function test_the_setting_is_added_switched_off_and_the_version_recorded()

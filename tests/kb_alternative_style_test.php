@@ -465,7 +465,7 @@ class kb_alternative_style_test extends \PHPUnit\Framework\TestCase
 
 	private function migration(array $config): \phpbbmodders\knowledgebase\migrations\version_2_0_24
 	{
-		return new \phpbbmodders\knowledgebase\migrations\version_2_0_24(new \phpbb\config\config($config), $this->createMock(\phpbb\db\driver\driver_interface::class), $this->createMock(\phpbb\db\tools\tools_interface::class), '', 'php', 'phpbb_');
+		return new \phpbbmodders\knowledgebase\migrations\version_2_0_24(new \phpbb\config\config($config), $this->createMock(\phpbb\db\driver\driver_interface::class), $this->createMock(\phpbb\db\tools\tools_interface::class), '', 'php', 'phpbb_', []);
 	}
 
 	public function test_the_migration_adds_the_two_settings_off_and_removes_the_classic_one_without_mapping_it()

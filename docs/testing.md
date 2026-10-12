@@ -1137,3 +1137,45 @@ the phpBB requirement and soft requirement carry the same minimum and the same `
 compatibility notes state the same floor. The full suite passes against the MySQL and PostgreSQL
 containers (386 tests, 1052 assertions, nothing skipped), and a fresh MySQL board enabled the
 extension and recorded version 2.0.24. The phpBB cap was not changed.
+
+## Running on phpBB 4.0 and allowing it in the constraints - 10/12/2026
+
+`composer.json` now allows phpBB 4.0.x: the requirement is `>=3.3.19 <4.1.0` and the soft requirement
+`>=3.3.19,<4.1.0@dev` (both said `<4.0.0`). To back that, the extension was run, with the constraints
+exactly as shipped, on a local phpBB 4.0.0-a3-dev board (three weeks older than the master that was
+read) and checked end to end. It found three more problems, all fixed so one code base serves 3.3.x
+and 4.0:
+
+- Every icon was drawn blank, because 4.0 uses Font Awesome 6 and needs different markup. All icons
+  now come from `inc/icon.php` through the template function `KbIconClass()` (a tagged Twig
+  extension, `inc/twig_icon.php`); 3.3.x output is unchanged.
+- The article page returned a 500: the text renderer service passes `configure_user()` its arguments
+  in the 3.3.x order and 4.0 declares them in another. `textformatter/renderer.php` accepts any order.
+- An uploaded file's recorded size was that of its last chunk, on every version; it is now the merged
+  file's size.
+
+New tests: `kb_icon_test.php` (11 cases: 3.3.x classes identical to the old markup, 4.0 markup, the four
+renamed outline icons, a free-typed icon name passed through, the Twig function rendered through a real
+Twig environment and its service tag, and no hand-written icon class left in any template or PHP
+file) and `kb_renderer_argument_order_test.php` (7 cases: all six argument orders reach the parent
+correctly, and the service definition). The migration tests now pass the seventh constructor
+argument 4.0 added, the test autoloader stays quiet for a class that does not exist (as the real one
+does), and three tests that build their schema with a 3.3.x-only class skip themselves on 4.0.
+
+The whole suite now also runs against the 4.0 core classes (`PHPBB_ROOT_PATH` set to the 4.0 board's
+root): 404 tests, no failures, 28 skipped (16 database cases without a database, 12 that use the
+3.3.x-only schema tools). Against the 3.3.x core with the MySQL and PostgreSQL containers it is 404 tests,
+1092 assertions, nothing skipped.
+
+On the 4.0 board, with a real browser: all 178 visible icons across the front-end and ACP pages draw
+(all 391 on the 3.3.x board); every page and ACP module returns 200; the ACP settings work and save,
+flat index and Slate load the right sheets, a custom stylesheet is served as `text/css` with
+`nosniff` and unsafe names get 404; articles submit and render (Markdown headings, code box), the
+alphabetic navigation has its landmark and 26 tooltips; approval and rejection notifications show
+in the bell and the notification list with avatars; a small image and a 9 MB file uploaded in nine
+chunks both succeed with the right size. Fresh MySQL and PostgreSQL boards on 3.3.x still render every
+page with every icon drawn.
+
+Not covered: email delivery of notifications on 4.0, the 4.0 extension catalogue and Composer
+handling, the current master (the board was three weeks older), and the approve/deny review flow
+beyond building its notifications (the approve page needs a review-team assignment first).

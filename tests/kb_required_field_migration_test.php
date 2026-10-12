@@ -21,7 +21,7 @@ class kb_required_field_migration_test extends \PHPUnit\Framework\TestCase
 		$tools = $this->createMock(\phpbb\db\tools\tools_interface::class);
 		$tools->method('sql_column_exists')->with('phpbb_kb_fields', 'field_required')->willReturn($column_exists);
 
-		return new version_2_0_19(new \phpbb\config\config([]), $db, $tools, '', 'php', 'phpbb_');
+		return new version_2_0_19(new \phpbb\config\config([]), $db, $tools, '', 'php', 'phpbb_', []);
 	}
 
 	public function test_it_adds_an_off_by_default_flag_to_the_fields_table_and_can_remove_it()

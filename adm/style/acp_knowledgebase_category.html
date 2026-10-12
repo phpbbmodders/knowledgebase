@@ -167,31 +167,31 @@
 						</td>
 						<td class="actions">
 							{% if categories.S_FIRST_ROW && not categories.S_LAST_ROW %}
-								<i class="icon acp-icon acp-icon-disabled fa-arrow-up fa-fw"
+								<i class="{{ KbIconClass('arrow-up', 'acp-icon acp-icon-disabled') }}"
 									title="{{ lang('MOVE_UP') }}"></i>
-								<a href="{{ categories.U_MOVE_DOWN }}" aria-label="{{ lang('MOVE_DOWN') }}"><i class="icon acp-icon fa-arrow-down fa-fw"
+								<a href="{{ categories.U_MOVE_DOWN }}" aria-label="{{ lang('MOVE_DOWN') }}"><i class="{{ KbIconClass('arrow-down', 'acp-icon') }}"
 										title="{{ lang('MOVE_DOWN') }}"></i></a>
 							{% elseif not categories.S_FIRST_ROW && not categories.S_LAST_ROW %}
-								<a href="{{ categories.U_MOVE_UP }}" aria-label="{{ lang('MOVE_UP') }}"><i class="icon acp-icon fa-arrow-up fa-fw"
+								<a href="{{ categories.U_MOVE_UP }}" aria-label="{{ lang('MOVE_UP') }}"><i class="{{ KbIconClass('arrow-up', 'acp-icon') }}"
 										title="{{ lang('MOVE_UP') }}"></i></a>
-								<a href="{{ categories.U_MOVE_DOWN }}" aria-label="{{ lang('MOVE_DOWN') }}"><i class="icon acp-icon fa-arrow-down fa-fw"
+								<a href="{{ categories.U_MOVE_DOWN }}" aria-label="{{ lang('MOVE_DOWN') }}"><i class="{{ KbIconClass('arrow-down', 'acp-icon') }}"
 										title="{{ lang('MOVE_DOWN') }}"></i></a>
 							{% elseif categories.S_LAST_ROW && not categories.S_FIRST_ROW %}
-								<a href="{{ categories.U_MOVE_UP }}" aria-label="{{ lang('MOVE_UP') }}"><i class="icon acp-icon fa-arrow-up fa-fw"
+								<a href="{{ categories.U_MOVE_UP }}" aria-label="{{ lang('MOVE_UP') }}"><i class="{{ KbIconClass('arrow-up', 'acp-icon') }}"
 										title="{{ lang('MOVE_UP') }}"></i></a>
-								<i class="icon acp-icon acp-icon-disabled fa-arrow-down fa-fw"
+								<i class="{{ KbIconClass('arrow-down', 'acp-icon acp-icon-disabled') }}"
 									title="{{ lang('MOVE_DOWN') }}"></i>
 							{% else %}
-								<i class="icon acp-icon acp-icon-disabled fa-arrow-up fa-fw"
+								<i class="{{ KbIconClass('arrow-up', 'acp-icon acp-icon-disabled') }}"
 									title="{{ lang('MOVE_UP') }}"></i>
-								<i class="icon acp-icon acp-icon-disabled fa-arrow-down fa-fw"
+								<i class="{{ KbIconClass('arrow-down', 'acp-icon acp-icon-disabled') }}"
 									title="{{ lang('MOVE_DOWN') }}"></i>
 							{% endif %}
-							<a href="{{ categories.U_EDIT }}" aria-label="{{ lang('EDIT') }}"><i class="icon acp-icon fa-pencil fa-fw"
+							<a href="{{ categories.U_EDIT }}" aria-label="{{ lang('EDIT') }}"><i class="{{ KbIconClass('pencil', 'acp-icon') }}"
 									title="{{ lang('EDIT') }}"></i></a>
-							<a href="{{ categories.U_DELETE }}" aria-label="{{ lang('DELETE') }}"><i class="icon acp-icon fa-trash fa-fw"
+							<a href="{{ categories.U_DELETE }}" aria-label="{{ lang('DELETE') }}"><i class="{{ KbIconClass('trash', 'acp-icon') }}"
 									title="{{ lang('DELETE') }}"></i></a>
-							<a href="{{ categories.U_SYNC }}" aria-label="{{ lang('RESYNC') }}"><i class="icon acp-icon fa-refresh fa-fw"
+							<a href="{{ categories.U_SYNC }}" aria-label="{{ lang('RESYNC') }}"><i class="{{ KbIconClass('refresh', 'acp-icon') }}"
 									title="{{ lang('RESYNC') }}"></i></a>
 						</td>
 					</tr>

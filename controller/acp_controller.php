@@ -31,6 +31,7 @@ use phpbb\user;
 use RuntimeException;
 use phpbbmodders\knowledgebase\inc\alternative_styles;
 use phpbbmodders\knowledgebase\inc\field\kb_field_type_factory;
+use phpbbmodders\knowledgebase\inc\icon;
 use phpbbmodders\knowledgebase\inc\functions_kb;
 use phpbbmodders\knowledgebase\search\kb_search_backend_factory;
 
@@ -1217,10 +1218,10 @@ class acp_controller
 	{
 		return match ($status)
 		{
-			functions_kb::STATUS_ACTIVE => '<i class="icon fa-thumbs-o-up fa-fw acp-icon-settings" title="' . $this->language->lang('KB_STATUS_ACTIVE') . '"></i>',
-			functions_kb::STATUS_REVIEWED => '<i class="icon fa-eye fa-fw acp-icon-resync" title="' . $this->language->lang('KB_STATUS_REVIEWED') . '"></i>',
-			functions_kb::STATUS_INACTIVE => '<i class="icon fa-eye-slash fa-fw acp-icon-resync" title="' . $this->language->lang('KB_STATUS_INACTIVE') . '"></i>',
-			default => '<i class="icon fa fa-exclamation-triangle fa-fw acp-icon-resync" aria-hidden="true" title="' . $this->language->lang('KB_STATUS_NEW') . '"></i>',
+			functions_kb::STATUS_ACTIVE => '<i class="' . icon::classes('thumbs-o-up', 'acp-icon-settings') . '" title="' . $this->language->lang('KB_STATUS_ACTIVE') . '"></i>',
+			functions_kb::STATUS_REVIEWED => '<i class="' . icon::classes('eye', 'acp-icon-resync') . '" title="' . $this->language->lang('KB_STATUS_REVIEWED') . '"></i>',
+			functions_kb::STATUS_INACTIVE => '<i class="' . icon::classes('eye-slash', 'acp-icon-resync') . '" title="' . $this->language->lang('KB_STATUS_INACTIVE') . '"></i>',
+			default => '<i class="' . icon::classes('exclamation-triangle', 'acp-icon-resync') . '" aria-hidden="true" title="' . $this->language->lang('KB_STATUS_NEW') . '"></i>',
 		};
 	}
 

@@ -8,9 +8,9 @@ were last checked against the code on 10/12/2026 (version 2.0.24).
 
 From `composer.json`:
 
-- `require.phpbb/phpbb`: `>=3.3.19 <4.0.0`
-- `extra.soft-require.phpbb/phpbb`: `>=3.3.19,<4.0.0@dev` — phpBB 4.0 and its
-  dev builds are explicitly excluded today.
+- `require.phpbb/phpbb`: `>=3.3.19 <4.1.0`
+- `extra.soft-require.phpbb/phpbb`: `>=3.3.19,<4.1.0@dev` — phpBB 3.3.x and 4.0.x,
+  including 4.0 development builds. (Until 10/12/2026 both said `<4.0.0`.)
 - `require.php`: `>=8.2` (also enforced when the extension is enabled, by `ext.php`; it matches phpBB
   4.0's own PHP floor and the oldest version the CI matrix tests)
 
@@ -113,7 +113,7 @@ ran, 17 tables), and every front-end page loaded (index, categories, all article
 search and results, article, print view, posting form, UCP notification pages), every ACP module
 rendered, and an article submitted through the posting form was saved without error.
 
-**Found, and fixed the same day** (version 2.0.24 code, working on both 3.3.x and 4.0):
+**Found, and fixed the same day** (working on both 3.3.x and 4.0):
 
 1. **Notification avatars (was a fatal error on 4.0).** `get_avatar(): string` in
    `notification/type/approve.php`, `disapprove.php` and `need_approval.php` returned the avatar as
@@ -136,20 +136,46 @@ rendered, and an article submitted through the posting form was saved without er
    `max_post_img_height`, which 4.0 removes with Flash and image links; a missing value now counts
    as no limit. `enable_bbcode('flash')` stays; it does nothing once the BBCode is gone.
 
+**Two more 4.0 problems, found by looking at it running** (a static comparison could not show them):
+
+4. **Icons were blank.** phpBB 4.0 moved to Font Awesome 6 and its own icon markup; an
+   `<i class="icon fa-pencil fa-fw">` element, which is all 3.3.x needs, is drawn empty because it has no
+   style class (`fas`, `far`) and 4.0's `o-icon o-icon-font` classes. Every Knowledge Base button
+   (the move arrows, approve, delete, edit, print, search, the caret, the menu icon, the ACP icons)
+   showed as an empty box. Outline icons also changed name (`file-o` became `far fa-file`). All icon
+   markup now goes through one helper, `inc/icon.php`, which returns the class list for the running
+   version (4.0 is recognised by the `Icon()` Twig function it adds), exposed to the templates as
+   `KbIconClass('pencil', 'icon-blue')` through a tagged Twig extension. 3.3.x output is the same
+   classes as before. A check of every visible icon on every page found all 178 drawn on 4.0 and all
+   391 on 3.3.x.
+5. **The article page failed with a 500.** The article text renderer service calls
+   `configure_user(user, config, auth)`; 4.0 declares it as `configure_user(auth, config, user)`, a
+   `TypeError`. 4.0 also adds `configure_mention_helper`. The service now uses
+   `textformatter/renderer.php`, a subclass whose `configure_user()` takes the three in any order and
+   passes them on in the order the running phpBB declares (read from the parent's parameter types),
+   and the mention helper is requested optionally so the call is simply left out on 3.3.x.
+
+6. **Uploaded file size (an old bug, on every version).** Testing a chunked upload on 4.0 showed the
+   attachment's recorded size was the size of the last chunk (611,392 bytes for a 9,000,000-byte file),
+   because `controller/posting.php` stored `$_FILES['fileupload']['size']` instead of the merged file's
+   size. It now stores `$upload_file->get('filesize')`. A single-request upload (70 bytes) and the
+   3.3.x test board give the same result as before.
+
 **Declared support.** The PHP floor was raised from 8.0 to 8.2 on 10/12/2026. The extension uses
 nothing specific to 8.1 or 8.2 (it linted clean and passed its unit tests on PHP 8.0.30), so this is
 a policy choice, not a technical need: phpBB 4.0 requires PHP 8.2 itself and CI runs only 8.2, 8.3
 and 8.4, so the stated floor now equals what is actually tested. A 3.3.x board on PHP 8.0 or 8.1
-can no longer enable this extension. The two phpBB constraints still exclude 4.0
-(`>=3.3.19 <4.0.0`, soft `>=3.3.19,<4.0.0@dev`); they have not been loosened, because lifting them
-is a compatibility claim and the points under "Not checked" are still unverified.
+can no longer enable this extension. The phpBB constraints were then widened to `<4.1.0`, so
+the extension can be enabled on 4.0.x; it was enabled on a 4.0.0-a3-dev board with the constraints
+as shipped. 4.0 is still a development release, so "supported" here means "checked as below", not a
+promise about later 4.0 builds.
 
-**Not checked.** Email delivery of the notifications, the
-rewritten `acp_extensions` (extension catalogue and Composer handling), and a run on the current
-master rather than the three-week-old checkout. The 4.0 board also had other extensions installed;
-one of them (`tas2580/wiki`) breaks the UCP notification settings page on 4.0 because it overrides
-the notification base constructor, which gained two arguments. The Knowledge Base types do not
-override it and are unaffected by that change. No new core event is needed for any of this.
+**Not checked.** Email delivery of the notifications, the rewritten `acp_extensions` (extension
+catalogue and Composer handling), and a run on the current master rather than the three-week-old
+checkout. The 4.0 board also had other extensions installed; one of them (`tas2580/wiki`) breaks the
+UCP notification settings page on 4.0 because it overrides the notification base constructor, which
+gained two arguments. The Knowledge Base types do not override it and are unaffected. No new core
+event is needed for any of this.
 
 ## Reference material
 
