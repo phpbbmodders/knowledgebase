@@ -1,15 +1,16 @@
 # phpBB 4.0.x Compatibility Notes — Knowledge Base Extension
 
 Tracks what's known about this extension's readiness for phpBB 4.0.x,
-alongside its current phpBB 3.3.x support.
+alongside its current phpBB 3.3.x support. Declared support and the bug list
+were last checked against the code on 10/12/2026 (version 2.0.24).
 
 ## Current declared support
 
 From `composer.json`:
 
-- `require.phpbb/phpbb`: `>=3.3.19`
-- `extra.soft-require.phpbb/phpbb`: `>=3.3.19,<4.0.0@dev` — phpBB 4.0 dev
-  builds are explicitly excluded today.
+- `require.phpbb/phpbb`: `>=3.3.19 <4.0.0`
+- `extra.soft-require.phpbb/phpbb`: `>=3.3.19,<4.0.0@dev` — phpBB 4.0 and its
+  dev builds are explicitly excluded today.
 - `require.php`: `>=8.0`
 
 phpBB 4.0.x is still in development, so specifics below are marked
@@ -18,12 +19,13 @@ evidence — nothing here is guessed.
 
 ## What this extension does
 
-A wiki/FAQ system ("Knowledge Base") bolted onto a phpBB board:
-categories and articles with their own attachments, an approval
-workflow, and a search index, plus an ACP area to manage all of it.
-It has its own custom permission system (separate database tables,
-not phpBB's core ACL) and can optionally auto-post a forum topic when
-an article is published.
+A knowledge base for a phpBB board: articles organised in categories, with
+attachments, Markdown or BBCode text, revisions, an approval workflow with
+review teams, and a search index, plus an ACP area to manage all of it. It has
+its own custom permission system (separate database tables, not phpBB's core
+ACL), can optionally announce new articles in a forum and keep a private
+changelog topic per article, and can recolour itself with an optional
+stylesheet (see the [styling guide](styling/README.md)).
 
 ## Audit summary (completed)
 
@@ -56,8 +58,8 @@ rather than documented extension points:
 - Anywhere core global constants are referenced directly, e.g.
   `ATTACHMENT_CATEGORY_IMAGE`.
 
-**Concrete 4.0 signal found (not a guess):** `inc/functions_kb.php:830-837`
-(`check_is_img()`) already branches on
+**Concrete 4.0 signal found (not a guess):** `check_is_img()` in
+`inc/functions_kb.php` already branches on
 `phpbb_version_compare($this->config['version'], '4.0.0', '<')`,
 using the legacy `ATTACHMENT_CATEGORY_IMAGE` constant on 3.3.x but a
 namespaced `\phpbb\attachment\attachment_category::IMAGE` class on
@@ -75,57 +77,27 @@ plumbing (controllers, search backends, notification types) and the
 Twig templates — these lean on recent (3.2+) core investments that
 4.0 is more likely to build on than replace outright.
 
-### Bugs found along the way (not version-related, worth fixing regardless)
+### Bugs found along the way — all fixed
 
-1. `acp/attachments_info.php` (lines 30, 35, 40) — the `orphan`,
-   `extra_files`, and `lost_files` ACP modes are gated on
-   `'auth' => 'ext_phpbbmodders/garage && acl_a_board'` — `phpbbmodders/garage` is a
-   different, unrelated extension. This makes those three ACP pages
-   permanently inaccessible for anyone without that unrelated
-   extension installed (almost everyone). Should be
-   `ext_phpbbmodders/knowledgebase`.
-2. `acl_kb_get()` in `inc/functions_kb.php` — hardcoded
-   `category_id = 1` and reads the wrong SQL field
-   (`auth_option_id` instead of `auth_setting`) in its per-user
-   permission-override check, making the custom per-user override
-   feature effectively non-functional outside category 1.
-3. Two leftover pre-Twig legacy template snippets render as literal
-   broken text since Twig doesn't parse them:
-   `styles/all/template/kb_post_body.html:84`
-   (`<!-- IF SHOW_PANEL -->...<!-- ENDIF -->`) and
-   `adm/style/acp_knowledgebase_permissions.html:229`
-   (`<!-- BEGIN category -->`).
-4. `migrations/version_1_0_3.php::update_schema()` (lines 38-47) —
-   the returned array has two `'drop_columns'` keys; the second
-   silently overwrites the first in PHP, so
-   `kb_src_wrdmtch.reply_id` is never actually dropped (only
-   `kb_articles.bbcode_bitfield` is). Harmless (orphaned unused
-   column survives) but not what the code intends.
-5. Minor: `notification/type/need_approval.php:108`'s
-   `is_available()` checks `$this->user->data['author_id']`, a key
-   that doesn't exist in `user->data` (likely meant `user_id`) —
-   makes the UCP toggle for this notification type unreliable, but
-   doesn't affect actual delivery. The three notification types'
-   `check_permission()` methods use `global $table_prefix;` instead
-   of the DI pattern used everywhere else in this codebase. The three
-   template-event files under `styles/all/template/event/`
-   only fire for prosilver-based styles — moving them to
-   `styles/all/template/event/` would make them style-independent at
-   no cost.
+These turned up during the audit and were not version-related. Each was
+checked against the current code on 10/12/2026.
 
-### Real bug found in the controller layer
-
-`controller/posting.php` — the same category-move check appears twice
-a few lines apart with inconsistent comparison operators:
-`$cat_id !== $to_id` (strict, line 375) vs. `$cat_id != $to_id`
-(loose, line 386). Both values come from
-`request->variable(..., 0)` so both are always `int` today, making
-this harmless in practice — but fragile if that ever changes.
+| # | Problem | Status |
+|---|---|---|
+| 1 | The `orphan`, `extra_files` and `lost_files` modes in `acp/attachments_info.php` were gated on another extension (`phpbbmodders/garage`), so those three ACP pages were unreachable for nearly everyone. | Fixed: all five modes name `ext_phpbbmodders/knowledgebase`. |
+| 2 | `acl_kb_get()` in `inc/functions_kb.php` hardcoded `category_id = 1` and read `auth_option_id` instead of `auth_setting` in its per-user override check, so per-user overrides only worked in category 1. | Fixed in `68aea42`. |
+| 3 | Two leftover pre-Twig snippets rendered as literal text (`<!-- IF SHOW_PANEL -->` in the posting template, `<!-- BEGIN category -->` in the ACP permissions template). | Fixed in `d2d120f` and, for the posting template, by the template rewrite in `5690db6`. None remain. |
+| 4 | `migrations/version_1_0_3.php::update_schema()` had two `'drop_columns'` keys, so the second silently replaced the first and `kb_src_wrdmtch.reply_id` was never dropped. | Fixed in `9f103fc`: one key drops both columns. |
+| 5 | `need_approval::is_available()` read a key that does not exist in `user->data` (`author_id`); the notification types used `global $table_prefix` instead of injected table names; the template-event files sat in a prosilver-only folder. | Fixed in `cb8345c` and `32a8ba9`; the events now live in `styles/all/template/event/`, which is the extension's only style folder. |
+| 6 | `controller/posting.php` compared the category-move ids with `!==` in one place and `!=` a few lines later. Harmless while both are ints, fragile otherwise. | Fixed in `c53137a`: both comparisons are strict. |
 
 ## Reference material
 
-- 3.3.x core-architecture deep dive, CLI dev guide, and CLI user
-  reference: `/home/william/Desktop/phpbb33_docs/repos/docs/Claude/`
-  and `/home/william/Desktop/phpbb33_docs/repos/docs/`
-- Extension coding-guidelines/conventions docs (see
-  `reference_phpbb_extension_conventions_doc` memory)
+On the maintainer's machine, under `/home/william/Desktop/repos/misc/docs/`:
+
+- `Claude/phpbb-core-architecture-deep-dive.md`: phpBB 3.3.x core internals.
+- `Claude/phpbb-cli-console-commands.md` and `phpbb-cli-user-reference.md`:
+  the CLI.
+- `Claude/phpbb-extension-coding-guidelines.md` and
+  `Claude/phpbb-extension-conventions.md`: extension coding guidelines and the
+  conventions seen across real extensions.
