@@ -6,34 +6,38 @@ the configuration page, **Extensions > Knowledge Base > Configuration**.
 
 | Setting | What it changes | Default |
 |---|---|---|
-| **Flat article index** | Layout and behaviour: one dropdown of every category instead of the category tree, every article in one list, and a compact, wrapping layout for the navigation tabs and the article tables. It sets no colours. | off |
+| **Flat article index** | Layout and behaviour: one dropdown of every category instead of the category tree, every article in one list, and a compact layout for the article tables. It sets no colours. | off |
 | **Use an alternative stylesheet** | Colours only: recolours the tabs, the header bars and the article tables over the board style. The **Stylesheet** dropdown that appears chooses which one. The choice is remembered while the setting is off. | off |
 
 The two combine freely. Neither changes who can see or do what.
 
+The navigation tabs are not a setting: they always have the same compact,
+wrapping shape, and the selected tab is painted with the board style's own
+header colours (blue in prosilver, red in Revolution, dark in ProMinoDeux).
+
 All the screenshots below are real captures of the test board, on three board
 styles: prosilver, prosilver Special Edition - Revolution (red headers, dark
 outer page) and ProMinoDeux (a dark header and blue buttons). Each shows a
-category page as a Knowledge Base moderator.
+category page as a Knowledge Base administrator, with the tab layout described above.
 
 ## Board colours (nothing switched on)
 
 The tabs, header bars and rows are the board style's own, so each style shows
-its own palette.
+its own palette; the selected tab uses the same colours as the header bars.
 
 | prosilver | Revolution | ProMinoDeux |
 |---|---|---|
-| ![prosilver, hierarchical, board colours](../images/styling/prosilver-hierarchical-board.png) | ![Revolution, hierarchical, board colours](../images/styling/revolution-hierarchical-board.png) | ![ProMinoDeux, hierarchical, board colours](../images/styling/prominodeux-hierarchical-board.png) |
+| ![prosilver, hierarchical, board colours](../../../images/styling/prosilver-hierarchical-board.png) | ![Revolution, hierarchical, board colours](../../../images/styling/revolution-hierarchical-board.png) | ![ProMinoDeux, hierarchical, board colours](../../../images/styling/prominodeux-hierarchical-board.png) |
 
 ## Flat article index
 
 Same colours, different layout: the category tree is replaced by a dropdown
-and every article is listed. The tabs are smaller and wrap, and the table
-rows get a thin neutral divider.
+and every article is listed. The table rows get a thin neutral divider. (The
+tabs look the same as in the hierarchical layout.)
 
 | prosilver | Revolution | ProMinoDeux |
 |---|---|---|
-| ![prosilver, flat, board colours](../images/styling/prosilver-flat-board.png) | ![Revolution, flat, board colours](../images/styling/revolution-flat-board.png) | ![ProMinoDeux, flat, board colours](../images/styling/prominodeux-flat-board.png) |
+| ![prosilver, flat, board colours](../../../images/styling/prosilver-flat-board.png) | ![Revolution, flat, board colours](../../../images/styling/revolution-flat-board.png) | ![ProMinoDeux, flat, board colours](../../../images/styling/prominodeux-flat-board.png) |
 
 ## The bundled Slate stylesheet
 
@@ -42,15 +46,15 @@ with the flat index on or off, on any board style.
 
 | | prosilver | Revolution | ProMinoDeux |
 |---|---|---|---|
-| Hierarchical | ![prosilver, hierarchical, Slate](../images/styling/prosilver-hierarchical-slate.png) | ![Revolution, hierarchical, Slate](../images/styling/revolution-hierarchical-slate.png) | ![ProMinoDeux, hierarchical, Slate](../images/styling/prominodeux-hierarchical-slate.png) |
-| Flat | ![prosilver, flat, Slate](../images/styling/prosilver-flat-slate.png) | ![Revolution, flat, Slate](../images/styling/revolution-flat-slate.png) | ![ProMinoDeux, flat, Slate](../images/styling/prominodeux-flat-slate.png) |
+| Hierarchical | ![prosilver, hierarchical, Slate](../../../images/styling/prosilver-hierarchical-slate.png) | ![Revolution, hierarchical, Slate](../../../images/styling/revolution-hierarchical-slate.png) | ![ProMinoDeux, hierarchical, Slate](../../../images/styling/prominodeux-hierarchical-slate.png) |
+| Flat | ![prosilver, flat, Slate](../../../images/styling/prosilver-flat-slate.png) | ![Revolution, flat, Slate](../../../images/styling/revolution-flat-slate.png) | ![ProMinoDeux, flat, Slate](../../../images/styling/prominodeux-flat-slate.png) |
 
 On a phone the same pages stack and the tabs wrap; there is no sideways
 scrolling in any combination tested.
 
 | prosilver, flat, Slate | Revolution, hierarchical, board colours | ProMinoDeux, flat, Slate |
 |---|---|---|
-| ![prosilver on a phone](../images/styling/prosilver-flat-slate-mobile.png) | ![Revolution on a phone](../images/styling/revolution-hierarchical-board-mobile.png) | ![ProMinoDeux on a phone](../images/styling/prominodeux-flat-slate-mobile.png) |
+| ![prosilver on a phone](../../../images/styling/prosilver-flat-slate-mobile.png) | ![Revolution on a phone](../../../images/styling/revolution-hierarchical-board-mobile.png) | ![ProMinoDeux on a phone](../../../images/styling/prominodeux-flat-slate-mobile.png) |
 
 ## Your own stylesheet
 
@@ -70,18 +74,38 @@ recolours the selected tab and nothing else (shown on all three styles):
 
 | prosilver | Revolution | ProMinoDeux |
 |---|---|---|
-| ![prosilver, custom selected-tab sheet](../images/styling/prosilver-hierarchical-custom.png) | ![Revolution, custom selected-tab sheet](../images/styling/revolution-hierarchical-custom.png) | ![ProMinoDeux, custom selected-tab sheet](../images/styling/prominodeux-hierarchical-custom.png) |
+| ![prosilver, custom selected-tab sheet](../../../images/styling/prosilver-hierarchical-custom.png) | ![Revolution, custom selected-tab sheet](../../../images/styling/revolution-hierarchical-custom.png) | ![ProMinoDeux, custom selected-tab sheet](../../../images/styling/prominodeux-hierarchical-custom.png) |
 
 The file is [`examples/selected-tab.css.example`](examples/selected-tab.css.example);
 save it as `selected-tab.css` to use it. For a fuller starting point copy
 sections from the bundled Slate sheet,
-[`styles/all/theme/alternatives/slate.css`](../../styles/all/theme/alternatives/slate.css).
+[`styles/all/theme/alternatives/slate.css`](../../../../styles/all/theme/alternatives/slate.css).
 It is written as the worked example: its header explains the palette and the
 load order, and each of its four sections (tabs, header bars, category lists,
-article tables) stands on its own. The layout rules of the flat index live
-separately in
-[`phpbbmodders_knowledgebase_flat.css`](../../styles/all/theme/phpbbmodders_knowledgebase_flat.css),
+article tables) stands on its own. The shape of the tabs is in
+[`phpbbmodders_knowledgebase.css`](../../../../styles/all/theme/phpbbmodders_knowledgebase.css),
+and the layout rules of the flat index live separately in
+[`phpbbmodders_knowledgebase_flat.css`](../../../../styles/all/theme/phpbbmodders_knowledgebase_flat.css),
 so a colour sheet never needs to touch them.
+
+### A board style with light header colours
+
+The selected tab is painted with the board style's header colours and its text
+is white, which suits prosilver, Revolution and ProMinoDeux. On a style whose
+headers are pale, white text would be hard to read. A one-rule custom
+stylesheet fixes the text for that style and leaves the header colour alone:
+
+```css
+.tabs.kb-tabs .kb-tab-active > a,
+.tabs.kb-tabs .kb-tab-active > a:hover {
+	color: #333;
+}
+```
+
+Save it in the stylesheets folder (see above), for example as
+`light-header-tabs.css`, and choose it under **Custom**. It loads after the
+extension's own sheet, so it wins on equal specificity. Checked on the test board:
+the tab text turns dark grey and the tab keeps the style's header colour.
 
 ### The hooks to select
 

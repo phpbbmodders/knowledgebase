@@ -1,7 +1,9 @@
 # Forum search integration
 
-Status: direction confirmed 10/12/2026, not started. Applies to the Knowledge Base and, in its own
-repository, to the Wiki (`phpbbmodders/wiki`, `docs/TODO/todo-forum-search-integration.md`).
+Status: direction confirmed 10/12/2026. The Wiki's side is built and merged (wiki pull requests #55
+and #56: its own search, then the "Wiki (N)" block and the "Also search the Wiki" option in the board
+search, with an ACP switch and block size); the Knowledge Base's side is not started. Applies to the
+Knowledge Base and, in its own repository, to the Wiki (`phpbbmodders/wiki`).
 
 ## Goal
 

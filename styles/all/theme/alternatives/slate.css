@@ -13,10 +13,11 @@
  * sections you want to change - every section below stands on its own.
  *
  * WHAT IT DOES NOT DO
- * It changes colours and nothing else. Spacing, wrapping and the shape of the
- * tabs and tables belong to the "Flat article index" setting, which loads
- * phpbbmodders_knowledgebase_flat.css. The two settings are independent: this
- * sheet works with the flat index on or off.
+ * It changes colours and nothing else. The shape of the tabs (compact, wrapping)
+ * is in the extension's base sheet, phpbbmodders_knowledgebase.css, and the
+ * layout of the article tables belongs to the "Flat article index" setting,
+ * which loads phpbbmodders_knowledgebase_flat.css. The two settings are
+ * independent: this sheet works with the flat index on or off.
  *
  * HOW IT LOADS
  * After the board style's own stylesheets and after the extension's base
@@ -43,7 +44,9 @@
  * Hooks: .kb-tabs (the strip), .kb-tab (every tab), .kb-tab-active (the page
  * you are on). prosilver paints tabs with a background colour on the link and
  * a gradient on the selected one, so the gradient is cleared first or the
- * flat colour would sit underneath it. border-color matches the fill so no
+ * flat colour would sit underneath it. Without an alternative the selected tab
+ * shows the board style's header colours through a transparent link (see the
+ * base sheet); painting the link here covers them. border-color matches the fill so no
  * outline of the board style's blue shows around a tab.
  */
 .tabs.kb-tabs .kb-tab > a {

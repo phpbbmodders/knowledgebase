@@ -1506,3 +1506,20 @@ and read (`json_encode`/`json_decode`).
 
 Phase 1 design is now complete. Next: implementation (migration +
 backend + ACP UI + notifications).
+
+## Styling design and tab shape (completed 10/13/2026)
+
+Original items, from the master TODO's Active list: "Styling design and continuation handoff" and
+"Tab shape preview". The full design record stays in [styling/discussion-handoff.md](styling/discussion-handoff.md)
+and the illustrated guide in [styling/README.md](styling/README.md); the tab comparison stays in
+[tabs/README.md](tabs/README.md).
+
+- **10/12/2026**: Flat index layout, the optional alternative-stylesheet picker with the bundled Slate
+  sheet, and custom stylesheets served from the board's `store/` folder were built (migration
+  `version_2_0_24`; the old Classic look setting was removed).
+- **10/13/2026**: the last open decisions were made and built. The Classic tab shape (a wrapping row of
+  compact tabs with a square bottom) is the tab shape on every page, with Flat index on or off, and the
+  selected tab takes the board style's forum-header colours through the style's own `forabg` class,
+  with no script. The guide's screenshots were taken again on prosilver, Revolution and ProMinoDeux.
+- Left as it is: a board style with light header colours needs an alternative stylesheet for the
+  selected tab's text, which is white.

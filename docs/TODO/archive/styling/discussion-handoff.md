@@ -33,9 +33,19 @@ Done (migration `version_2_0_24`, version 2.0.24):
   white page, so the headings were invisible; they now follow each board style.
 - Guide with screenshots: [README.md](README.md).
 
-Not done, still open: the final tab shape, and whether the selected tab takes
-the board's forum-header colours (the proposal below and
-[docs/tabs](../tabs/README.md)); both wait on Kailey. The base sheet's
+Decided and built on 10/13/2026: the final tab shape is the Classic one (a
+wrapping row of compact tabs with a square bottom), for every Knowledge Base
+page whether Flat index is on or off, so those rules moved from
+`phpbbmodders_knowledgebase_flat.css` to the base sheet; and the selected tab
+takes the board style's forum-header colours (its list item carries the
+style's own `forabg` class and its link is transparent; the text is white, as
+the header text is in all three styles). The guide's screenshots were taken
+again. Not done: the previews in `tabs/` (now beside this file in the archive) are unchanged, and a style with light
+headers would need an alternative stylesheet for the selected tab's text.
+
+(Previously open, waiting on Kailey: the final tab shape, and whether the
+selected tab takes the board's forum-header colours; see the proposal below and
+[the tab comparison](../tabs/README.md).) The base sheet's
 remaining fixed colours (status badges, the copy-button and code box, grey
 borders) were reviewed: they are self-contained badges or neutral greys and
 were left as they are.
@@ -47,7 +57,7 @@ Get an explicit instruction to implement before changing production CSS,
 templates, controllers, migrations or board settings. No production styling
 changes have been implemented. William subsequently authorized a temporary
 browser-only tab comparison; its screenshots, preview CSS and comparison page
-are in [docs/tabs](../tabs/README.md). That preview does not authorize the full
+are in [the tab comparison](../tabs/README.md). That preview does not authorize the full
 picker implementation. William subsequently authorized publishing these
 documents and linking them from `docs/TODO.md`; production implementation
 still requires a separate instruction.
@@ -187,7 +197,7 @@ References checked in the discussion:
 ## Illustrated Documentation
 
 William requested a dedicated documentation subdirectory with screenshots.
-Use `docs/styling/` for the guide and `docs/images/styling/` for screenshots,
+Use a `styling/` folder for the guide (moved on 10/13/2026 to `docs/TODO/archive/styling/` with the rest of the finished work) and `docs/images/styling/` for screenshots,
 following the repository's canonical documentation-image location.
 
 Illustrate hierarchical versus Flat index layouts, native versus Classic
@@ -220,7 +230,7 @@ A live preview was optional discussion, not agreed implementation scope.
 
 Keep this handoff and `docs/TODO.md` current with approved scope,
 implementation status and remaining work. Preserve the existing comparison
-under `docs/tabs/`; future guide screenshots belong in `docs/images/styling/`.
+under `tabs/` (now `docs/TODO/archive/tabs/`); future guide screenshots belong in `docs/images/styling/`.
 
 ## Existing Work And Preservation
 
@@ -233,5 +243,5 @@ Naming, author-PM preferences and comments/changelog testing are complete and
 merged separately in [PR #45](https://github.com/phpbbmodders/knowledgebase/pull/45).
 Do not redo those changes or count their checks as styling verification.
 Related evidence: the Author PMs, comments and changelog and Fixture and browser testing
-method sections of [`docs/testing.md`](../testing.md). Verify current Git and board state
+method sections of [`docs/testing.md`](../../../testing.md). Verify current Git and board state
 before resuming; an old report or configured URL is not current runtime proof.

@@ -1,18 +1,18 @@
 <div class="tabs kb-tabs">
 	<ul>
-		<li class="tab kb-tab{% if S_KB_TAB_INDEX %} activetab kb-tab-active{% endif %}"><a href="{{ U_KB_TAB_INDEX }}">{{ lang('KB_TAB_INDEX') }}</a></li>
-		<li class="tab kb-tab{% if S_KB_TAB_MY_ARTICLES %} activetab kb-tab-active{% endif %}"><a href="{{ U_KB_TAB_MY_ARTICLES }}">{{ lang('KB_TAB_MY_ARTICLES') }}</a></li>
+		<li class="tab kb-tab{% if S_KB_TAB_INDEX %} activetab kb-tab-active forabg{% endif %}"><a href="{{ U_KB_TAB_INDEX }}">{{ lang('KB_TAB_INDEX') }}</a></li>
+		<li class="tab kb-tab{% if S_KB_TAB_MY_ARTICLES %} activetab kb-tab-active forabg{% endif %}"><a href="{{ U_KB_TAB_MY_ARTICLES }}">{{ lang('KB_TAB_MY_ARTICLES') }}</a></li>
 		{% if S_KB_CAN_SUBMIT_TAB %}
-			<li class="tab kb-tab{% if S_KB_TAB_SUBMIT %} activetab kb-tab-active{% endif %}"><a href="{{ U_KB_TAB_SUBMIT }}">{{ lang('ADD_ARTICLE') }}</a></li>
+			<li class="tab kb-tab{% if S_KB_TAB_SUBMIT %} activetab kb-tab-active forabg{% endif %}"><a href="{{ U_KB_TAB_SUBMIT }}">{{ lang('ADD_ARTICLE') }}</a></li>
 		{% endif %}
 		{% if S_KB_CAN_REDIRECT_TAB %}
-			<li class="tab kb-tab{% if S_KB_TAB_REDIRECT %} activetab kb-tab-active{% endif %}"><a href="{{ U_KB_TAB_REDIRECT }}">{{ lang('KB_SUBMIT_REDIRECT') }}</a></li>
+			<li class="tab kb-tab{% if S_KB_TAB_REDIRECT %} activetab kb-tab-active forabg{% endif %}"><a href="{{ U_KB_TAB_REDIRECT }}">{{ lang('KB_SUBMIT_REDIRECT') }}</a></li>
 		{% endif %}
 		{% if S_KB_CAN_ADMIN_TAB %}
-			<li class="tab kb-tab{% if S_KB_TAB_ADMIN %} activetab kb-tab-active{% endif %}"><a href="{{ U_KB_TAB_ADMIN }}">{{ lang('KB_TAB_ADMINISTRATION') }}</a></li>
+			<li class="tab kb-tab{% if S_KB_TAB_ADMIN %} activetab kb-tab-active forabg{% endif %}"><a href="{{ U_KB_TAB_ADMIN }}">{{ lang('KB_TAB_ADMINISTRATION') }}</a></li>
 		{% endif %}
 		{% if S_KB_EXTRA_TAB %}
-			<li class="tab activetab kb-tab kb-tab-active"><a>{{ KB_EXTRA_TAB_LABEL }}</a></li>
+			<li class="tab activetab kb-tab kb-tab-active forabg"><a>{{ KB_EXTRA_TAB_LABEL }}</a></li>
 		{% endif %}
 	</ul>
 </div>

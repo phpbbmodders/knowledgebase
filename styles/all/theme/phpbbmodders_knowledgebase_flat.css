@@ -4,54 +4,19 @@
  * Loaded after phpbbmodders_knowledgebase.css only while "Flat article index"
  * is switched on in the ACP (Extensions > Knowledge Base > Configuration).
  * Flat mode lists every article in one table and swaps the category tree for
- * a dropdown, so it also gives the navigation tabs and the article tables a
- * compact, wrapping layout.
+ * a dropdown, so it also gives the article tables a compact layout. (The
+ * navigation tabs have the same compact, wrapping shape with or without it;
+ * their rules are in phpbbmodders_knowledgebase.css.)
  *
- * This file is layout only. It sets no colours of its own: the tabs, table
- * headers, rows and borders keep the colours of whichever board style the
- * member is using (prosilver, Revolution, ProMinoDeux and so on). To recolour
- * them, pick an alternative stylesheet in the same ACP page - see
- * alternatives/slate.css for a commented example.
+ * This file is layout only. It sets no colours of its own: the table headers,
+ * rows and borders keep the colours of whichever board style the member is
+ * using (prosilver, Revolution, ProMinoDeux and so on). To recolour them, pick
+ * an alternative stylesheet in the same ACP page - see alternatives/slate.css
+ * for a commented example.
  *
  * Every selector starts from a kb-* hook class the extension's templates add
  * next to the board style's own classes, so nothing here reaches forum pages.
  */
-
-/*
- * Navigation tabs.
- * prosilver floats its tabs and lets them overflow on a narrow screen. A flex
- * row that wraps keeps every tab visible, so five tabs still fit a phone.
- */
-.tabs.kb-tabs {
-	margin-bottom: 4px;
-}
-
-.tabs.kb-tabs > ul {
-	display: flex;
-	flex-wrap: wrap;
-}
-
-.tabs.kb-tabs .kb-tab {
-	float: none;
-	margin-right: 2px;
-	margin-bottom: 2px;
-}
-
-/* Smaller tabs with a square bottom: no border or inset shadow, a short label. */
-.tabs.kb-tabs .kb-tab > a {
-	border: none;
-	box-shadow: none;
-	padding: 6px 12px;
-	border-radius: 3px 3px 0 0;
-	text-decoration: none;
-	font-size: 0.95em;
-}
-
-.tabs.kb-tabs .kb-tab-active > a,
-.tabs.kb-tabs .kb-tab-active > a:hover {
-	box-shadow: none;
-	font-weight: bold;
-}
 
 /*
  * The article tables (category page, "Manage Your Articles", the review queue).

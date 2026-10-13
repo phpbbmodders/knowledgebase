@@ -26,7 +26,7 @@ review teams, and a search index, plus an ACP area to manage all of it. It has
 its own custom permission system (separate database tables, not phpBB's core
 ACL), can optionally announce new articles in a forum and keep a private
 changelog topic per article, and can recolour itself with an optional
-stylesheet (see the [styling guide](styling/README.md)).
+stylesheet (see the [styling guide](TODO/archive/styling/README.md)).
 
 ## Audit summary (completed)
 

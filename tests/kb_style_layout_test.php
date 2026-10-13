@@ -75,13 +75,18 @@ class kb_style_layout_test extends \PHPUnit\Framework\TestCase
 		$this->assertStringNotContainsString('classic', $event);
 	}
 
-	public function test_the_base_sheet_carries_neither_the_flat_layout_nor_any_alternative_colours()
+	public function test_the_base_sheet_carries_the_tab_shape_but_neither_the_flat_layout_nor_any_alternative_colours()
 	{
 		$base = $this->read('styles/all/theme/phpbbmodders_knowledgebase.css');
 
-		foreach (['.kb-tab', '#536482', '#8f9dab', 'nth-child(even)', 'thead th', 'kb-listing'] as $other_sheet)
+		foreach (['#536482', '#8f9dab', 'nth-child(even)', 'thead th', 'kb-listing'] as $other_sheet)
 		{
 			$this->assertStringNotContainsString($other_sheet, $base, $other_sheet);
+		}
+		// Every look has the compact, wrapping tabs, and a selected tab in the board style's header colours.
+		foreach (['.tabs.kb-tabs > ul', 'flex-wrap: wrap', '.kb-tab-active.forabg'] as $tab_rule)
+		{
+			$this->assertStringContainsString($tab_rule, $base, $tab_rule);
 		}
 		// The status badges and the article page layout fixes belong to every look.
 		$this->assertStringContainsString('.kb-status-badge', $base);
@@ -92,7 +97,7 @@ class kb_style_layout_test extends \PHPUnit\Framework\TestCase
 	{
 		$flat = $this->css_without_comments('styles/all/theme/phpbbmodders_knowledgebase_flat.css');
 
-		$this->assertStringContainsString('.kb-tab', $flat);
+		$this->assertStringNotContainsString('.kb-tab', $flat, 'the tab shape is in the base sheet');
 		$this->assertStringContainsString('table.table1.kb-index-table', $flat);
 		$this->assertDoesNotMatchRegularExpression('/#[0-9a-fA-F]{3,8}\b/', $flat, 'a fixed colour');
 		$this->assertDoesNotMatchRegularExpression('/(^|[;{\s])(background[\w-]*|color|border-[\w-]*color)\s*:/', $flat, 'a colour declaration');
@@ -127,6 +132,8 @@ class kb_style_layout_test extends \PHPUnit\Framework\TestCase
 		$this->assertSame(6, preg_match_all('/<li class="tab [^"]*kb-tab/', $tabs));
 		$this->assertStringNotContainsString('<a href="{{ U_KB_TAB_INDEX }}" class="kb-tab', $tabs);
 		$this->assertSame(substr_count($tabs, 'activetab'), substr_count($tabs, 'kb-tab-active'));
+		// The selected tab's list item takes the board style's header colours through its own class.
+		$this->assertSame(6, substr_count($tabs, 'kb-tab-active forabg'));
 	}
 
 	public function test_the_forum_style_boxes_carry_a_hook_the_alternatives_recolour()

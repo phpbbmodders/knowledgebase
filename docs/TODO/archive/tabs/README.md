@@ -1,5 +1,9 @@
 # Tab Shape Comparison
 
+> Decided 10/13/2026: the Classic tab shape, with the selected tab in the board
+> style's forum-header colours, is now the Knowledge Base's tab look. This page
+> is the record the decision was made from; it is not updated.
+
 Temporary visual comparison captured on 10/11/2026. Open
 [comparison.html](comparison.html) for the six side-by-side desktop examples.
 Each example also links to a full-page screenshot and a mobile screenshot.
