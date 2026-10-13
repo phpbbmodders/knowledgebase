@@ -11,7 +11,7 @@ curl --fail --location --max-time 60 https://phar.phpunit.de/phpunit-9.6.37.phar
 php /tmp/kb-phpunit.phar --do-not-cache-result --test-suffix _test.php tests
 ```
 
-Without database fixture ports, the four MySQL/PostgreSQL integration
+Without database fixture ports, the five MySQL/PostgreSQL integration
 cases skip. The remaining tests include in-memory SQLite regression
 checks. The current GitHub workflow runs coding and extension validation
 checks; it does not run this suite.

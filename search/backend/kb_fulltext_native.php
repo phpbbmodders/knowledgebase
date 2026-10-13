@@ -841,8 +841,9 @@ class kb_fulltext_native extends kb_base implements kb_search_backend_interface
 		{
 			$sql_count = str_replace("SELECT {$sql_array['SELECT']}", "SELECT COUNT(DISTINCT {$sql_array['SELECT']}) as total_results", $sql);
 			$result = $this->db->sql_query($sql_count);
-//			$total_results = (int) $this->db->sql_fetchfield('total_results');
-			$total_results = count($this->db->sql_fetchrowset($result));
+
+			// With GROUP BY the count query returns one row per article; without it, a single aggregate row
+			$total_results = ($sql_array['GROUP_BY']) ? count($this->db->sql_fetchrowset($result)) : (int) $this->db->sql_fetchfield('total_results');
 			$this->db->sql_freeresult($result);
 
 			if (!$total_results)

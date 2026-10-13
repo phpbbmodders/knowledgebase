@@ -11,12 +11,14 @@
 namespace phpbbmodders\knowledgebase\search\backend;
 
 require_once __DIR__ . '/kb_search_sql_test.php';
+require_once dirname(__DIR__) . '/search/backend/kb_fulltext_native.php';
 require_once dirname(__DIR__) . '/migrations/version_1_0_0.php';
 require_once dirname(__DIR__) . '/migrations/version_2_0_15.php';
 if (!defined('IN_PHPBB')) define('IN_PHPBB', true);
 if (!defined('CONFIG_TABLE')) define('CONFIG_TABLE', 'phpbb_config');
 if (!defined('SEARCH_RESULTS_TABLE')) define('SEARCH_RESULTS_TABLE', 'phpbb_search_results');
 require_once (getenv('PHPBB_ROOT_PATH') ?: dirname(__DIR__, 4)) . '/includes/functions.php';
+require_once (getenv('PHPBB_ROOT_PATH') ?: dirname(__DIR__, 4)) . '/includes/utf/utf_tools.php';
 
 /** Opt-in tests against disposable localhost databases named kb_fixture. */
 class kb_search_database_test extends \PHPUnit\Framework\TestCase
@@ -37,13 +39,13 @@ class kb_search_database_test extends \PHPUnit\Framework\TestCase
 		$this->tools = $engine === 'mysql' ? new \phpbb\db\tools\tools($this->db) : new \phpbb\db\tools\postgres($this->db);
 		$this->class = $engine === 'mysql' ? kb_fulltext_mysql::class : kb_fulltext_postgres::class;
 		$this->config = new \phpbb\config\config(['fulltext_postgres_ts_name' => 'english', 'search_block_size' => 100, 'num_posts' => 99, 'kb_num_articles' => 3]);
-		foreach (['phpbb_kb_articles', 'phpbb_kb_search_results', 'phpbb_kb_src_wrdmtch', 'phpbb_kb_article_categories', SEARCH_RESULTS_TABLE] as $table)
+		foreach (['phpbb_kb_articles', 'phpbb_kb_search_results', 'phpbb_kb_src_wrdlist', 'phpbb_kb_src_wrdmtch', 'phpbb_kb_article_categories', SEARCH_RESULTS_TABLE] as $table)
 		{
 			$this->query('DROP TABLE IF EXISTS ' . $table);
 		}
 		$old = new \phpbbmodders\knowledgebase\migrations\version_1_0_0($this->config, $this->db, $this->tools, '', 'php', 'phpbb_', []);
 		$schema = $old->update_schema()['add_tables'];
-		foreach (['phpbb_kb_articles', 'phpbb_kb_search_results', 'phpbb_kb_src_wrdmtch'] as $table)
+		foreach (['phpbb_kb_articles', 'phpbb_kb_search_results', 'phpbb_kb_src_wrdlist', 'phpbb_kb_src_wrdmtch'] as $table)
 		{
 			$this->tools->sql_create_table($table, $schema[$table]);
 		}
@@ -160,6 +162,62 @@ class kb_search_database_test extends \PHPUnit\Framework\TestCase
 		$result = $this->query('SELECT COUNT(*) AS matches FROM phpbb_kb_src_wrdmtch');
 		$this->assertSame(2, (int) $this->db->sql_fetchfield('matches', false, $result));
 		$this->db->sql_freeresult($result);
+	}
+
+	/**
+	 * The native backend counts matches itself on MySQL. Without a GROUP BY (titles only, text only) the count
+	 * query returns one aggregate row, which used to be counted as a single result whatever the real number.
+	 */
+	public function test_native_backend_counts_all_matches_for_titles_only_and_text_only()
+	{
+		$this->connect('mysql');
+		$this->query('ALTER TABLE phpbb_kb_src_wrdmtch ADD COLUMN descr_match INTEGER NOT NULL DEFAULT 0');
+		$this->config->set('kb_search', 1);
+		$backend = $this->getMockBuilder(kb_fulltext_native::class)->disableOriginalConstructor()->onlyMethods(['obtain_ids', 'save_ids', 'destroy_cache'])->getMock();
+		$backend->method('obtain_ids')->willReturn(0);
+		foreach (['db' => $this->db, 'config' => $this->config, 'articles_table' => 'phpbb_kb_articles', 'search_results_table' => 'phpbb_kb_search_results', 'article_categories_table' => 'phpbb_kb_article_categories', 'wordmatch_table' => 'phpbb_kb_src_wrdmtch', 'wordlist_table' => 'phpbb_kb_src_wrdlist', 'word_length' => ['min' => 3, 'max' => 14]] as $name => $value)
+		{
+			$property = new \ReflectionProperty($backend, $name);
+			$property->setValue($backend, $value);
+		}
+		$description = '';
+		foreach ([1, 2, 3, 4] as $article_id)
+		{
+			$title = 'Migration guide';
+			$body = 'A migration guide for extension developers';
+			$backend->index('add', $article_id, $body, $title, $description, 2);
+		}
+		$word_ids = [];
+		$result = $this->query('SELECT word_id, word_text FROM phpbb_kb_src_wrdlist');
+		while ($row = $this->db->sql_fetchrow($result))
+		{
+			$word_ids[$row['word_text']] = (int) $row['word_id'];
+		}
+		$this->db->sql_freeresult($result);
+
+		// Article 2 is not approved, so three articles match
+		foreach ([
+			['migration', 'all', 10, 3, [4, 3, 1]],
+			['migration', 'titleonly', 10, 3, [4, 3, 1]],
+			['migration', 'msgonly', 10, 3, [4, 3, 1]],
+			['migration', 'titleonly', 2, 3, [4, 3]],
+			['developers', 'msgonly', 10, 3, [4, 3, 1]],
+			['developers', 'titleonly', 10, false, []],
+			['migration', 'descronly', 10, false, []],
+		] as [$word, $fields, $per_page, $expected_total, $expected_ids])
+		{
+			$this->assertArrayHasKey($word, $word_ids);
+			foreach (['search_query' => '+' . $word, 'must_contain_ids' => [$word_ids[$word]]] as $name => $value)
+			{
+				$property = new \ReflectionProperty($backend, $name);
+				$property->setValue($backend, $value);
+			}
+			$ids = [];
+			$start = 0;
+			$count = $backend->keyword_search('posts', $fields, 'all', ['t' => 'p.article_date'], 't', 'd', '0', [], 0, [], '', $ids, $start, $per_page);
+			$this->assertSame($expected_total, $count, "$word in $fields, $per_page per page");
+			$this->assertSame($expected_ids, array_map('intval', array_slice($ids, 0, $per_page)), "$word in $fields, $per_page per page");
+		}
 	}
 
 	public function engines()
