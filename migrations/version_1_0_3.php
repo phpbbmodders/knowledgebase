@@ -72,9 +72,18 @@ class version_1_0_3 extends \phpbb\db\migration\migration
 
 		if (strpos($sql_layer, 'mysql') === 0)
 		{
+			// The old unique key is named un_mtch on phpBB 3.3 but carries a table
+			// prefix (kbsrcwrdmt_un_mtch) on phpBB 4.0, so it is found by its
+			// columns, not by that name.
+			$drops = '';
+			foreach ($this->old_unique_keys($table) as $key)
+			{
+				$drops .= 'DROP INDEX ' . $key . ', ';
+			}
+
 			// MySQL-specific combined DROP/ADD INDEX syntax with a
 			// storage-engine index-type hint.
-			$sql = 'ALTER TABLE ' . $table . ' DROP INDEX un_mtch, ADD UNIQUE un_mtch (article_id, word_id, title_match, descr_match) USING BTREE';
+			$sql = 'ALTER TABLE ' . $table . ' ' . $drops . 'ADD UNIQUE un_mtch (article_id, word_id, title_match, descr_match) USING BTREE';
 			$this->db->sql_query($sql);
 		}
 		else if (strpos($sql_layer, 'postgres') === 0 || strpos($sql_layer, 'sqlite') === 0)
@@ -88,5 +97,38 @@ class version_1_0_3 extends \phpbb\db\migration\migration
 		// Other DBMS (MSSQL, Oracle): left as-is rather than guessing at
 		// syntax that can't be verified here - the table keeps whatever
 		// index it already had.
+	}
+
+	/**
+	 * The names of the table's unique keys, other than the primary key, that cover
+	 * only some of the four match columns: the one this migration replaces.
+	 *
+	 * @param string $table
+	 * @return string[]
+	 */
+	public function old_unique_keys($table)
+	{
+		$columns = [];
+		$result = $this->db->sql_query('SHOW INDEX FROM ' . $table);
+		while ($row = $this->db->sql_fetchrow($result))
+		{
+			if ((int) $row['Non_unique'] === 0 && $row['Key_name'] !== 'PRIMARY')
+			{
+				$columns[$row['Key_name']][] = $row['Column_name'];
+			}
+		}
+		$this->db->sql_freeresult($result);
+
+		$match_columns = ['article_id', 'word_id', 'title_match', 'descr_match'];
+		$keys = [];
+		foreach ($columns as $key => $key_columns)
+		{
+			if (!array_diff($key_columns, $match_columns) && in_array('word_id', $key_columns, true))
+			{
+				$keys[] = $key;
+			}
+		}
+
+		return $keys;
 	}
 }

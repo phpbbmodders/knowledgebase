@@ -1234,3 +1234,19 @@ cannot write everywhere). The only deprecation notices come from phpBB 3.3.19 it
 extension. `ReflectionProperty::setAccessible()` is deprecated in 8.5 and has had no effect since 8.1, so
 the tests no longer call it. A test that expected `/usr` to be unwritable now skips when the tests run as
 root, as they do in a container.
+
+## Enabling on phpBB 4.0 with MySQL - 10/14/2026
+
+Enabling the extension on a fresh phpBB 4.0.0-a3-dev board with MySQL 8.0 stopped with `Can't DROP 'un_mtch'`. Migration
+`version_1_0_3` replaces the word-match table's unique key on MySQL with `DROP INDEX un_mtch`, but phpBB 4.0's schema tool
+names MySQL indexes with a table prefix (`kbsrcwrdmt_un_mtch`), so that name does not exist there; phpBB 3.3 names it
+`un_mtch`, which is why the 3.3 MySQL boards were unaffected. The migration now asks the table which unique keys cover
+the match columns (`SHOW INDEX`) and drops those, whatever they are called, then adds the four-column key as before; the
+PostgreSQL and SQLite statements are unchanged. The migration had not been applied anywhere with the old behaviour
+that this changes, since it could not finish on 4.0 with MySQL and was already correct on 3.3.
+
+On a fresh 4.0 MySQL board (Docker `mysql:8.0`) the extension now enables, the word-match table ends with a
+four-column unique key and the KB fixtures seed. `kb_search_key_migration_test.php` (5 cases, 4 of which fail on the old
+code) covers the key being dropped under the 3.3 name and under the 4.0 name, no old key at all, an unrelated unique key
+being left alone, and the PostgreSQL and SQLite statements; the suite passes with 417 tests (17 skipped: database cases
+without the MySQL and PostgreSQL fixtures).
