@@ -2,6 +2,21 @@
 
 A knowledge base for phpBB: articles organised in categories, with attachments, Markdown or BBCode text, revisions, an approval workflow, search, and its own permission system, all managed from the ACP.
 
+## Screenshots
+
+<table>
+<tr>
+<td align="center"><a href="docs/images/screenshots/01-flat-index.png"><img src="docs/images/screenshots/01-flat-index.png" width="440" alt="The flat article index"></a><br>The flat article index (the default)</td>
+<td align="center"><a href="docs/images/screenshots/08-category-tree.png"><img src="docs/images/screenshots/08-category-tree.png" width="440" alt="The category tree"></a><br>Hierarchical category browsing</td>
+</tr>
+<tr>
+<td align="center"><a href="docs/images/screenshots/02-article.png"><img src="docs/images/screenshots/02-article.png" width="440" alt="An article"></a><br>An article</td>
+<td align="center"><a href="docs/images/screenshots/05-approval-queue.png"><img src="docs/images/screenshots/05-approval-queue.png" width="440" alt="The approval queue"></a><br>The approval queue</td>
+</tr>
+</table>
+
+More screenshots, including the article form, search results and the ACP settings: [docs/images/screenshots](docs/images/screenshots/README.md).
+
 ## Installation
 
 1. Copy the extension to: `/ext/phpbbmodders/knowledgebase`
