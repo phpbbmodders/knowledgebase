@@ -46,13 +46,15 @@ class kb_hierarchical_default_test extends \PHPUnit\Framework\TestCase
 		$this->assertSame(['config.add:kb_flat_index', 'config.remove:kb_hierarchical_index', 'config.update:kb_version'], $reverted);
 	}
 
-	public function test_the_extension_version_matches_the_last_migration()
+	public function test_the_extension_version_is_not_older_than_the_last_migration()
 	{
+		// composer.json holds the release version (a rolling -dev prerelease); the migrations'
+		// own numbers only mark the database schema through the kb_version setting.
 		$composer = json_decode(file_get_contents(self::ROOT . '/composer.json'), true);
 		$versions = array_map(fn($file) => str_replace('_', '.', substr(basename($file, '.php'), strlen('version_'))), glob(self::ROOT . '/migrations/version_*.php'));
 		usort($versions, 'version_compare');
 
-		$this->assertSame(end($versions), $composer['version']);
+		$this->assertTrue(version_compare($composer['version'], end($versions), '>='), $composer['version'] . ' is older than the last migration ' . end($versions));
 	}
 
 	/** @dataProvider code_that_reads_the_setting */
