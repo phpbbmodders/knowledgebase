@@ -26,6 +26,12 @@ A member's own articles and drafts.
 
 ![Manage Your Articles](03-manage-your-articles.png)
 
+## Recent changes
+
+The **Recent changes** tab: the live articles, newest first, with a **New** or **Updated** badge, the category, the author and when the article last changed. Under the heading are the RSS and Atom feeds of the same list. A browser or feed reader also finds them from the page header, and the ACP says which formats are offered.
+
+![The Recent changes tab](12-recent-changes.png)
+
 ## Add an article
 
 The form for a new article.

@@ -26,6 +26,18 @@ phpbbmodders_knowledgebase_my_articles:
     path: /knowledgebase/my_articles
     defaults: { _controller: phpbbmodders.knowledgebase.controller.index:my_articles }
 
+phpbbmodders_knowledgebase_recent_changes:
+    path: /knowledgebase/recent_changes
+    defaults: { _controller: phpbbmodders.knowledgebase.controller.recent_changes:page }
+
+# The feeds of the recent changes page. Under /knowledgebase/ only: the /kb/
+# alias above forwards to routes without a file extension.
+phpbbmodders_knowledgebase_recent_changes_feed:
+    path: /knowledgebase/recent_changes.{_format}
+    defaults: { _controller: phpbbmodders.knowledgebase.controller.recent_changes:feed }
+    requirements:
+        _format: rss|atom
+
 phpbbmodders_knowledgebase_article:
     path: /knowledgebase/article
     defaults: { _controller: phpbbmodders.knowledgebase.controller.article:show }

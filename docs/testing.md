@@ -1339,3 +1339,21 @@ plain `php -S` sent the upload to the board index.
 being opened up, a board whose folder cannot be made (no warning raised), the move leaving the protection files and `plupload` behind, never writing over a file, doing nothing twice, leaving files in place when the
 new folder cannot be made, and the migration; the ported cases of the old ACP folder check are among them. `kb_adopt_original_test.php` now expects the copy in the new folder. The suite passes with 468 tests
 (17 skipped: database cases without the MySQL and PostgreSQL fixtures, which this change does not touch).
+
+## Recent changes and its RSS and Atom feeds - 10/14/2026
+
+A **Recent changes** tab (`/knowledgebase/recent_changes`) lists the live articles, newest first: approved, active and not a redirect, so drafts, articles waiting for review, switched-off articles and redirects never appear.
+An article's time is its last edit, or the day it was written when it was never edited, and it carries a **New** or **Updated** badge. The page uses the board's "articles per page" setting and has pagination.
+The same list is an RSS 2.0 and an Atom 1.0 feed (`recent_changes.rss`, `recent_changes.atom`, 50 entries, `Cache-Control: public, max-age=300`) built by `inc/feed.php`, which is the wiki's feed builder: `DOMDocument` writes the XML, so
+titles and descriptions, which the board stores HTML-escaped, are decoded once and escaped once. A feed reader is a guest, so the guest's right to read the Knowledge Base decides: 403 without it, 404 for a format the ACP does not offer.
+**Extensions > Knowledge Base > Configuration** has a **Recent changes feed** choice (RSS only, Atom only, RSS and Atom; both by default, a value that is not one of the three is refused), stored as `kb_feed_format` by migration `version_2_0_29`
+(version 2.0.29). The page header advertises the offered formats to a visitor who may read, on every board page, through `overall_header_head_append`.
+
+A 43-check browser run (`kb-recent-changes-test.js`) covers the setting's three choices and refusing a fourth, the tab sitting third and selected alone, the heading, the header link tags and the page's links, every page of the list holding each live article once and none of the 149 to 153 hidden
+ones, the order matching the database's own (edit or write time, newest first, ties by id), **Updated** exactly on the edited articles with the edited one first, both feeds parsing as XML with 50 entries in the page's order and times that never increase, absolute article links, the first entry opening
+the newest article, markup characters in a title and a description (`Fish & <Chips> "tasty" Übersicht`, `R&D <b>bold</b>`) arriving as the real characters and shown as text, "RSS only" and "Atom only" each giving 200 and 404 and dropping the other link from the header and the page,
+a guest getting 403 until guests may read and then both feeds and the page, a member denied the Knowledge Base getting 403 and a refusal page with no header links, and the other tabs keeping their own selection. The fixtures hold no edited article, so the run edits one and puts it back. It passes on phpBB 3.3.19 and
+4.0.0-a3-dev with SQLite, MySQL 8.0 and PostgreSQL 16 (six boards, 43 of 43 on each). The tab layout run (selected tab in the board's header colours, no overflow at 1100 and 390 pixels, three styles, flat and hierarchical, Slate) still passes (23 of 23) on the 3.3 SQLite board; it cannot sign in to the 4.0 SQLite board.
+
+`kb_feed_test.php` (the wiki's feed cases: formats offered, valid settings, both documents well formed with values escaped once, an empty feed) and `kb_recent_changes_test.php` (the migration; 403 without running a query, 404 for a format not offered, the feed built from given rows with its headers and New or Updated summaries, the query's live-only
+conditions and ordering, and the routes, service, tab, header template, ACP and language strings being wired in) are new; the style layout test now expects the extra tab. The suite passes with 485 tests (17 skipped: database cases without the MySQL and PostgreSQL fixtures, which this change does not touch).

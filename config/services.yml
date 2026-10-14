@@ -35,6 +35,22 @@ services:
             - '%tables.articles_table%'
             - '%tables.categories_table%'
 
+    phpbbmodders.knowledgebase.controller.recent_changes:
+        class: phpbbmodders\knowledgebase\controller\recent_changes
+        arguments:
+            - '@dbal.conn'
+            - '@config'
+            - '@controller.helper'
+            - '@language'
+            - '@auth'
+            - '@request'
+            - '@template'
+            - '@user'
+            - '@pagination'
+            - '@phpbbmodders.knowledgebase.inc'
+            - '%tables.articles_table%'
+            - '%tables.categories_table%'
+
     phpbbmodders.knowledgebase.controller.article:
         class: phpbbmodders\knowledgebase\controller\article
         arguments:

@@ -23,6 +23,7 @@ use phpbb\controller\helper;
 use phpbb\language\language;
 use phpbb\template\template;
 use phpbbmodders\knowledgebase\inc\alternative_styles;
+use phpbbmodders\knowledgebase\inc\feed;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
@@ -119,7 +120,37 @@ class listener implements EventSubscriberInterface
 		$this->template->assign_vars(array_merge([
 			'KB_FONT_ICON' => $this->config['kb_font_icon'],
 			'U_LIBRARY'    => ($this->auth->acl_get('u_kb_view') || $this->auth->acl_get('a_manage_kb')) ? $this->helper->route('phpbbmodders_knowledgebase_index') : '',
-		], $this->stylesheet_template_vars()));
+		], $this->feed_template_vars(), $this->stylesheet_template_vars()));
+	}
+
+	/**
+	 * The recent changes feed links: the address of each feed format the ACP
+	 * offers, for a visitor who may read the Knowledge Base. A format that is
+	 * not offered, or a visitor who may not read, gets an empty address, so
+	 * the header advertises nothing.
+	 *
+	 * @return array
+	 */
+	protected function feed_template_vars(): array
+	{
+		$vars = ['U_KB_FEED_RSS' => '', 'U_KB_FEED_ATOM' => ''];
+
+		if (!$this->auth->acl_get('u_kb_view') && !$this->auth->acl_get('a_manage_kb'))
+		{
+			return $vars;
+		}
+
+		$setting = $this->config['kb_feed_format'] ?? feed::BOTH;
+		if (feed::offers($setting, feed::RSS))
+		{
+			$vars['U_KB_FEED_RSS'] = $this->helper->route('phpbbmodders_knowledgebase_recent_changes_feed', ['_format' => feed::RSS]);
+		}
+		if (feed::offers($setting, feed::ATOM))
+		{
+			$vars['U_KB_FEED_ATOM'] = $this->helper->route('phpbbmodders_knowledgebase_recent_changes_feed', ['_format' => feed::ATOM]);
+		}
+
+		return $vars;
 	}
 
 	/**

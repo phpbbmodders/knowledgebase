@@ -40,7 +40,7 @@ class kb_style_layout_test extends \PHPUnit\Framework\TestCase
 	public function shipped_files(): array
 	{
 		$files = [];
-		foreach (['kb_approve_body', 'kb_article_body', 'kb_article_body_print', 'kb_cat_body', 'kb_cat_list', 'kb_index_body', 'kb_my_articles_body', 'kb_nav_tabs', 'kb_notice_body', 'kb_post_body', 'kb_queue_body', 'kb_search_body', 'kb_search_results'] as $template)
+		foreach (['kb_approve_body', 'kb_article_body', 'kb_article_body_print', 'kb_cat_body', 'kb_cat_list', 'kb_index_body', 'kb_my_articles_body', 'kb_nav_tabs', 'kb_notice_body', 'kb_post_body', 'kb_queue_body', 'kb_recent_changes_body', 'kb_search_body', 'kb_search_results'] as $template)
 		{
 			$files[$template] = ['template/' . $template . '.html'];
 		}
@@ -128,12 +128,12 @@ class kb_style_layout_test extends \PHPUnit\Framework\TestCase
 		$tabs = $this->read('styles/all/template/kb_nav_tabs.html');
 
 		$this->assertStringContainsString('<div class="tabs kb-tabs">', $tabs);
-		$this->assertSame(6, substr_count($tabs, '<li class="tab'));
-		$this->assertSame(6, preg_match_all('/<li class="tab [^"]*kb-tab/', $tabs));
+		$this->assertSame(7, substr_count($tabs, '<li class="tab'));
+		$this->assertSame(7, preg_match_all('/<li class="tab [^"]*kb-tab/', $tabs));
 		$this->assertStringNotContainsString('<a href="{{ U_KB_TAB_INDEX }}" class="kb-tab', $tabs);
 		$this->assertSame(substr_count($tabs, 'activetab'), substr_count($tabs, 'kb-tab-active'));
 		// The selected tab's list item takes the board style's header colours through its own class.
-		$this->assertSame(6, substr_count($tabs, 'kb-tab-active forabg'));
+		$this->assertSame(7, substr_count($tabs, 'kb-tab-active forabg'));
 	}
 
 	public function test_the_forum_style_boxes_carry_a_hook_the_alternatives_recolour()

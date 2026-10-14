@@ -566,17 +566,17 @@ class functions_kb
 	}
 
 	/**
-	 * Assigns the shared five-tab (View Article Index / Manage Your
-	 * Articles / Submit an Article / Submit a Redirect / Administration)
-	 * navigation strip variables used by kb_nav_tabs.html on every
+	 * Assigns the shared six-tab (View Article Index / Manage Your
+	 * Articles / Recent changes / Submit an Article / Submit a Redirect /
+	 * Administration) navigation strip variables used by kb_nav_tabs.html on every
 	 * front-end KB page. $cat_id, when known, is carried into the
 	 * Submit tabs so they land in the same category the user is
 	 * currently browsing rather than requiring a second category pick.
-	 * $extra_tab_label adds a sixth, always-active tab after
+	 * $extra_tab_label adds a seventh, always-active tab after
 	 * Administration - used only by the article page's dynamic
 	 * "Reading Article #id" / "Notice" tab.
 	 *
-	 * @param string      $active          'index', 'my_articles', 'submit', 'redirect', 'admin', or '' for none of the five
+	 * @param string      $active          'index', 'my_articles', 'recent_changes', 'submit', 'redirect', 'admin', or '' for none of the six
 	 * @param int         $cat_id
 	 * @param string|null $extra_tab_label
 	 * @return void
@@ -601,6 +601,7 @@ class functions_kb
 		$this->template->assign_vars([
 			'U_KB_TAB_INDEX'         => $this->helper->route('phpbbmodders_knowledgebase_index'),
 			'U_KB_TAB_MY_ARTICLES'   => $this->helper->route('phpbbmodders_knowledgebase_my_articles'),
+			'U_KB_TAB_RECENT_CHANGES' => $this->helper->route('phpbbmodders_knowledgebase_recent_changes'),
 			'U_KB_TAB_SUBMIT'        => $can_submit_tab ? $this->helper->route('phpbbmodders_knowledgebase_posting', ['id' => $submit_cat_id]) : '',
 			'U_KB_TAB_REDIRECT'      => $can_redirect_tab ? $this->helper->route('phpbbmodders_knowledgebase_posting', ['id' => $redirect_cat_id, 'mode' => 'redirect']) : '',
 			'U_KB_TAB_ADMIN'         => $this->helper->route('phpbbmodders_knowledgebase_queue'),
@@ -609,6 +610,7 @@ class functions_kb
 			'S_KB_CAN_ADMIN_TAB'     => $this->auth->acl_get('a_manage_kb') || !empty($this->get_moderatable_categories()),
 			'S_KB_TAB_INDEX'         => $active === 'index',
 			'S_KB_TAB_MY_ARTICLES'   => $active === 'my_articles',
+			'S_KB_TAB_RECENT_CHANGES' => $active === 'recent_changes',
 			'S_KB_TAB_SUBMIT'        => $active === 'submit',
 			'S_KB_TAB_REDIRECT'      => $active === 'redirect',
 			'S_KB_TAB_ADMIN'         => $active === 'admin',

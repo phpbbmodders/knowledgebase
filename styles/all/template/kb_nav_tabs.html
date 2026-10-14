@@ -2,6 +2,7 @@
 	<ul>
 		<li class="tab kb-tab{% if S_KB_TAB_INDEX %} activetab kb-tab-active forabg{% endif %}"><a href="{{ U_KB_TAB_INDEX }}">{{ lang('KB_TAB_INDEX') }}</a></li>
 		<li class="tab kb-tab{% if S_KB_TAB_MY_ARTICLES %} activetab kb-tab-active forabg{% endif %}"><a href="{{ U_KB_TAB_MY_ARTICLES }}">{{ lang('KB_TAB_MY_ARTICLES') }}</a></li>
+		<li class="tab kb-tab{% if S_KB_TAB_RECENT_CHANGES %} activetab kb-tab-active forabg{% endif %}"><a href="{{ U_KB_TAB_RECENT_CHANGES }}">{{ lang('KB_TAB_RECENT_CHANGES') }}</a></li>
 		{% if S_KB_CAN_SUBMIT_TAB %}
 			<li class="tab kb-tab{% if S_KB_TAB_SUBMIT %} activetab kb-tab-active forabg{% endif %}"><a href="{{ U_KB_TAB_SUBMIT }}">{{ lang('ADD_ARTICLE') }}</a></li>
 		{% endif %}

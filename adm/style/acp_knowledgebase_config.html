@@ -104,6 +104,13 @@
 		</div>
 		<dl>
 			<dt>
+				<label for="feed_format">{{ lang('KB_FEED_FORMAT') }}{{ lang('COLON') }}</label><br>
+				<span>{{ lang('KB_FEED_FORMAT_EXPLAIN') }}</span>
+			</dt>
+			<dd><select name="feed_format" id="feed_format">{{ S_FEED_FORMAT_OPTIONS }}</select></dd>
+		</dl>
+		<dl>
+			<dt>
 				<label for="articles_per_page">{{ lang('PER_PAGE') }}{{ lang('COLON') }}</label><br>
 				<span>{{ lang('PER_PAGE_EXPLAIN') }}</span>
 			</dt>

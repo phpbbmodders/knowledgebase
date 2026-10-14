@@ -1,0 +1,62 @@
+{% INCLUDE 'overall_header.html' %}
+<h2><a href="{{ U_LIBRARY }}" class="nav">{{ lang('LIBRARY') }}</a> &raquo; {{ lang('KB_TAB_RECENT_CHANGES') }}</h2>
+{% INCLUDE '@phpbbmodders_knowledgebase/kb_nav_tabs.html' %}
+
+<div class="panel">
+	<div class="inner">
+		<p>{{ lang('KB_RECENT_CHANGES_EXPLAIN') }}</p>
+		{% if U_KB_FEED_RSS or U_KB_FEED_ATOM %}
+			<p class="kb-feed-links">
+				{{ lang('KB_FEED_SUBSCRIBE') }}
+				{% if U_KB_FEED_RSS %}<a href="{{ U_KB_FEED_RSS }}">{{ lang('KB_FEED_RSS_LINK') }}</a>{% endif %}
+				{% if U_KB_FEED_RSS and U_KB_FEED_ATOM %}&bull;{% endif %}
+				{% if U_KB_FEED_ATOM %}<a href="{{ U_KB_FEED_ATOM }}">{{ lang('KB_FEED_ATOM_LINK') }}</a>{% endif %}
+			</p>
+		{% endif %}
+	</div>
+</div>
+
+<div class="forumbg forumbg-table kb-listing">
+<div class="inner">
+<table class="table1 kb-index-table">
+	<thead>
+	<tr>
+		<th>{{ lang('ARTICLE') }}</th>
+		<th class="kb-index-author">{{ lang('CATEGORY') }}</th>
+		<th class="kb-index-author">{{ lang('ARTICLE_AUTHOR') }}</th>
+		<th class="kb-index-author">{{ lang('KB_RECENT_CHANGES_WHEN') }}</th>
+	</tr>
+	</thead>
+	<tbody>
+	{% for change in loops.changes %}
+		<tr class="{{ loop.index is odd ? 'bg1' : 'bg2' }}">
+			<td>
+				<a href="{{ change.U_ARTICLE }}">{{ change.ARTICLE_TITLE }}</a>
+				<span class="kb-status-badge {{ change.S_UPDATED ? 'kb-status-reviewed' : 'kb-status-new' }}">{{ lang(change.S_UPDATED ? 'KB_RECENT_UPDATED' : 'KB_RECENT_NEW') }}</span>
+				{% if change.DESCRIPTION %}<br><span>{{ change.DESCRIPTION }}</span>{% endif %}
+			</td>
+			<td class="kb-index-author"><a href="{{ change.U_CATEGORY }}">{{ change.CATEGORY_NAME }}</a></td>
+			<td class="kb-index-author">{{ change.AUTHOR }}</td>
+			<td class="kb-index-author">{{ change.CHANGED_TIME }}</td>
+		</tr>
+	{% endfor %}
+	{% if not loops.changes|length %}
+		<tr class="bg1">
+			<td colspan="4">{{ lang('NO_ARTICLES') }}</td>
+		</tr>
+	{% endif %}
+	</tbody>
+</table>
+</div>
+</div>
+
+<div class="action-bar bar-bottom">
+	<div class="pagination">
+		{{ TOTAL_ITEMS }}
+		{% if loops.pagination|length %}
+			{% INCLUDE 'pagination.html' %}
+		{% endif %}
+	</div>
+	<div id="page" style="display: none;">{{ CURRENT_PAGE_NUMBER }}</div>
+</div>
+{% INCLUDE 'overall_footer.html' %}

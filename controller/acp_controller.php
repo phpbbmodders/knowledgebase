@@ -30,6 +30,7 @@ use phpbb\template\template;
 use phpbb\user;
 use RuntimeException;
 use phpbbmodders\knowledgebase\inc\alternative_styles;
+use phpbbmodders\knowledgebase\inc\feed;
 use phpbbmodders\knowledgebase\inc\field\kb_field_type_factory;
 use phpbbmodders\knowledgebase\inc\icon;
 use phpbbmodders\knowledgebase\inc\functions_kb;
@@ -286,6 +287,7 @@ class acp_controller
 			'S_ALT_STYLE_OPTIONS'      => $this->alternative_style_options((string) $this->config['kb_alt_style']),
 			'ALT_STYLE_MISSING'        => $this->config['kb_alt_style_enabled'] ? htmlspecialchars($this->alt_styles->missing_choice(), ENT_COMPAT, 'UTF-8') : '',
 			'ALT_STYLE_DIRECTORY'      => $this->alt_styles->custom_directory_label(),
+			'S_FEED_FORMAT_OPTIONS'    => $this->feed_format_options(),
 			'PER_PAGE'                 => $this->config['kb_articles_per_page'] ?? 10,
 			'DESCRIPTION_MAX_LENGTH'   => $this->kb->get_description_max_length(),
 			'DESCRIPTION_COLUMN_LENGTH' => functions_kb::DESCRIPTION_COLUMN_LENGTH,
@@ -308,6 +310,25 @@ class acp_controller
 		]);
 	}
 
+	/**
+	 * The options of the recent changes feed format select, the stored choice selected.
+	 *
+	 * @return string HTML option elements
+	 */
+	protected function feed_format_options(): string
+	{
+		$current = $this->config['kb_feed_format'] ?? feed::BOTH;
+		$current = feed::is_valid_setting($current) ? $current : feed::BOTH;
+
+		$options = '';
+		foreach ([feed::BOTH => 'KB_FEED_FORMAT_BOTH', feed::RSS => 'KB_FEED_FORMAT_RSS', feed::ATOM => 'KB_FEED_FORMAT_ATOM'] as $value => $label)
+		{
+			$options .= '<option value="' . $value . '"' . ($current === $value ? ' selected="selected"' : '') . '>' . $this->language->lang($label) . '</option>';
+		}
+
+		return $options;
+	}
+
 	/** Set the options a user can configure
 	 *
 	 * @return void
@@ -324,6 +345,12 @@ class acp_controller
 
 		$this->validate_alternative_style();
 
+		$feed_format = $this->request->variable('feed_format', '');
+		if (!feed::is_valid_setting($feed_format))
+		{
+			trigger_error($this->language->lang('KB_FEED_FORMAT_INVALID') . adm_back_link($this->u_action), E_USER_WARNING);
+		}
+
 		// Max file size
 		$max_filesize = (int) $this->request->variable('max_filesize', 0);
 		$size_select = $this->request->variable('size_select', 'b');
@@ -333,6 +360,7 @@ class acp_controller
 		$this->config->set('kb_font_icon', $kb_font_icon);
 
 		$this->config->set('kb_hierarchical_index', $this->request->variable('hierarchical_index', 0) ? 1 : 0);
+		$this->config->set('kb_feed_format', $feed_format);
 		$this->save_alternative_style();
 		$this->save_announcement_forum();
 		$this->config->set('kb_changelog_forum_id', $this->request->variable('changelog_forum_id', 0));
