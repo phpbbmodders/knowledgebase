@@ -6,7 +6,7 @@ the configuration page, **Extensions > Knowledge Base > Configuration**.
 
 | Setting | What it changes | Default |
 |---|---|---|
-| **Flat article index** | Layout and behaviour: one dropdown of every category instead of the category tree, every article in one list, and a compact layout for the article tables. It sets no colours. | off |
+| **Hierarchical category browsing** | Layout and behaviour. Off, the default, gives the flat article index: one dropdown of every category, every article in one list, and a compact layout for the article tables. On, the index shows the category tree with its subcategories. It sets no colours. | off |
 | **Use an alternative stylesheet** | Colours only: recolours the tabs, the header bars and the article tables over the board style. The **Stylesheet** dropdown that appears chooses which one. The choice is remembered while the setting is off. | off |
 
 The two combine freely. Neither changes who can see or do what.
@@ -20,19 +20,21 @@ styles: prosilver, prosilver Special Edition - Revolution (red headers, dark
 outer page) and ProMinoDeux (a dark header and blue buttons). Each shows a
 category page as a Knowledge Base administrator, with the tab layout described above.
 
-## Board colours (nothing switched on)
+## Board colours (no alternative stylesheet)
 
 The tabs, header bars and rows are the board style's own, so each style shows
 its own palette; the selected tab uses the same colours as the header bars.
+
+These show hierarchical category browsing switched on; the flat default is next.
 
 | prosilver | Revolution | ProMinoDeux |
 |---|---|---|
 | ![prosilver, hierarchical, board colours](../../../images/styling/prosilver-hierarchical-board.png) | ![Revolution, hierarchical, board colours](../../../images/styling/revolution-hierarchical-board.png) | ![ProMinoDeux, hierarchical, board colours](../../../images/styling/prominodeux-hierarchical-board.png) |
 
-## Flat article index
+## Flat article index (the default)
 
-Same colours, different layout: the category tree is replaced by a dropdown
-and every article is listed. The table rows get a thin neutral divider. (The
+Same colours, different layout from the tree: the category tree is replaced by
+a dropdown and every article is listed. The table rows get a thin neutral divider. (The
 tabs look the same as in the hierarchical layout.)
 
 | prosilver | Revolution | ProMinoDeux |

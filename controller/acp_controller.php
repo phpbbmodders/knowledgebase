@@ -284,7 +284,7 @@ class acp_controller
 			'MAX_ATTACHMENTS'          => $this->config['kb_max_attachments'],
 			'EXTGROUP_FILESIZE'        => $max_filesize,
 			'ADVANCED_FORM'            => $announce_forum_id ? '' : 'none',
-			'FLAT_INDEX_ON'            => $this->config['kb_flat_index'] ? 'checked="checked"' : '',
+			'HIERARCHICAL_INDEX_ON'    => $this->config['kb_hierarchical_index'] ? 'checked="checked"' : '',
 			'ALT_STYLE_ON'             => $this->config['kb_alt_style_enabled'] ? 'checked="checked"' : '',
 			'ALT_STYLE_DISPLAY'        => $this->config['kb_alt_style_enabled'] ? '' : 'none',
 			'S_ALT_STYLE_OPTIONS'      => $this->alternative_style_options((string) $this->config['kb_alt_style']),
@@ -336,7 +336,7 @@ class acp_controller
 		// Save config value
 		$this->config->set('kb_font_icon', $kb_font_icon);
 
-		$this->config->set('kb_flat_index', $this->request->variable('flat_index', 0));
+		$this->config->set('kb_hierarchical_index', $this->request->variable('hierarchical_index', 0) ? 1 : 0);
 		$this->save_alternative_style();
 		$this->save_announcement_forum();
 		$this->config->set('kb_changelog_forum_id', $this->request->variable('changelog_forum_id', 0));

@@ -111,22 +111,22 @@ class category
 		$cat_id = $this->request->variable('id', 0);
 		$start = $this->request->variable('start', 0);
 
-		// Flat index mode: id=0 renders every article across every
+		// Flat index mode (the default): id=0 renders every article across every
 		// category instead of redirecting to the hierarchical index.
 		$flat_all = false;
 		if (!$cat_id)
 		{
-			if (!$this->config['kb_flat_index'])
+			if ($this->config['kb_hierarchical_index'])
 			{
 				redirect($this->helper->route('phpbbmodders_knowledgebase_index'));
 			}
 			$flat_all = true;
 		}
 
-		// With the flat index setting on, every category page keeps the flat
-		// layout - the category dropdown, no hierarchical subcategory list and
-		// no parent trail - not just the all-categories page (id=0).
-		$flat_layout = (bool) $this->config['kb_flat_index'];
+		// Unless hierarchical browsing is switched on, every category page keeps
+		// the flat layout - the category dropdown, no hierarchical subcategory
+		// list and no parent trail - not just the all-categories page (id=0).
+		$flat_layout = !$this->config['kb_hierarchical_index'];
 
 		if (!$flat_all)
 		{

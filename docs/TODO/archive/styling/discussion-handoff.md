@@ -43,6 +43,11 @@ the header text is in all three styles). The guide's screenshots were taken
 again. Not done: the previews in `tabs/` (now beside this file in the archive) are unchanged, and a style with light
 headers would need an alternative stylesheet for the selected tab's text.
 
+Changed again on 10/13/2026: the flat article index became the default, and its setting was turned round
+into **Hierarchical category browsing** (`kb_hierarchical_index`, off by default; the old `kb_flat_index` is
+removed by migration `version_2_0_26`, not mapped). The agreed design above that says hierarchical
+browsing stays the default is superseded.
+
 (Previously open, waiting on Kailey: the final tab shape, and whether the
 selected tab takes the board's forum-header colours; see the proposal below and
 [the tab comparison](../tabs/README.md).) The base sheet's

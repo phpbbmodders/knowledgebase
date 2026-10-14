@@ -15,9 +15,10 @@
  * WHAT IT DOES NOT DO
  * It changes colours and nothing else. The shape of the tabs (compact, wrapping)
  * is in the extension's base sheet, phpbbmodders_knowledgebase.css, and the
- * layout of the article tables belongs to the "Flat article index" setting,
- * which loads phpbbmodders_knowledgebase_flat.css. The two settings are
- * independent: this sheet works with the flat index on or off.
+ * layout of the article tables belongs to the flat article index (the
+ * default; "Hierarchical category browsing" turns it off), which loads
+ * phpbbmodders_knowledgebase_flat.css. The two settings are independent:
+ * this sheet works with the flat index or the category tree.
  *
  * HOW IT LOADS
  * After the board style's own stylesheets and after the extension's base

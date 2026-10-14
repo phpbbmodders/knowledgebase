@@ -108,7 +108,9 @@ class index
 			trigger_error($this->language->lang('NOT_AUTHORISED'));
 		}
 
-		if ($this->config['kb_flat_index'])
+		// The flat index is the default: the home page is the all-categories list
+		// unless hierarchical browsing is switched on.
+		if (!$this->config['kb_hierarchical_index'])
 		{
 			redirect($this->helper->route('phpbbmodders_knowledgebase_category', ['id' => 0]));
 		}

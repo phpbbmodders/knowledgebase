@@ -137,7 +137,7 @@ class listener implements EventSubscriberInterface
 	protected function stylesheet_template_vars(): array
 	{
 		$vars = [
-			'S_KB_FLAT_INDEX'            => (bool) $this->config['kb_flat_index'],
+			'S_KB_FLAT_INDEX'            => !$this->config['kb_hierarchical_index'],
 			'KB_ALT_STYLE_BUNDLED_FILE'  => '',
 			'U_KB_ALT_STYLE_CUSTOM'      => '',
 		];

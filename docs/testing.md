@@ -1235,6 +1235,31 @@ extension. `ReflectionProperty::setAccessible()` is deprecated in 8.5 and has ha
 the tests no longer call it. A test that expected `/usr` to be unwritable now skips when the tests run as
 root, as they do in a container.
 
+## Flat index by default, with a hierarchical checkbox - 10/13/2026
+
+The flat article index is now the default. `kb_flat_index` is replaced by `kb_hierarchical_index` (migration
+`version_2_0_26`, version 2.0.26), off by default; the ACP checkbox is **Hierarchical category browsing**
+and brings back the category tree. The old setting is removed and not mapped; nobody has installed the
+extension yet, so there is nothing to preserve.
+
+On the 3.3.19 SQLite test board (the migration ran with `db:migrate`): `kb_hierarchical_index` was 0, `kb_flat_index`
+was gone and `kb_version` read 2.0.26. A browser run of 10 checks confirmed that the ACP shows the new
+checkbox unticked and no old one, that `/knowledgebase` lands on the flat all-categories page with its tab strip, that
+ticking the box shows the category tree on the home page and sends `category?id=0` back to it, and that
+unticking returns to the flat page. The earlier 23-check tab run (five tabs as an administrator, three styles, 1100 px
+and 390 px, flat, hierarchical, and Slate) was repeated with the new checkbox and passed. A re-run of the
+default checks on a board that already had the box ticked failed its first two default-state checks, as expected, and
+the board was put back to the default afterwards.
+
+The 10 default-and-checkbox checks were then run on the five other boards, built fresh from the branch: phpBB 3.3.19 with MySQL 8.0 and PostgreSQL 16, and
+phpBB 4.0.0-a3-dev with SQLite, MySQL 8.0 and PostgreSQL 16 (six boards in all, 10 of 10 on each). The 23-check tab run was done on the 3.3.19 SQLite board only.
+
+`kb_hierarchical_default_test.php` (11 cases) covers the migration's steps, dependency, skip rule and revert,
+the version matching `composer.json`, that no code outside the old migrations reads `kb_flat_index`, the three
+controller choices, and the ACP checkbox with its label keys; `kb_alternative_style_test.php` now expects the
+flat layout by default and the new setting. The suite passes with 435 tests (17 skipped: database cases without the
+MySQL and PostgreSQL fixtures, which this change does not touch).
+
 ## Enabling on phpBB 4.0 with MySQL - 10/14/2026
 
 Enabling the extension on a fresh phpBB 4.0.0-a3-dev board with MySQL 8.0 stopped with `Can't DROP 'un_mtch'`. Migration

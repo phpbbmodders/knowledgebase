@@ -1,8 +1,9 @@
 /*
  * Knowledge Base - layout for the flat article index.
  *
- * Loaded after phpbbmodders_knowledgebase.css only while "Flat article index"
- * is switched on in the ACP (Extensions > Knowledge Base > Configuration).
+ * Loaded after phpbbmodders_knowledgebase.css unless "Hierarchical category
+ * browsing" is switched on in the ACP (Extensions > Knowledge Base >
+ * Configuration): the flat index is the default.
  * Flat mode lists every article in one table and swaps the category tree for
  * a dropdown, so it also gives the article tables a compact layout. (The
  * navigation tabs have the same compact, wrapping shape with or without it;

@@ -226,7 +226,7 @@ class kb_alternative_style_test extends \PHPUnit\Framework\TestCase
 		$helper->method('route')->willReturnCallback(fn($name, $params = []) => '/' . $name . '?' . http_build_query($params));
 		$auth = $this->createMock(\phpbb\auth\auth::class);
 		$auth->method('acl_get')->willReturn(false);
-		$config += ['kb_font_icon' => 'book', 'kb_flat_index' => 0];
+		$config += ['kb_font_icon' => 'book', 'kb_hierarchical_index' => 0];
 
 		$listener = new \phpbbmodders\knowledgebase\event\listener(
 			new \phpbb\config\config($config),
@@ -243,11 +243,11 @@ class kb_alternative_style_test extends \PHPUnit\Framework\TestCase
 		return $assigned;
 	}
 
-	public function test_by_default_the_templates_get_no_flat_layout_and_no_alternative()
+	public function test_by_default_the_templates_get_the_flat_layout_and_no_alternative()
 	{
 		$vars = $this->assigned_by_the_page_header([]);
 
-		$this->assertFalse($vars['S_KB_FLAT_INDEX']);
+		$this->assertTrue($vars['S_KB_FLAT_INDEX']);
 		$this->assertSame('', $vars['KB_ALT_STYLE_BUNDLED_FILE']);
 		$this->assertSame('', $vars['U_KB_ALT_STYLE_CUSTOM']);
 		$this->assertSame('book', $vars['KB_FONT_ICON']);
@@ -255,7 +255,7 @@ class kb_alternative_style_test extends \PHPUnit\Framework\TestCase
 	}
 
 	/** @dataProvider flat_settings */
-	public function test_the_flat_layout_follows_only_the_flat_index_setting($config, bool $expected)
+	public function test_the_flat_layout_follows_only_the_hierarchical_setting($config, bool $expected)
 	{
 		$this->assertSame($expected, $this->assigned_by_the_page_header($config)['S_KB_FLAT_INDEX']);
 	}
@@ -263,10 +263,10 @@ class kb_alternative_style_test extends \PHPUnit\Framework\TestCase
 	public function flat_settings(): array
 	{
 		return [
-			'flat on'                     => [['kb_flat_index' => '1'], true],
-			'flat off'                    => [['kb_flat_index' => '0'], false],
-			'flat on, colours on'         => [['kb_flat_index' => 1, 'kb_alt_style_enabled' => 1, 'kb_alt_style' => 'bundled:slate'], true],
-			'flat off, colours on'        => [['kb_flat_index' => 0, 'kb_alt_style_enabled' => 1, 'kb_alt_style' => 'bundled:slate'], false],
+			'hierarchical off'            => [['kb_hierarchical_index' => '0'], true],
+			'hierarchical on'             => [['kb_hierarchical_index' => '1'], false],
+			'hierarchical off, colours on' => [['kb_hierarchical_index' => 0, 'kb_alt_style_enabled' => 1, 'kb_alt_style' => 'bundled:slate'], true],
+			'hierarchical on, colours on' => [['kb_hierarchical_index' => 1, 'kb_alt_style_enabled' => 1, 'kb_alt_style' => 'bundled:slate'], false],
 		];
 	}
 
