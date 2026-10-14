@@ -1250,3 +1250,24 @@ four-column unique key and the KB fixtures seed. `kb_search_key_migration_test.p
 code) covers the key being dropped under the 3.3 name and under the 4.0 name, no old key at all, an unrelated unique key
 being left alone, and the PostgreSQL and SQLite statements; the suite passes with 417 tests (17 skipped: database cases
 without the MySQL and PostgreSQL fixtures).
+
+## Native search key on phpBB 4.0 with PostgreSQL and SQLite - 10/14/2026
+
+Testing the board search on fresh phpBB 4.0.0-a3-dev boards found that the native search left articles only partly indexed on
+PostgreSQL 16 and on SQLite: 93 indexed words and 351 word matches against 451 and 5,599 on the phpBB 3.3 boards
+and on 4.0 with MySQL, with the same 265 articles. Words that only the later articles hold (such as "guide" and "practical")
+were missing, so a search for them found nothing. The word-match table there had the original three-column unique key
+(`kbsrcwrdmt_un_mtch` over article_id, word_id, title_match) and no four-column one. Migrations 1.0.3 and 2.0.15 drop and add a key
+called `un_mtch`, but phpBB 4.0 names the key with a table prefix, so they do not find it. With only the three-column key, a word in
+both the title and the description of an article is refused by the database, the indexer does not report the refusal,
+and the rest of that article's words are lost (the same effect as the one fixed in the Wiki's port of this engine).
+
+Migration `version_2_0_25` reads the table's unique keys by their columns (`SHOW INDEX` on MySQL, `pg_indexes` on
+PostgreSQL, `PRAGMA` on SQLite), leaves a board that already has the four-column key alone, and otherwise drops the narrower key and adds
+`un_mtch` over all four columns; other databases are not touched. On fresh 4.0 boards (Docker `postgres:16-alpine`, and SQLite) the extension
+now ends with a single four-column unique key and the native index has 451 words and 5,599 matches, as on the other boards.
+
+`kb_match_key_repair_test.php` (7 cases) covers the three-column key being replaced on MySQL and on PostgreSQL, a board that already has the key being left alone,
+an unrelated unique key being kept, a database the migration does not read, the version steps, and a real SQLite table: the word that a
+three-column key refuses as a description match inserts after the repair, and a second run changes nothing. The suite passes with 424 tests
+(17 skipped: database cases without the MySQL and PostgreSQL fixtures).
