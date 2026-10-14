@@ -1,6 +1,14 @@
 # Knowledge Base screenshots
 
-Taken with Playwright on a throwaway phpBB 3.3.19 board (prosilver, SQLite) filled with test articles, as an administrator. The flat article index is the default; the category tree needs **Hierarchical category browsing** switched on under **Extensions > Knowledge Base > Configuration**.
+Taken with Playwright by `phpbb-test-board/screenshots.py` in [phpbb-release-tools](https://github.com/phpbbmodders/phpbb-release-tools) on a throwaway phpBB 3.3 board (prosilver, SQLite) filled with example articles and forum questions, as an administrator. The flat article index is the default; the category tree needs **Hierarchical category browsing** switched on under **Extensions > Knowledge Base > Configuration**.
+
+A change that alters a page shown here means retaking them, with the extension's own entry in that script:
+
+```bash
+phpbb-release-tools/phpbb-test-board/screenshots.py path/to/knowledgebase -o path/to/knowledgebase/docs/images/screenshots --seed path/to/seed-forum/bin/seed-standard-fixtures.php
+```
+
+The two ACP pages are taken in full, so a setting further down the page is not cut off.
 
 ## The flat article index
 
@@ -52,13 +60,13 @@ Results of a search on the Knowledge Base's own search page.
 
 ## ACP configuration
 
-**Extensions > Knowledge Base > Configuration**, with the hierarchical browsing and alternative stylesheet settings.
+**Extensions > Knowledge Base > Configuration**, the whole page: the announcement and changelog forums, hierarchical browsing, the alternative stylesheet, the **Recent changes feed** (RSS, Atom or both), the number of articles per page, the description length and the sorting order, then the attachment settings, the review teams and the contact group.
 
 ![The configuration page in the ACP](07-acp-configuration.png)
 
 ## Knowledge Base articles in the board's search
 
-A search in phpBB's own search for `backup`. The **Knowledge Base (34)** block sits above the forum results and lists the best matches with their category, a snippet with the word marked and a link to all of them; the forum post that asks about backups is the first of the forum results below it. Switch the block off, or set how many articles it lists, in the ACP.
+A search in phpBB's own search for `backup`. The **Knowledge Base (4)** block sits above the forum results and lists the best matches with their category, a snippet with the word marked and a link to all of them; the forum post that asks about backups is the first of the forum results below it. Switch the block off, or set how many articles it lists, in the ACP.
 
 ![The board search with a Knowledge Base block above a forum post](09-board-search-kb-block.png)
 
