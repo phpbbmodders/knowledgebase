@@ -12,6 +12,8 @@
 
 namespace phpbbmodders\knowledgebase;
 
+use phpbbmodders\knowledgebase\inc\upload_directory;
+
 class ext extends \phpbb\extension\base
 {
 	/** Minimum phpBB version - 3.3.19 carries the security fixes from 3.3.17-3.3.19 */
@@ -103,6 +105,11 @@ class ext extends \phpbb\extension\base
 			$phpbb_notifications->enable_notifications('phpbbmodders.knowledgebase.notification.type.need_approval');
 			$phpbb_notifications->enable_notifications('phpbbmodders.knowledgebase.notification.type.approve');
 			$phpbb_notifications->enable_notifications('phpbbmodders.knowledgebase.notification.type.disapprove');
+
+			// The attachments folder, in the board's store folder, and any attachments still in the extension's own folder;
+			// the Configuration page says so if the folder cannot be made
+			upload_directory::ensure($this->container->getParameter('core.root_path'));
+			upload_directory::move_legacy_files($this->container->getParameter('core.root_path'));
 
 			return 'notifications';
 		}

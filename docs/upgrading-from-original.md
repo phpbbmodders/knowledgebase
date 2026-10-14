@@ -33,11 +33,11 @@ from it. Boards on the original's older 1.0.x line were not tested.
   types are switched on again, because the original switched them off when it was
   disabled.
 - The uploaded files in `ext/sheer/knowledgebase/files/`, which are copied into
-  `ext/phpbbmodders/knowledgebase/files/` when the old folder is still there.
+  `store/phpbbmodders_knowledgebase/files/` when the old folder is still there.
   Files already present are not overwritten, and the originals are left alone. If
   a file cannot be copied, enabling stops before anything in the database is
   changed; fix the folder's permissions and enable again. If you have already
-  deleted the old folder, copy its `files/` contents across yourself before
+  deleted the old folder, copy its `files/` contents into `store/phpbbmodders_knowledgebase/files/` yourself before
   enabling.
 
 The disabled `sheer/knowledgebase` entry in the extensions list, its migration

@@ -19,6 +19,7 @@ use phpbb\language\language;
 use phpbb\request\request_interface;
 use phpbb\user;
 use phpbbmodders\knowledgebase\inc\functions_kb;
+use phpbbmodders\knowledgebase\inc\upload_directory;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 
@@ -51,6 +52,9 @@ class kb_file
 	/** @var string */
 	protected string $articles_table;
 
+	/** @var string */
+	protected string $phpbb_root_path;
+
 	/**
 	 * Constructor
 	 *
@@ -63,12 +67,15 @@ class kb_file
 	 * @param functions_kb      $kb
 	 * @param string            $attachments_table
 	 * @param string            $articles_table
+	 * @param string            $phpbb_root_path
 	 */
 	public function __construct(
 		driver_interface $db, language $language, request_interface $request, manager $ext_manager,
-		auth $auth, user $user, functions_kb $kb, string $attachments_table, string $articles_table
+		auth $auth, user $user, functions_kb $kb, string $attachments_table, string $articles_table,
+		string $phpbb_root_path
 	)
 	{
+		$this->phpbb_root_path = $phpbb_root_path;
 		$this->db = $db;
 		$this->language = $language;
 		$this->request = $request;
@@ -188,7 +195,7 @@ class kb_file
 		$time = new \Datetime();
 		$response->setExpires($time->modify('+1 month'));
 
-		$upload_file = $this->ext_manager->get_extension_path('phpbbmodders/knowledgebase', true) . 'files/' . $attachment['physical_filename'];
+		$upload_file = upload_directory::path($this->phpbb_root_path) . $attachment['physical_filename'];
 		$response->setContent(file_get_contents($upload_file));
 
 		return $response;

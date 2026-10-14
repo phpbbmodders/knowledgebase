@@ -1316,3 +1316,26 @@ branch and seeded with seed-forum's fixtures, which now include forum questions 
 with 462 tests (17 skipped: database cases without the MySQL and PostgreSQL fixtures, which this change does not touch).
 
 Two bugs in older migrations showed up while building the 4.0 boards and were fixed in their own pull requests (#51 and #52, recorded above). The Knowledge Base's own search page shows its snippets as the markup the author typed (for example `[b]` tags and `#` headings), where the block shows plain text; this change does not touch that page.
+
+## Attachments in the board's store folder - 10/14/2026
+
+Attachments, and the uploads still in progress, were kept in `ext/phpbbmodders/knowledgebase/files/`. The Configuration page showed "the files and
+plupload folders could not be made writable automatically" whenever the web server's user did not own the extension's folder, which is usual after a
+copy as another user, and the extension cannot change ownership. They are now kept in `store/phpbbmodders_knowledgebase/files/` (with its `plupload/` folder), which
+phpBB needs to be writable on every board, and which is not removed when the extension's folder is replaced to upgrade it. `inc/upload_directory.php` builds the path for
+the download, posting, ACP and enable code and makes the folders (opening one up only when it is not writable, and adding `.htaccess` and `index.htm`).
+Enabling the extension makes them and moves any attachments still in the old folder; the Configuration page and the posting form's upload make them again;
+migration `version_2_0_28` (version 2.0.28) moves existing attachments without writing over a file already in the new folder; the migration that adopts the original
+extension's uploads now copies them straight into the new folder. The Configuration warning names the folder, and the README's Common problems section has the fix.
+
+An 8-check browser run covers the folder with its plupload folder and protection files, no warning on the Configuration page, a fixture attachment served from the new folder with
+the right size, an upload through the posting form (listed, saved with the article, its file in the store folder and not in the old one, nothing left in the plupload folder) and the
+download of that file with identical bytes. It passes on phpBB 3.3.19 and 4.0.0-a3-dev with SQLite, MySQL 8.0 and PostgreSQL 16 (six boards): the 4.0 boards and the 3.3 MySQL and PostgreSQL boards were built fresh
+from this branch and seeded, and the 3.3 SQLite board was an existing one, where the migration moved its 11 fixture files across (run as the web server's user, after
+`store/phpbbmodders_knowledgebase/` was given to that user, as the README says; before that it left the files where they were, as designed). The 3.3 MySQL and PostgreSQL boards are served through a router that rewrites clean URLs, as a web server does;
+plain `php -S` sent the upload to the board index.
+
+`kb_upload_directory_test.php` (10 cases) covers the paths, the folders and protection files being made, a second run changing nothing and leaving an edited `.htaccess` alone, a read-only folder
+being opened up, a board whose folder cannot be made (no warning raised), the move leaving the protection files and `plupload` behind, never writing over a file, doing nothing twice, leaving files in place when the
+new folder cannot be made, and the migration; the ported cases of the old ACP folder check are among them. `kb_adopt_original_test.php` now expects the copy in the new folder. The suite passes with 468 tests
+(17 skipped: database cases without the MySQL and PostgreSQL fixtures, which this change does not touch).

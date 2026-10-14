@@ -33,6 +33,7 @@ use phpbbmodders\knowledgebase\inc\alternative_styles;
 use phpbbmodders\knowledgebase\inc\field\kb_field_type_factory;
 use phpbbmodders\knowledgebase\inc\icon;
 use phpbbmodders\knowledgebase\inc\functions_kb;
+use phpbbmodders\knowledgebase\inc\upload_directory;
 use phpbbmodders\knowledgebase\search\kb_search_backend_factory;
 
 class acp_controller
@@ -203,7 +204,7 @@ class acp_controller
 		$this->kb_groups_table = $kb_groups_table;
 		$this->alt_styles = $alt_styles;
 
-		$this->upload_dir = $this->ext_manager->get_extension_path('phpbbmodders/knowledgebase', true) . 'files/';
+		$this->upload_dir = upload_directory::path($this->phpbb_root_path);
 	}
 
 
@@ -230,15 +231,10 @@ class acp_controller
 			trigger_error($this->language->lang('CONFIG_UPDATED') . adm_back_link($this->u_action));
 		}
 
-		// Check upload directory
-		$plupload_dir = $this->upload_dir . 'plupload/';
-		$diru_exists = is_dir($this->upload_dir) || (mkdir($this->upload_dir, 0777, true) && is_dir($this->upload_dir));
-		$dirp_exists = is_dir($plupload_dir) || (mkdir($plupload_dir, 0777, true) && is_dir($plupload_dir));
+		// Check upload directory: made again here in case something removed it since the extension was enabled
 		$dirIsWritable = false;
-		if ($diru_exists && $dirp_exists)
+		if (upload_directory::ensure($this->phpbb_root_path))
 		{
-			$this->make_directory_writable($this->upload_dir);
-			$this->make_directory_writable($plupload_dir);
 			if (is_writable($this->upload_dir))
 			{
 				$tempFile = tempnam($this->upload_dir, 'tmp');
@@ -354,28 +350,6 @@ class acp_controller
 		$this->config_text->set('kb_team_groups', json_encode($team_groups));
 
 		$this->config->set('kb_contact_group', $this->valid_contact_group($this->request->variable('contact_group', 0)));
-	}
-
-	/**
-	 * Make sure the web server can write to a directory.
-	 *
-	 * A directory that is already writable is left alone: chmod() fails with a
-	 * warning on a directory the web server user does not own, even when its
-	 * mode is already fine, and the old unconditional chmod() printed that
-	 * warning on every visit to the configuration page. Only a directory that
-	 * is not writable is changed, and if that is not allowed either the write
-	 * test that follows reports it.
-	 *
-	 * @param string $directory
-	 * @return void
-	 */
-	protected function make_directory_writable(string $directory): void
-	{
-		if (!is_writable($directory))
-		{
-			@chmod($directory, 0777);
-			clearstatcache(true, $directory);
-		}
 	}
 
 	/**

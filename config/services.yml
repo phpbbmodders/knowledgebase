@@ -271,6 +271,7 @@ services:
             - '@phpbbmodders.knowledgebase.inc'
             - '%tables.kb_attachments_table%'
             - '%tables.articles_table%'
+            - '%core.root_path%'
 
     phpbbmodders.knowledgebase.controller.acp:
         class: phpbbmodders\knowledgebase\controller\acp_controller

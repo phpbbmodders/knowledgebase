@@ -31,7 +31,7 @@ if (empty($lang) || !is_array($lang))
 
 $lang = array_merge($lang, [
 //Configuration
-'KB_NOT_WRITABLE'                            => 'The “files” and “plupload” folders could not be made writable automatically.<br>Please make them writable by the web server manually.',
+'KB_NOT_WRITABLE'                            => 'The Knowledge Base’s upload folders, “store/phpbbmodders_knowledgebase/files” and its “plupload” folder, could not be made writable automatically.<br>Please make the board’s “store” folder, and the “phpbbmodders_knowledgebase” folder in it if it already exists, writable by the web server.',
 'KB_FONT_ICON'                               => 'Knowledge Base link icon',
 'KB_FONT_ICON_EXPLAIN'                       => 'Enter the name of a <a href="https://fontawesome.com/v4.7.0/icons/" target="_blank"><strong>Font Awesome</strong></a> icon to use for the Knowledge Base link in the header.<br> Leave this field blank for no Knowledge Base icon.',
 'KB_FONT_ICON_INVALID'                       => 'The Knowledge Base link icon contained invalid characters.',

@@ -11,6 +11,8 @@
 
 namespace phpbbmodders\knowledgebase\migrations;
 
+use phpbbmodders\knowledgebase\inc\upload_directory;
+
 class version_2_0_20 extends \phpbb\db\migration\migration
 {
 	protected const OLD_NAMESPACE = 'sheer\\knowledgebase\\';
@@ -55,22 +57,26 @@ class version_2_0_20 extends \phpbb\db\migration\migration
 
 	/**
 	 * Copy the attachments the original stored in its own extension folder
-	 * into this extension's folder, when that folder is still there. Files
-	 * already present are left alone.
+	 * into this extension's attachments folder (store/phpbbmodders_knowledgebase/files/),
+	 * when the original's folder is still there. Files already present are left alone.
 	 *
 	 * @throws \phpbb\db\migration\exception When a file cannot be copied
 	 */
 	protected function copy_original_files()
 	{
 		$source = $this->phpbb_root_path . 'ext/' . self::OLD_EXTENSION . '/files/';
-		$target = $this->phpbb_root_path . 'ext/' . self::NEW_EXTENSION . '/files/';
+		$target = upload_directory::path($this->phpbb_root_path);
 
 		if (!is_dir($source) || realpath($source) === realpath($target))
 		{
 			return;
 		}
 
-		if (!is_dir($target) && !@mkdir($target, 0755, true) && !is_dir($target))
+		if (!is_dir($target))
+		{
+			upload_directory::ensure($this->phpbb_root_path);
+		}
+		if (!is_dir($target))
 		{
 			throw new \phpbb\db\migration\exception('The Knowledge Base could not create ' . $target . ' to copy the original extension\'s attachments into. Create it or fix its permissions, then enable the extension again.');
 		}

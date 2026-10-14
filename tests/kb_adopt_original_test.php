@@ -11,6 +11,7 @@
 namespace phpbbmodders\knowledgebase\migrations;
 
 require_once __DIR__ . '/kb_extensions_test.php';
+require_once dirname(__DIR__) . '/inc/upload_directory.php';
 require_once dirname(__DIR__) . '/migrations/version_1_0_0.php';
 require_once dirname(__DIR__) . '/migrations/version_2_0_20.php';
 
@@ -235,7 +236,7 @@ class kb_adopt_original_test extends \PHPUnit\Framework\TestCase
 	{
 		$this->connect('sqlite');
 		$source = $this->original_files(['abc_report.pdf' => 'original', 'thumb_abc_report.pdf' => 'thumb', 'kept.txt' => 'from original']);
-		$target = $this->root . 'ext/phpbbmodders/knowledgebase/files/';
+		$target = $this->root . 'store/phpbbmodders_knowledgebase/files/';
 		mkdir($target, 0755, true);
 		file_put_contents($target . 'kept.txt', 'already here');
 		mkdir($source . 'subdir');
@@ -249,14 +250,14 @@ class kb_adopt_original_test extends \PHPUnit\Framework\TestCase
 		$this->assertSame('original', file_get_contents($source . 'abc_report.pdf'));
 	}
 
-	public function test_the_files_folder_is_created_when_this_extension_has_none_yet()
+	public function test_the_attachments_folder_is_created_in_the_store_folder_when_it_is_not_there_yet()
 	{
 		$this->connect('sqlite');
 		$this->original_files(['a.dat' => 'x']);
 
 		$this->adopt();
 
-		$this->assertSame('x', file_get_contents($this->root . 'ext/phpbbmodders/knowledgebase/files/a.dat'));
+		$this->assertSame('x', file_get_contents($this->root . 'store/phpbbmodders_knowledgebase/files/a.dat'));
 	}
 
 	public function test_nothing_happens_when_the_original_folder_is_already_gone()
@@ -286,7 +287,7 @@ class kb_adopt_original_test extends \PHPUnit\Framework\TestCase
 		$this->connect('sqlite');
 		$this->module(1, 'acp', '\\sheer\\knowledgebase\\acp\\config_module', 'ext_sheer/knowledgebase');
 		$this->original_files(['a.dat' => 'x']);
-		$target = $this->root . 'ext/phpbbmodders/knowledgebase/files/';
+		$target = $this->root . 'store/phpbbmodders_knowledgebase/files/';
 		mkdir($target, 0755, true);
 		chmod($target, 0555);
 

@@ -38,14 +38,15 @@ Upgrading from the original `sheer/knowledgebase` extension? See
 [Upgrading from the original](docs/upgrading-from-original.md): your data carries
 over.
 
-Attachments are stored under `ext/phpbbmodders/knowledgebase/files/`,
-protected by that directory's `.htaccess`. **This only works on
-Apache** - nginx ignores `.htaccess` entirely. If you're running
-nginx, add an explicit deny rule for that path in your server config,
-e.g.:
+Attachments are stored under `store/phpbbmodders_knowledgebase/files/` in the board's own folder,
+with the rest of phpBB's data, so they stay when the extension's folder is replaced to upgrade it.
+The folder is made when the extension is enabled and has its own `.htaccess`. **That only works on
+Apache** - nginx ignores `.htaccess` entirely, and phpBB's installation notes already ask nginx
+users to block the `store/` folder. If yours does not, add an explicit deny rule for it in your server
+config, e.g.:
 
 ```nginx
-location ~ ^/ext/phpbbmodders/knowledgebase/files/ {
+location ~ ^/store/ {
 	deny all;
 	return 403;
 }
@@ -53,20 +54,18 @@ location ~ ^/ext/phpbbmodders/knowledgebase/files/ {
 
 ## Common problems
 
-### "The “files” and “plupload” folders could not be made writable automatically"
+### "The Knowledge Base's upload folders ... could not be made writable automatically"
 
-A red message at the top of **Extensions > Knowledge Base > Configuration**. The extension keeps attachments, and uploads that are still in progress, in `ext/phpbbmodders/knowledgebase/files/` and `files/plupload/`. The web server's user has to be able to write there. The extension tries to open the folders up itself, and cannot when another user owns them or when they are missing, for example after the extension was copied in with a tool that leaves out or removes the `files` folder.
+A red message at the top of **Extensions > Knowledge Base > Configuration**. The extension keeps attachments, and uploads that are still in progress, in `store/phpbbmodders_knowledgebase/files/` and its `plupload/` folder, inside phpBB's own `store/` folder. It makes them when it is enabled, and again whenever that page opens. It cannot when the web server's user is not allowed to write in `store/`, which phpBB needs on every board, or in `store/phpbbmodders_knowledgebase/` when someone else made that folder first (for example to put a custom stylesheet in it).
 
-Give the folders to the user your web server or PHP runs as (`www-data` on Debian and Ubuntu, `apache` on Fedora and CentOS, `nginx` on some nginx setups) from the board's root folder:
+Give `store/` to the user your web server or PHP runs as (`www-data` on Debian and Ubuntu, `apache` on Fedora and CentOS, `nginx` on some nginx setups), from the board's root folder:
 
 ```bash
-cd ext/phpbbmodders/knowledgebase
-mkdir -p files/plupload
-sudo chown -R www-data:www-data files
-sudo chmod -R 775 files
+sudo chown -R www-data:www-data store
+sudo chmod -R 775 store
 ```
 
-Without shell access, create `files` and `files/plupload` with your FTP program and set both to 775 (777 only if your host allows nothing else). Reload the Configuration page: the message goes away as soon as the folders can be written. Keep the access protection for the `files` folder described above in place (the `.htaccess` file on Apache, the `deny` rule on nginx).
+Without shell access, set the `store` folder and everything in it to 775 with your FTP program (777 only if your host allows nothing else). Reload the Configuration page: the message goes away as soon as the folders can be made. Attachments that earlier versions kept in `ext/phpbbmodders/knowledgebase/files/` are moved across when the extension is updated; any that could not be moved stay in that folder and keep the old problem, so run the commands above and disable and enable the extension again.
 
 ## Automated testing
 

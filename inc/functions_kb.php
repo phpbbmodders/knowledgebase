@@ -207,7 +207,7 @@ class functions_kb
 		$this->draft_edits_table = $draft_edits_table;
 		$this->group_helper = $group_helper;
 
-		$this->upload_dir = $this->ext_manager->get_extension_path('phpbbmodders/knowledgebase', true) . 'files/';
+		$this->upload_dir = upload_directory::path($this->phpbb_root_path);
 		$this->log->set_log_table($this->kb_logs_table);
 	}
 

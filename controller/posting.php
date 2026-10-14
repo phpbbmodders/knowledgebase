@@ -29,6 +29,7 @@ use phpbb\user;
 use RuntimeException;
 use phpbbmodders\knowledgebase\inc\field\kb_field_type_factory;
 use phpbbmodders\knowledgebase\inc\functions_kb;
+use phpbbmodders\knowledgebase\inc\upload_directory;
 use phpbbmodders\knowledgebase\search\kb_search_backend_factory;
 use phpbbmodders\knowledgebase\textformatter\article_text;
 
@@ -171,7 +172,7 @@ class posting
 		$this->categories_table = $categories_table;
 		$this->attachments_table = $attachments_table;
 
-		$this->upload_dir = $this->ext_manager->get_extension_path('phpbbmodders/knowledgebase', true) . 'files/';
+		$this->upload_dir = upload_directory::path($this->phpbb_root_path);
 	}
 
 	public function post_article(): \Symfony\Component\HttpFoundation\Response
@@ -1374,6 +1375,8 @@ class posting
 			trigger_error('FORM_INVALID');
 		}
 
+		// Made again here in case it was removed since the extension was enabled
+		upload_directory::ensure($this->phpbb_root_path);
 		$this->plupload->set_upload_directories($this->upload_dir, $this->upload_dir . '/plupload');
 
 		$attachment_data = $this->request->variable('attachment_data', [['' => '']], true, request_interface::POST);
