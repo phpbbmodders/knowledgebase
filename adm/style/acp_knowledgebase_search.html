@@ -35,6 +35,32 @@
 				</label>
 			</dd>
 		</dl>
+		<dl>
+			<dt>
+				<label for="kb_search_board1">{{ lang('KB_SEARCH_BOARD') }}{{ lang('COLON') }}</label><br>
+				<span>{{ lang('KB_SEARCH_BOARD_EXPLAIN') }}</span>
+			</dt>
+			<dd>
+				<label>
+					<input type="radio" class="radio" id="kb_search_board1" name="config[kb_search_board]" value="1"
+						{% if S_YES_SEARCH_BOARD %} checked="checked" {% endif %}/> {{ lang('YES') }}
+				</label>
+				<label>
+					<input type="radio" class="radio" name="config[kb_search_board]" value="0"
+						{% if not S_YES_SEARCH_BOARD %} checked="checked"{% endif %}/> {{ lang('NO') }}
+				</label>
+			</dd>
+		</dl>
+		<dl>
+			<dt>
+				<label for="kb_search_board_max">{{ lang('KB_SEARCH_BOARD_MAX') }}{{ lang('COLON') }}</label><br>
+				<span>{{ lang('KB_SEARCH_BOARD_MAX_EXPLAIN') }}</span>
+			</dt>
+			<dd>
+				<input id="kb_search_board_max" maxlength="2" min="1" max="50" name="config[kb_search_board_max]"
+					value="{{ KB_SEARCH_BOARD_MAX }}" type="number">
+			</dd>
+		</dl>
 	</fieldset>
 	<fieldset>
 		<legend>{{ lang('SEARCH_TYPE') }}</legend>

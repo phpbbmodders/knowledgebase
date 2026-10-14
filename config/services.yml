@@ -124,6 +124,33 @@ services:
             - '%tables.articles_table%'
             - '%tables.categories_table%'
 
+    # runs a keyword search for the block on the board's search results
+    phpbbmodders.knowledgebase.board_search:
+        class: phpbbmodders\knowledgebase\inc\board_search
+        arguments:
+            - '@dbal.conn'
+            - '@controller.helper'
+            - '@user'
+            - '@phpbbmodders.knowledgebase.inc'
+            - '@phpbbmodders.knowledgebase.article_text'
+            - '@phpbbmodders.knowledgebase.search.backend_factory'
+            - '%tables.articles_table%'
+            - '%core.root_path%'
+            - '%core.php_ext%'
+
+    phpbbmodders.knowledgebase.board_search_listener:
+        class: phpbbmodders\knowledgebase\event\board_search_listener
+        arguments:
+            - '@auth'
+            - '@config'
+            - '@controller.helper'
+            - '@language'
+            - '@request'
+            - '@template'
+            - '@phpbbmodders.knowledgebase.board_search'
+        tags:
+            - { name: event.listener }
+
     phpbbmodders.knowledgebase.listener:
         class: phpbbmodders\knowledgebase\event\listener
         arguments:

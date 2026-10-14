@@ -11,11 +11,11 @@ A knowledge base for phpBB: articles organised in categories, with attachments, 
 </tr>
 <tr>
 <td align="center"><a href="docs/images/screenshots/02-article.png"><img src="docs/images/screenshots/02-article.png" width="440" alt="An article"></a><br>An article</td>
-<td align="center"><a href="docs/images/screenshots/05-approval-queue.png"><img src="docs/images/screenshots/05-approval-queue.png" width="440" alt="The approval queue"></a><br>The approval queue</td>
+<td align="center"><a href="docs/images/screenshots/09-board-search-kb-block.png"><img src="docs/images/screenshots/09-board-search-kb-block.png" width="440" alt="Knowledge Base articles beside the forum posts in a board search"></a><br>Knowledge Base block in the board search</td>
 </tr>
 </table>
 
-More screenshots, including the article form, search results and the ACP settings: [docs/images/screenshots](docs/images/screenshots/README.md).
+More screenshots, including the article form, the approval queue and the ACP settings: [docs/images/screenshots](docs/images/screenshots/README.md).
 
 ## Installation
 
@@ -28,6 +28,11 @@ The Knowledge Base follows each member's board style. It starts as a flat articl
 index (one list of every article, with a category dropdown); hierarchical category
 browsing and an optional colour stylesheet (a bundled one, or your own CSS file) are
 set on the same ACP page; see the [styling guide](docs/TODO/archive/styling/README.md).
+
+A search of the board also shows the matching articles in a **Knowledge Base** block above
+the forum results, with an **Also search the Knowledge Base** option in the advanced search.
+Switch the block off, or set how many articles it lists, under **Extensions > Knowledge Base >
+Search**.
 
 Upgrading from the original `sheer/knowledgebase` extension? See
 [Upgrading from the original](docs/upgrading-from-original.md): your data carries
@@ -45,6 +50,23 @@ location ~ ^/ext/phpbbmodders/knowledgebase/files/ {
 	return 403;
 }
 ```
+
+## Common problems
+
+### "The “files” and “plupload” folders could not be made writable automatically"
+
+A red message at the top of **Extensions > Knowledge Base > Configuration**. The extension keeps attachments, and uploads that are still in progress, in `ext/phpbbmodders/knowledgebase/files/` and `files/plupload/`. The web server's user has to be able to write there. The extension tries to open the folders up itself, and cannot when another user owns them or when they are missing, for example after the extension was copied in with a tool that leaves out or removes the `files` folder.
+
+Give the folders to the user your web server or PHP runs as (`www-data` on Debian and Ubuntu, `apache` on Fedora and CentOS, `nginx` on some nginx setups) from the board's root folder:
+
+```bash
+cd ext/phpbbmodders/knowledgebase
+mkdir -p files/plupload
+sudo chown -R www-data:www-data files
+sudo chmod -R 775 files
+```
+
+Without shell access, create `files` and `files/plupload` with your FTP program and set both to 775 (777 only if your host allows nothing else). Reload the Configuration page: the message goes away as soon as the folders can be written. Keep the access protection for the `files` folder described above in place (the `.htaccess` file on Apache, the `deny` rule on nginx).
 
 ## Automated testing
 

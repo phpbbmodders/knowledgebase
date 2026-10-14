@@ -1523,3 +1523,85 @@ and the illustrated guide in [styling/README.md](styling/README.md); the tab com
   with no script. The guide's screenshots were taken again on prosilver, Revolution and ProMinoDeux.
 - Left as it is: a board style with light header colours needs an alternative stylesheet for the
   selected tab's text, which is white.
+
+## Forum search integration (completed 10/14/2026)
+
+Status: direction confirmed 10/12/2026. The Wiki's side is built and merged (wiki pull requests #55
+and #56: its own search, then the "Wiki (N)" block and the "Also search the Wiki" option in the board
+search, with an ACP switch and block size); the Knowledge Base's side is not started. Applies to the
+Knowledge Base and, in its own repository, to the Wiki (`phpbbmodders/wiki`).
+
+### Goal
+
+A member who searches the board with phpBB's normal search also finds Knowledge Base articles,
+without leaving that page. The extension keeps its own search engine and index; the board search
+only shows its results beside the forum results ("option 1": grouped results, not one mixed list).
+
+### What a member sees
+
+- The normal post results are unchanged. Above them, after a keyword search, a block reads
+  "Knowledge Base (12)" with the top few matching articles (title, category, a snippet with the
+  word highlighted, link) and a "View all 12" link to the existing Knowledge Base results page.
+- The Wiki adds its own block in the same place ("Wiki (3)").
+- A block appears only when it has matches. A user who may not read any matching article sees no
+  block and no count, and an extension that is disabled adds nothing.
+- Advanced search gets an "Also search the Knowledge Base" checkbox, ticked by default; unticking
+  it hides the block for that search.
+- Only keyword searches show a block. "New posts", "Unanswered topics", "Your posts" and
+  author-only searches are about posts and show none.
+
+### How
+
+- A listener on the core search events (identical on phpBB 3.3.x and 4.0): after the core keyword
+  search, read the same keywords from the request and ask this extension's own engine for the top N
+  matches and the total. Hand the result to a block in the template event
+  `search_results_header_after`; add the checkbox in `search_body_search_options_append`.
+- Permissions come from the extension's own checks (the per-category read rights and the article
+  status rules the engine already applies), so nothing a member cannot read is counted or shown.
+- No content is copied into phpBB's forum tables and no core file changes. If an extension point
+  turns out to be missing, write the request up under `docs/events/` instead of patching core.
+
+### Work
+
+1. Listener, block template, checkbox, language strings, accessible markup (a labelled region and a
+   heading), and an ACP setting for how many articles the block shows (default 5) and for switching
+   the block off.
+2. Cheap query: only the top N and the count, no snippet work for results that are not shown;
+   consider short-lived caching per keyword and user group.
+3. Tests: block shown and hidden, permission filtering (a restricted category never appears in the
+   list or the count), the checkbox, non-keyword searches, an extension with search switched off,
+   core pagination of the post results untouched.
+4. Verify in a browser on 3.3.x and 4.0 with SQLite, MySQL and PostgreSQL; record what was and was
+   not covered in `docs/testing.md`.
+
+### Open decisions
+
+- Whether this extension's own search page and ACP engine settings stay as an advanced
+  Knowledge-Base-only search (planned) or are retired later.
+- The Wiki gets a search first: the Knowledge Base's search is ported to it (see the Wiki's own
+  plan). Decide there whether to copy the engine or move it into one shared package so a fix lands
+  in both.
+
+### Not in scope
+
+One mixed, paginated list of posts and articles (would need a hidden "shadow" topic per article
+and an exact copy of the article permissions into a forum; rejected for the risk of leaking
+restricted text), Sphinx, and changing how phpBB indexes posts.
+
+### As built and verified (10/14/2026)
+
+- The block, the option and the settings follow the plan: a **Knowledge Base (N)** block above the forum results of a keyword search,
+  with a link to all of the matches, and an **Also search the Knowledge Base** option ticked by default. Under **Extensions > Knowledge
+  Base > Search**, in General search settings, the block can be switched off and sized (1 to 50, default 5). It shows on the first page
+  of results only and not for searches by author, within one topic, or the pre-made ones; a header search box includes it. The
+  Knowledge Base has no read rights per category, so the block follows the global read permission and shows only approved articles.
+  No core file was changed and no `docs/events/` request was needed.
+- The snippets are made from the rendered article text, because 3.3 stores articles as formatter XML with an empty BBCode uid.
+  (The Knowledge Base's own search page shows its snippets as the markup the author typed, such as `[b]` tags and `#` headings; the block shows plain text.)
+- Two bugs in earlier migrations were found and fixed on the way, in their own pull requests: enabling the extension on phpBB 4.0 with
+  MySQL stopped on a hard-coded index name (#51), and on 4.0 with PostgreSQL and SQLite the native search left articles partly
+  indexed because the word-match table kept its three-column unique key (#52).
+- Tested with a 26-check browser run on phpBB 3.3.19 and 4.0.0-a3-dev, each with SQLite, MySQL 8.0 and PostgreSQL 16: native search on all,
+  and MySQL fulltext and PostgreSQL fulltext on their own databases (11 runs, all passing). Forum questions for the board search to find
+  beside the block are part of seed-forum's Knowledge Base fixtures.
+

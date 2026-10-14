@@ -1,0 +1,9 @@
+{% if S_KB_BOARD_SEARCH %}
+	<dl>
+		<dt><label for="kb_also">{{ lang('KB_BOARD_SEARCH_ALSO') }}{{ lang('COLON') }}</label><br><span>{{ lang('KB_BOARD_SEARCH_ALSO_EXPLAIN') }}</span></dt>
+		<dd>
+			<input type="hidden" name="kb_form" value="1">
+			<label for="kb_also"><input type="checkbox" class="radio" name="kb_also" id="kb_also" value="1" checked="checked" /> {{ lang('YES') }}</label>
+		</dd>
+	</dl>
+{% endif %}

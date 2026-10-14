@@ -40,7 +40,7 @@ The Administration tab: new articles and revisions waiting for review, with the 
 
 ## Search
 
-Results of a search in the Knowledge Base.
+Results of a search on the Knowledge Base's own search page.
 
 ![Search results](06-search-results.png)
 
@@ -49,3 +49,22 @@ Results of a search in the Knowledge Base.
 **Extensions > Knowledge Base > Configuration**, with the hierarchical browsing and alternative stylesheet settings.
 
 ![The configuration page in the ACP](07-acp-configuration.png)
+
+## Knowledge Base articles in the board's search
+
+A search in phpBB's own search for `backup`. The **Knowledge Base (34)** block sits above the forum results and lists the best matches with their category, a snippet with the word marked and a link to all of them; the forum post that asks about backups is the first of the forum results below it. Switch the block off, or set how many articles it lists, in the ACP.
+
+![The board search with a Knowledge Base block above a forum post](09-board-search-kb-block.png)
+
+## Also search the Knowledge Base
+
+The advanced search has an **Also search the Knowledge Base** option, ticked by default.
+
+![The advanced search with the Also search the Knowledge Base option](10-advanced-search-option.png)
+
+## ACP search settings
+
+**Extensions > Knowledge Base > Search**: under **General search settings**, whether the board search shows the Knowledge Base block and how many articles it lists, beside the results per page for the Knowledge Base's own search; then the search backend and each backend's index.
+
+![The Knowledge Base search settings in the ACP](11-acp-search-settings.png)
+

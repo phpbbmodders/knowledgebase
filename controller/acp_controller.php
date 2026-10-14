@@ -3341,8 +3341,10 @@ class acp_controller
 		}
 
 		$settings = [
-			'kb_search'          => 'bool',
-			'kb_per_page_search' => 'int',
+			'kb_search'           => 'bool',
+			'kb_per_page_search'  => 'int',
+			'kb_search_board'     => 'bool',
+			'kb_search_board_max' => 'integer:1:50',
 		];
 
 		$search_options = '';
@@ -3450,6 +3452,8 @@ class acp_controller
 			'S_YES_SEARCH'       => (bool) $this->config['kb_search'],
 			'S_SETTINGS'         => true,
 			'PER_PAGE_KB_SEARCH' => ($this->config['kb_per_page_search']) ? $this->config['kb_per_page_search'] : 10,
+			'S_YES_SEARCH_BOARD' => (bool) $this->config['kb_search_board'],
+			'KB_SEARCH_BOARD_MAX' => ($this->config['kb_search_board_max']) ? (int) $this->config['kb_search_board_max'] : 5,
 
 			'U_ACTION' => $this->u_action . '&amp;hash=' . generate_link_hash('kb_acp_search'),
 		]);

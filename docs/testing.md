@@ -1296,3 +1296,23 @@ now ends with a single four-column unique key and the native index has 451 words
 an unrelated unique key being kept, a database the migration does not read, the version steps, and a real SQLite table: the word that a
 three-column key refuses as a description match inserts after the repair, and a second run changes nothing. The suite passes with 424 tests
 (17 skipped: database cases without the MySQL and PostgreSQL fixtures).
+
+## Knowledge Base matches in the board search - 10/14/2026
+
+A **Knowledge Base (N)** block above the forum results of a keyword search, an **Also search the Knowledge Base** option in the advanced search, and
+two ACP settings under **Extensions > Knowledge Base > Search** (the block on or off, and how many articles it lists; migration `version_2_0_27`,
+version 2.0.27). The articles are found by the search engine chosen in the ACP, the same one the Knowledge Base's own search page uses; the
+snippets come from the rendered article text, because articles are stored as formatter XML.
+
+`kb_board_search_test.php` (27 cases) covers the migration, the block shown with its count and its link to all matches, 14 kinds of search that show no
+block (no words, a later page, either switch off, no read permission, the box unticked, a pre-made search, a search by author or author id, a search inside
+one topic, no index, words it cannot search on, no matches, a count with nothing to list), the size taken from the ACP, the option and the way an unticked box
+is carried through the result links, the three core events hooked, the templates and ACP fields, and the snippet text (tags removed, entities escaped again, a
+script tag left as text). A 26-check browser run covers the ACP fields, the option, the block above the forum posts with highlighting and a count that agrees
+with the Knowledge Base's own search, the header search box, an unticked box and its links, no block for pre-made, author, topic or no-match searches, titles-only
+and text-only counts, the block size, a member who may not read the Knowledge Base, and both switches. It passes on phpBB 3.3.19 and 4.0.0-a3-dev, each with SQLite, MySQL 8.0
+and PostgreSQL 16 (native search on all, and MySQL fulltext and PostgreSQL fulltext on their own databases): 11 runs, 26 of 26 each. The boards were built fresh from this
+branch and seeded with seed-forum's fixtures, which now include forum questions about backups, clean URLs and installation for the block to sit beside. The suite passes
+with 462 tests (17 skipped: database cases without the MySQL and PostgreSQL fixtures, which this change does not touch).
+
+Two bugs in older migrations showed up while building the 4.0 boards and were fixed in their own pull requests (#51 and #52, recorded above). The Knowledge Base's own search page shows its snippets as the markup the author typed (for example `[b]` tags and `#` headings), where the block shows plain text; this change does not touch that page.

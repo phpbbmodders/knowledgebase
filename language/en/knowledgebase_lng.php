@@ -209,5 +209,12 @@ $lang = array_merge($lang, [
 	'SEARCH_IN_CAT'                        => 'Search in category…',
 	'SORT_ARTICLE_TITLE'                   => 'Article title',
 	'TOTAL_ITEMS'                          => 'Articles: <strong>%d</strong>',
+	'KB_BOARD_SEARCH_ALSO'                 => 'Also search the Knowledge Base',
+	'KB_BOARD_SEARCH_ALSO_EXPLAIN'         => 'Shows the Knowledge Base articles that match in a block of their own above the forum results.',
+	'KB_BOARD_BLOCK_TITLE'                 => 'Knowledge Base (%d)',
+	'KB_BOARD_VIEW_ALL'                    => [
+		1 => 'View the Knowledge Base article',
+		2 => 'View all %d Knowledge Base articles',
+	],
 	'WARNING_DEFAULT_CONFIG'               => 'The Knowledge Base is using its default configuration settings, which can make it work incorrectly.<br>Please go to <strong>Configuration</strong> and specify the required values.',
 ]);

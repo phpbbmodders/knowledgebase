@@ -49,8 +49,10 @@ class kb_hierarchical_default_test extends \PHPUnit\Framework\TestCase
 	public function test_the_extension_version_matches_the_last_migration()
 	{
 		$composer = json_decode(file_get_contents(self::ROOT . '/composer.json'), true);
+		$versions = array_map(fn($file) => str_replace('_', '.', substr(basename($file, '.php'), strlen('version_'))), glob(self::ROOT . '/migrations/version_*.php'));
+		usort($versions, 'version_compare');
 
-		$this->assertSame('2.0.26', $composer['version']);
+		$this->assertSame(end($versions), $composer['version']);
 	}
 
 	/** @dataProvider code_that_reads_the_setting */

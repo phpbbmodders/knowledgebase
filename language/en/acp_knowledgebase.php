@@ -160,6 +160,10 @@ $lang = array_merge($lang, [
 'YES_SEARCH_EXPLAIN'                         => 'Enables user facing search functionality including member search.',
 'PER_PAGE_SEARCH'                            => 'Search Results',
 'PER_PAGE_SEARCH_EXPLAIN'                    => 'The number of items displayed on the search results page.',
+'KB_SEARCH_BOARD'                            => 'Show Knowledge Base matches in the board search',
+'KB_SEARCH_BOARD_EXPLAIN'                    => 'Adds an &ldquo;Also search the Knowledge Base&rdquo; option to the board&rsquo;s advanced search and shows the articles that match a board search in a block above the forum results. Needs the Knowledge Base search to be on.',
+'KB_SEARCH_BOARD_MAX'                        => 'Articles in that block',
+'KB_SEARCH_BOARD_MAX_EXPLAIN'                => 'The most articles the block lists, from 1 to 50. A link to all of the matches is shown below them.',
 'SEARCH_TYPE_EXPLAIN'                        => 'The Knowledge Base lets you choose the backend used to search article text. By default it uses its own fulltext search.',
 
 //Attachments

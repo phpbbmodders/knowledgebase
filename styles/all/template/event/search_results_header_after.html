@@ -1,0 +1,30 @@
+{% if S_KB_BOARD_BLOCK %}
+	<div class="forumbg kb-board-search" role="region" aria-labelledby="kb-board-search-title">
+		<div class="inner">
+			<ul class="topiclist">
+				<li class="header"><dl class="row-item"><dt><div class="list-inner" id="kb-board-search-title">{{ KB_BOARD_TOTAL }}</div></dt></dl></li>
+			</ul>
+			<ul class="topiclist topics">
+				{% for kb_match in kb_matches %}
+				<li class="row {% if loop.index is even %}bg1{% else %}bg2{% endif %}">
+					<dl class="row-item">
+						<dt>
+							<div class="list-inner">
+								<a href="{{ kb_match.U_VIEW }}" class="topictitle">{{ kb_match.TITLE }}</a>
+								{% if kb_match.CATEGORY %}<br />{{ lang('CATEGORY') }}{{ lang('COLON') }} <a href="{{ kb_match.U_CAT }}">{{ kb_match.CATEGORY }}</a>{% endif %}
+								{% if kb_match.SNIPPET %}<br /><span>{{ kb_match.SNIPPET }}</span>{% endif %}
+								<br />{{ kb_match.DATE }}
+							</div>
+						</dt>
+					</dl>
+				</li>
+				{% endfor %}
+				<li class="row bg3 kb-board-search-all">
+					<dl class="row-item">
+						<dt><div class="list-inner"><a href="{{ U_KB_BOARD_VIEW_ALL }}">{{ KB_BOARD_VIEW_ALL }}</a></div></dt>
+					</dl>
+				</li>
+			</ul>
+		</div>
+	</div>
+{% endif %}

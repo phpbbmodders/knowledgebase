@@ -18,4 +18,6 @@ The [Claude full codebase review of 09/30/2026](archive1.md#claude-full-codebase
 
 The [styling design and tab shape](archive1.md#styling-design-and-tab-shape-completed-10132026) work is complete and was archived on 10/13/2026: Flat index, the alternative stylesheet picker with the bundled Slate sheet and custom files, the Classic tab shape and the board-coloured selected tab. The guide is [styling/README.md](styling/README.md).
 
+The [forum search integration](archive1.md#forum-search-integration-completed-10142026) is complete and was archived on 10/14/2026: the Knowledge Base block and the "Also search the Knowledge Base" option in the board's search, with an ACP switch and block size.
+
 The [September 26 AI validation](archive1.md#ai-extension-validation---2026-09-26) describes the pre-remediation snapshot. Its original findings are preserved, but the old Deny recommendation is not a current-tree verdict. Both of its deferred design suggestions were closed on 10/05/2026, as described above; archiving is not a fresh validation pass.
