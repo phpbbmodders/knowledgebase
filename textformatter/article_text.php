@@ -147,7 +147,10 @@ class article_text
 				{
 					$text = $child->nodeValue;
 					$size = utf8_strlen($text);
-					if ($size > $remaining) $child->nodeValue = utf8_substr($text, 0, $remaining) . '…';
+					if ($size > $remaining)
+					{
+						$child->nodeValue = utf8_substr($text, 0, $remaining) . '…';
+					}
 					$remaining -= $size;
 				}
 				else
@@ -158,7 +161,10 @@ class article_text
 		};
 		$trim($root);
 		$result = '';
-		foreach ($root->childNodes as $child) $result .= $document->saveHTML($child);
+		foreach ($root->childNodes as $child)
+		{
+			$result .= $document->saveHTML($child);
+		}
 		return $result;
 	}
 
