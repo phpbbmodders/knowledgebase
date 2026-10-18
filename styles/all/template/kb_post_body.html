@@ -1,5 +1,5 @@
 {% INCLUDE 'overall_header.html' %}
-<h2 class="posting-title"><a href="{{ U_VIEW_FORUM }}">{{ CATEGORY_NAME }}</a></h2>
+<h2 class="posting-title">{% if S_EDIT_POST %}<a href="{{ U_VIEW_FORUM }}">{{ CATEGORY_NAME }}</a>{% else %}<a href="{{ U_LIBRARY }}">{{ lang('LIBRARY') }}</a> &raquo; {{ lang('POST_A') }}{% endif %}</h2>
 {% INCLUDE '@phpbbmodders_knowledgebase/kb_nav_tabs.html' %}
 
 <form id="postform" method="post" action="{{ S_POST_ACTION }}" {{ S_FORM_ENCTYPE }}>

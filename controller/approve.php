@@ -235,6 +235,8 @@ class approve
 		$this->db->sql_freeresult($result);
 
 		$author_colours = $this->kb->get_author_colours_bulk($art_rows);
+		$edit_flags = $this->kb->get_article_edit_flags_bulk(array_column($art_rows, 'article_id'));
+		$is_own_article_map = $this->kb->is_article_author_bulk($art_rows);
 
 		// Same options for every unassigned row below - computed once
 		// rather than re-querying the team group list per row.
@@ -248,7 +250,7 @@ class approve
 			// A revision survives deactivation - a moderator pulling a live
 			// article offline over a contentious edit still needs to see
 			// and act on it, not just get "Reactivate".
-			$has_revision = in_array($status, [functions_kb::STATUS_ACTIVE, functions_kb::STATUS_INACTIVE], true) && $this->kb->article_has_pending_revision($art_id);
+			$has_revision = in_array($status, [functions_kb::STATUS_ACTIVE, functions_kb::STATUS_INACTIVE], true) && !empty($edit_flags[$art_id]['revision']);
 			$assigned_team_id = (int) $art_row['assigned_team_id'];
 			$effective_team_id = $assigned_team_id ?: (int) ($category_info['default_team_id'] ?? 0);
 
@@ -265,6 +267,8 @@ class approve
 				'S_STATUS_ACTIVE'        => $status === functions_kb::STATUS_ACTIVE,
 				'S_STATUS_INACTIVE'      => $status === functions_kb::STATUS_INACTIVE,
 				'S_HAS_REVISION'         => $has_revision,
+				'STATUS'                 => $status,
+				'S_HAS_DRAFT_EDIT'       => !empty($edit_flags[$art_id]['draft']) && (!empty($is_own_article_map[$art_id]) || $this->auth->acl_get('a_manage_kb') || $this->kb->acl_kb_get_any($this->kb->get_article_categories($art_id), 'kb_m_edit')),
 				// Whether an explicit per-article team is set - controls
 				// the "Assign" button, independent of the category's
 				// default team below.

@@ -1,0 +1,35 @@
+{% INCLUDE 'overall_header.html' %}
+<h2><a href="{{ U_LIBRARY }}">{{ lang('LIBRARY') }}</a></h2>
+{% INCLUDE '@phpbbmodders_knowledgebase/kb_nav_tabs.html' %}
+<h3>{{ lang('KB_CHANGE_AUTHOR') }}</h3>
+<p><a href="{{ U_ARTICLE }}">{{ ARTICLE_TITLE }}</a></p>
+<form method="post" action="{{ U_CHANGE_AUTHOR }}">
+	<div class="panel">
+		<div class="inner">
+			{% if ERROR %}<p class="error">{{ ERROR }}</p>{% endif %}
+			<p>{{ lang('KB_CHANGE_AUTHOR_EXPLAIN') }}</p>
+			<p><strong>{{ lang('KB_WRITTEN_BY') }}{{ lang('COLON') }}</strong> {{ ARTICLE_AUTHOR }}</p>
+			<fieldset class="fields2">
+				<dl><dt><label for="author_type">{{ lang('KB_CHANGE_AUTHOR_TYPE') }}{{ lang('COLON') }}</label></dt>
+					<dd><select id="author_type" name="author_type">
+						<option value="0"{% if AUTHOR_TYPE == 0 %} selected{% endif %}>{{ lang('USERNAME') }}</option>
+						<option value="1"{% if AUTHOR_TYPE == 1 %} selected{% endif %}>{{ lang('KB_CHANGE_AUTHOR_TEAM') }}</option>
+					</select></dd></dl>
+				<dl><dt><label for="username">{{ lang('USERNAME') }}{{ lang('COLON') }}</label></dt>
+					<dd><input class="inputbox" type="text" id="username" name="username" value="{{ AUTHOR_USERNAME }}"></dd></dl>
+				<dl><dt><label for="group_id">{{ lang('KB_CHANGE_AUTHOR_TEAM') }}{{ lang('COLON') }}</label></dt>
+					<dd><select id="group_id" name="group_id"><option value="0">{{ lang('KB_CHANGE_AUTHOR_SELECT_TEAM') }}</option>
+						{% for team in loops.author_team %}<option value="{{ team.ID }}"{% if team.S_SELECTED %} selected{% endif %}>{{ team.NAME }}</option>{% endfor %}
+					</select></dd></dl>
+			</fieldset>
+		</div>
+	</div>
+	<fieldset class="submit-buttons">
+		<input type="hidden" name="old_author_id" value="{{ OLD_AUTHOR_ID }}">
+		<input type="hidden" name="old_author_type" value="{{ OLD_AUTHOR_TYPE }}">
+		<input class="button1" type="submit" name="submit" value="{{ lang('KB_CHANGE_AUTHOR') }}">
+		<a class="button2" href="{{ U_ARTICLE }}">{{ lang('CANCEL') }}</a>
+		{{ S_FORM_TOKEN }}
+	</fieldset>
+</form>
+{% INCLUDE 'overall_footer.html' %}

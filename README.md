@@ -6,16 +6,26 @@ A knowledge base for phpBB: articles organised in categories, with attachments, 
 
 <table>
 <tr>
-<td align="center"><a href="docs/images/screenshots/01-flat-index.png"><img src="docs/images/screenshots/01-flat-index.png" width="440" alt="The flat article index"></a><br>The flat article index (the default)</td>
-<td align="center"><a href="docs/images/screenshots/08-category-tree.png"><img src="docs/images/screenshots/08-category-tree.png" width="440" alt="The category tree"></a><br>Hierarchical category browsing</td>
+<td align="center"><a href="docs/images/screenshots/01-flat-index.png"><img src="docs/images/screenshots/01-flat-index.png" width="440" height="370" alt="The flat article index"></a><br>The flat article index (the default)</td>
+<td align="center"><a href="docs/images/screenshots/08-category-tree.png"><img src="docs/images/screenshots/08-category-tree.png" width="440" height="330" alt="The category tree"></a><br>Hierarchical category browsing</td>
 </tr>
 <tr>
-<td align="center"><a href="docs/images/screenshots/02-article.png"><img src="docs/images/screenshots/02-article.png" width="440" alt="An article"></a><br>An article</td>
-<td align="center"><a href="docs/images/screenshots/09-board-search-kb-block.png"><img src="docs/images/screenshots/09-board-search-kb-block.png" width="440" alt="Knowledge Base articles beside the forum posts in a board search"></a><br>Knowledge Base block in the board search</td>
+<td align="center"><a href="docs/images/screenshots/02-article.png"><img src="docs/images/screenshots/02-article.png" width="440" height="309" alt="An article"></a><br>An article</td>
+<td align="center"><a href="docs/images/screenshots/09-board-search-kb-block.png"><img src="docs/images/screenshots/09-board-search-kb-block.png" width="440" height="382" alt="Knowledge Base articles beside the forum posts in a board search"></a><br>Knowledge Base block in the board search</td>
 </tr>
 </table>
 
 More screenshots, including the article form, the approval queue and the ACP settings: [docs/images/screenshots](docs/images/screenshots/README.md).
+
+Primary authorship of submitted articles can be transferred to another active
+member or a configured KB team using **Change author** on the article page.
+Grant moderators **Can change the primary author of submitted articles** in
+Knowledge Base category permissions. KB administrators already have access.
+Transfers are logged and retain co-authors and submitted revisions. Private
+drafts and articles with private draft edits must be submitted or discarded
+before authorship can change.
+
+Article pages show status below the category. Category lists and review queues also show status, pending revisions, and “Has draft” for authors and authorized editors. Draft contents remain private. Markdown search excerpts retain their formatting.
 
 ## Installation
 
@@ -85,6 +95,7 @@ Based on the original [knowledgebase](https://github.com/sutrus/knowledgebase) e
 
 - Code review, bug fixes, and documentation assisted by [Claude](https://www.anthropic.com/claude).
 - Code review, bug fixes, and documentation assisted by [Codex](https://openai.com/codex/).
+
 
 ## License
 

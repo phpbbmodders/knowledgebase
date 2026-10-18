@@ -105,6 +105,7 @@
 				{% if art_row.S_IS_REDIRECT %}<i class="{{ KbIconClass('external-link') }}" aria-hidden="true"
 						title="{{ lang('KB_IS_REDIRECT') }}"></i>{% endif %}
 				{% if art_row.ARTICLE_DESCRIPTION %}<br>{{ art_row.ARTICLE_DESCRIPTION }}{% endif %}
+				<br><small class="kb-article-status">{% INCLUDE '@phpbbmodders_knowledgebase/kb_list_status.html' %}</small>
 			</td>
 			<td class="kb-index-views">{{ art_row.ART_VIEWS }}</td>
 			<td class="kb-index-author">{{ art_row.ARTICLE_AUTHOR }}{% if art_row.CO_AUTHORS %}, {{ art_row.CO_AUTHORS }}{% endif %}<br>{{ art_row.ARTICLE_DATE }}</td>

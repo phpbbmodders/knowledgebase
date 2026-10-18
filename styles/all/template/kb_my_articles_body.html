@@ -45,7 +45,7 @@
 			<td class="kb-index-author">{{ art_row.ARTICLE_AUTHOR }}{% if art_row.CO_AUTHORS %}, {{ art_row.CO_AUTHORS }}{% endif %}</td>
 			<td class="kb-index-views">
 				{% if art_row.S_HAS_REVISION %}{{ lang('KB_STATUS_REVISION') }}<br>{% endif %}
-				{% if art_row.S_HAS_DRAFT_EDIT %}<a href="{{ art_row.U_EDIT }}">{{ lang('KB_DRAFT_EDIT_PENDING') }}</a>{% endif %}
+				{% if art_row.S_HAS_DRAFT_EDIT %}<a href="{{ art_row.U_EDIT }}">{{ lang('KB_HAS_DRAFT') }}</a>{% endif %}
 			</td>
 			<td class="kb-index-author">{{ art_row.ARTICLE_DATE }}{% if art_row.EDIT_DATE %}<br>{{ art_row.EDIT_DATE }}{% endif %}</td>
 			<td class="kb-index-author">

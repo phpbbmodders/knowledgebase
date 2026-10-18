@@ -35,7 +35,7 @@
 	<tbody>
 	{% for art_row in loops.art_row %}
 		<tr class="{{ loop.index is odd ? 'bg1' : 'bg2' }}">
-			<td><a href="{{ art_row.U_ARTICLE }}">{{ art_row.ARTICLE_TITLE }}</a>{% if art_row.CATEGORY %}<br><small>{{ art_row.CATEGORY }}</small>{% endif %}</td>
+			<td><a href="{{ art_row.U_ARTICLE }}">{{ art_row.ARTICLE_TITLE }}</a>{% if art_row.CATEGORY %}<br><small>{{ art_row.CATEGORY }}</small>{% endif %}<br><small class="kb-article-status">{% INCLUDE '@phpbbmodders_knowledgebase/kb_list_status.html' %}</small></td>
 			<td class="kb-index-author">{{ art_row.ARTICLE_AUTHOR }}<br>{{ art_row.ARTICLE_DATE }}</td>
 			<td class="kb-index-author">
 				{% if art_row.U_TOPIC %}
