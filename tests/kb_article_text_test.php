@@ -109,6 +109,32 @@ class kb_article_text_test extends \PHPUnit\Framework\TestCase
 		}
 	}
 
+	public function test_markdown_search_excerpt_keeps_formatting_and_closes_cut_elements()
+	{
+		$this->renderer->method('get_viewcensors')->willReturn(false);
+		$this->renderer->method('render')->willReturn('<h2>Guide</h2><p><strong>Résumé &amp; notes</strong> follow</p><p>Hidden tail</p>');
+		$html = $this->article_text->search_display('<r>stored Markdown</r>', '', 13);
+		$this->assertStringContainsString('<h2>Guide</h2>', $html);
+		$this->assertStringContainsString('<strong>Résumé &amp;…</strong>', $html);
+		$this->assertStringNotContainsString('Hidden tail', $html);
+	}
+
+	public function test_unlimited_markdown_search_renders_the_stored_article()
+	{
+		$this->renderer->method('get_viewcensors')->willReturn(false);
+		$this->renderer->expects($this->once())->method('render')->with('<r>stored</r>')->willReturn('<h1>Title</h1><ol><li>Step</li></ol>');
+		$this->assertSame('<h1>Title</h1><ol><li>Step</li></ol>', $this->article_text->search_display('<r>stored</r>', '', -1));
+	}
+
+	public function test_markdown_excerpt_preserves_escaped_text_instead_of_creating_html()
+	{
+		$this->renderer->method('get_viewcensors')->willReturn(false);
+		$this->renderer->method('render')->willReturn('<p>&lt;script&gt;alert(1)&lt;/script&gt;</p>');
+		$html = $this->article_text->search_display('<r>stored</r>', '', 12);
+		$this->assertStringNotContainsString('<script', $html);
+		$this->assertStringContainsString('&lt;script&gt;', $html);
+	}
+
 	public function test_editing_a_markdown_article_gives_back_the_source_escaped_for_a_textarea()
 	{
 		$this->utils->expects($this->once())->method('unparse')->with('<r><STRONG>x</STRONG></r>')->willReturn("**x** < y & \"z\"");

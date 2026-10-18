@@ -42,6 +42,10 @@ phpbbmodders_knowledgebase_article:
     path: /knowledgebase/article
     defaults: { _controller: phpbbmodders.knowledgebase.controller.article:show }
 
+phpbbmodders_knowledgebase_change_author:
+    path: /knowledgebase/change_author
+    defaults: { _controller: phpbbmodders.knowledgebase.controller.change_author:main }
+
 phpbbmodders_knowledgebase_posting:
     path: /knowledgebase/posting
     defaults: { _controller: phpbbmodders.knowledgebase.controller.posting:post_article }

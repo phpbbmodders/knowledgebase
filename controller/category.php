@@ -371,6 +371,7 @@ class category
 		}, $art_rows);
 		$is_own_article_map = $this->kb->is_article_author_bulk($art_rows);
 		$co_authors_display_map = $this->kb->get_co_authors_display_bulk($art_ids);
+		$edit_flags = $this->kb->get_article_edit_flags_bulk($art_ids);
 
 		foreach ($art_rows as $art_row)
 		{
@@ -400,6 +401,8 @@ class category
 				'S_CAN_DELETE'        => $this->kb->acl_kb_get_any($article_categories, 'kb_m_delete') || ($is_own_article && $this->kb->acl_kb_get_any($article_categories, 'kb_u_delete')),
 				'S_CAN_EDIT'          => $this->kb->acl_kb_get_any($article_categories, 'kb_m_edit') || ($is_own_article && $this->kb->acl_kb_get_any($article_categories, 'kb_u_edit')),
 				'S_APPROVED'          => (bool) $art_row['approved'],
+				'S_HAS_REVISION'      => in_array((int) $art_row['status'], [functions_kb::STATUS_ACTIVE, functions_kb::STATUS_INACTIVE], true) && !empty($edit_flags[(int) $art_id]['revision']),
+				'S_HAS_DRAFT_EDIT'    => ($is_own_article || $this->kb->acl_kb_get_any($article_categories, 'kb_m_edit') || $this->auth->acl_get('a_manage_kb')) && !empty($edit_flags[(int) $art_id]['draft']),
 				'STATUS'              => (int) $art_row['status'],
 				'S_CROSS_LISTED'      => !$flat_all && (int) $art_row['article_category_id'] !== (int) $cat_id,
 				'S_IS_REDIRECT'       => (bool) $art_row['is_redirect'],

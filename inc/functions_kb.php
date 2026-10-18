@@ -1699,10 +1699,27 @@ class functions_kb
 		$this->db->sql_query($sql);
 	}
 
-	/**
-	 * @param int $article_id
-	 * @return bool
-	 */
+	/** Return pending revision and private draft existence flags for a page of articles. */
+	public function get_article_edit_flags_bulk(array $article_ids): array
+	{
+		$flags = [];
+		$article_ids = array_values(array_unique(array_map('intval', $article_ids)));
+		if (!$article_ids)
+		{
+			return $flags;
+		}
+		foreach (['revision' => $this->revisions_table, 'draft' => $this->draft_edits_table] as $flag => $table)
+		{
+			$result = $this->db->sql_query('SELECT article_id FROM ' . $table . ' WHERE ' . $this->db->sql_in_set('article_id', $article_ids));
+			while ($row = $this->db->sql_fetchrow($result))
+			{
+				$flags[(int) $row['article_id']][$flag] = true;
+			}
+			$this->db->sql_freeresult($result);
+		}
+		return $flags;
+	}
+
 	public function article_has_draft_edit(int $article_id): bool
 	{
 		return (bool) $this->get_article_draft_edit($article_id);

@@ -1,0 +1,8 @@
+<strong>{{ lang('KB_STATUS') }}{{ lang('COLON') }}</strong>
+{% if art_row.STATUS == 0 %}<span class="kb-status-badge kb-status-new">{{ lang('KB_STATUS_NEW') }}</span>
+{% elseif art_row.STATUS == 1 %}<span class="kb-status-badge kb-status-reviewed">{{ lang('KB_STATUS_REVIEWED') }}</span>
+{% elseif art_row.STATUS == 2 %}<span class="kb-status-badge kb-status-active">{{ lang('KB_STATUS_ACTIVE') }}</span>
+{% elseif art_row.STATUS == 3 %}<span class="kb-status-badge kb-status-inactive">{{ lang('KB_STATUS_INACTIVE') }}</span>
+{% elseif art_row.STATUS == 4 %}<span class="kb-status-badge kb-status-draft">{{ lang('KB_STATUS_DRAFT') }}</span>{% endif %}
+{% if art_row.S_HAS_REVISION %} <span class="kb-status-badge kb-status-revision">{{ lang('KB_STATUS_REVISION') }}</span>{% endif %}
+{% if art_row.S_HAS_DRAFT_EDIT %} <span class="kb-status-badge kb-status-draft">{{ lang('KB_HAS_DRAFT') }}</span>{% endif %}

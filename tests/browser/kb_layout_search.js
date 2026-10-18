@@ -1,0 +1,43 @@
+const {chromium} = require('playwright');
+const {expect} = require('playwright/test');
+const fs = require('node:fs');
+const base = process.env.KB_TEST_URL;
+if (!/^http:\/\/localhost:810[01]$/.test(base || '')) throw new Error('Use the disposable KB preview URL');
+(async()=>{
+ const browser=await chromium.launch({headless:true});
+ const page=await browser.newPage({viewport:{width:1280,height:900}});
+ try {
+  await page.goto(`${base}/ucp.php?mode=login`);
+  await page.locator('#username').fill('admin');
+  await page.locator('#password').fill('KbTest1234!');
+  await page.waitForFunction(()=>Date.now()/1000>Number(document.querySelector('[name="creation_time"]').value)+2);
+  await page.locator('[name="login"][type="submit"]').click();
+  await page.waitForURL(url=>!url.search.includes('mode=login'));
+  await page.goto(`${base}/knowledgebase/article?k=2`);
+  const heading=page.locator('.kb-article-heading');
+  await expect(heading).toContainText('Description:');
+  await expect(heading).toContainText('Category:');
+  const titleBox=await heading.locator('h3').boundingBox();
+  const descriptionBox=await heading.locator('p').first().boundingBox();
+  expect(descriptionBox.y-titleBox.y-titleBox.height).toBeLessThan(25);
+  const out=process.env.KB_ARTIFACT_DIR;
+  fs.mkdirSync(out,{recursive:true});
+  await page.screenshot({path:`${out}/article-layout.png`,fullPage:true});
+  await page.setViewportSize({width:390,height:844});
+  await expect(heading).toBeVisible();
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
+  await page.screenshot({path:`${out}/article-mobile.png`,fullPage:true});
+  await page.setViewportSize({width:1280,height:900});
+  await page.goto(`${base}/knowledgebase/queue`);
+  expect(await page.locator('.kb-article-status .kb-status-badge').count()).toBeGreaterThan(0);
+  await page.screenshot({path:`${out}/queue-statuses.png`,fullPage:true});
+  await page.goto(`${base}/knowledgebase/search?keywords=clean&sf=articles&cid=0`);
+  await expect(page.locator('.content').filter({hasText:'Clean URL Troubleshooting'}).first()).toBeVisible();
+  const results=page.locator('.content').filter({hasText:'Clean URL Troubleshooting'}).first();
+  expect(await results.locator('h1,h2,h3').count()).toBeGreaterThan(0);
+  expect(await results.innerText()).not.toContain('## Before you begin');
+  expect(await results.innerText()).not.toContain('# Clean URL Troubleshooting');
+  await page.screenshot({path:`${out}/markdown-search.png`,fullPage:true});
+  console.log(JSON.stringify({base,result:'PASS',checks:['metadata placement','mobile overflow','queue badges','rendered Markdown search']}));
+ } finally {await browser.close();}
+})();

@@ -1357,3 +1357,34 @@ a guest getting 403 until guests may read and then both feeds and the page, a me
 
 `kb_feed_test.php` (the wiki's feed cases: formats offered, valid settings, both documents well formed with values escaped once, an empty feed) and `kb_recent_changes_test.php` (the migration; 403 without running a query, 404 for a format not offered, the feed built from given rows with its headers and New or Updated summaries, the query's live-only
 conditions and ordering, and the routes, service, tab, header template, ACP and language strings being wired in) are new; the style layout test now expects the extra tab. The suite passes with 485 tests (17 skipped: database cases without the MySQL and PostgreSQL fixtures, which this change does not touch).
+
+
+## Primary author transfers
+
+The author-transfer tests cover permission checks, CSRF rejection, private
+article and edit drafts, stale ownership, member/team transfers, co-author
+handling, audit logging and rollback, and search-result cache invalidation.
+Run `kb_author_change_database_test.php` with the disposable database ports
+above to exercise the actual MySQL and PostgreSQL transfer SQL and permission
+migration/rollback.
+
+The browser check uses the standard seed-forum fixtures on a dedicated SQLite
+board whose directory is named `kb-author-change-*` under `seeded-board/`.
+It temporarily grants the `forum_moderator` account transfer permission for
+one category, prepares a pending revision and co-authors, and restores those
+fixtures after the checks. The audit entries remain as test evidence.
+
+```bash
+KB_TEST_URL=http://localhost:8100 \
+KB_TEST_BOARD_ROOT=/path/to/seeded-board/kb-author-change-33 \
+node /path/to/playwright-skill/run.js tests/browser/kb_author_change.js
+```
+
+`KB_ARTIFACT_DIR` optionally selects a directory for a full-page form screenshot.
+Use only disposable fixture boards: these checks change article ownership
+through real browser sessions before restoring it.
+
+The canonical seed-forum `bin/seed-kb-fixtures.php` supplies the author-transfer
+moderator, co-authors and pending revision. Build a fresh board with the updated
+script before running the browser suite. Its Python helper only snapshots and
+restores the fixture; it does not create articles or grant permissions.

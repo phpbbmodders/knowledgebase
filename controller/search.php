@@ -339,20 +339,28 @@ class search
 
 				if ($show_results === 'posts')
 				{
-					$text_only_message = $message = $row['article_body'];
-					if ($row['bbcode_uid'])
+					if (!empty($row['article_markdown']))
 					{
-						$text_only_message = str_replace('[*:' . $row['bbcode_uid'] . ']', '&sdot;&nbsp;', $text_only_message);
-
-						// no BBCode in text only message
-						strip_bbcode($text_only_message, $row['bbcode_uid']);
-						$row['article_body'] = get_context($text_only_message, array_filter(explode('|', $hilit), 'strlen'), $return_chars);
-						$row['article_body'] = bbcode_nl2br($row['article_body']);
-
+						$row['article_body'] = $this->article_text->search_display($row['article_body'], $row['bbcode_uid'], $return_chars);
 					}
-					if ($return_chars == -1 || utf8_strlen($text_only_message) < ($return_chars + 3))
+					else
 					{
-						$row['article_body'] = $this->article_text->display($message, $row['bbcode_uid'], !empty($row['article_markdown']), false);
+						$text_only_message = $message = $row['article_body'];
+						if ($row['bbcode_uid'])
+						{
+							$text_only_message = str_replace('[*:' . $row['bbcode_uid'] . ']', '&sdot;&nbsp;', $text_only_message);
+
+							// no BBCode in text only message
+							strip_bbcode($text_only_message, $row['bbcode_uid']);
+							$row['article_body'] = get_context($text_only_message, array_filter(explode('|', $hilit), 'strlen'), $return_chars);
+							$row['article_body'] = bbcode_nl2br($row['article_body']);
+
+						}
+						if ($return_chars == -1 || utf8_strlen($text_only_message) < ($return_chars + 3))
+						{
+							$row['article_body'] = $this->article_text->display($message, $row['bbcode_uid'], !empty($row['article_markdown']), false);
+						}
+
 					}
 
 					if ($hilit)

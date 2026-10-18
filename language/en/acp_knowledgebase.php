@@ -158,6 +158,7 @@ $lang = array_merge($lang, [
 'kb_u_delete'                                => 'Can delete own articles',
 'kb_u_add_noapprove'                         => 'Can add / modify articles without prior approval',
 // Moderator Permissions
+'kb_m_change_author'                         => 'Can change the primary author of submitted articles',
 'kb_m_edit'                                  => 'Can edit articles',
 'kb_m_delete'                                => 'Can delete articles',
 'kb_m_approve'                               => 'Can approve articles',

@@ -114,6 +114,60 @@ class article_text
 		}
 	}
 
+	/** Render a Markdown search excerpt without cutting stored XML or HTML tags. */
+	public function search_display(string $stored, string $uid, int $length): string
+	{
+		$html = $this->display($stored, $uid, true, false);
+		if ($length <= 0)
+		{
+			return $html;
+		}
+		$document = new \DOMDocument('1.0', 'UTF-8');
+		$previous_errors = libxml_use_internal_errors(true);
+		try
+		{
+			$document->loadHTML('<?xml encoding="UTF-8"><div id="kb-search-excerpt">' . $html . '</div>', LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+		}
+		finally
+		{
+			libxml_clear_errors();
+			libxml_use_internal_errors($previous_errors);
+		}
+		$root = $document->getElementById('kb-search-excerpt');
+		$remaining = $length;
+		$trim = function (\DOMNode $node) use (&$trim, &$remaining): void
+		{
+			foreach (iterator_to_array($node->childNodes) as $child)
+			{
+				if ($remaining <= 0)
+				{
+					$node->removeChild($child);
+				}
+				else if ($child instanceof \DOMText)
+				{
+					$text = $child->nodeValue;
+					$size = utf8_strlen($text);
+					if ($size > $remaining)
+					{
+						$child->nodeValue = utf8_substr($text, 0, $remaining) . '…';
+					}
+					$remaining -= $size;
+				}
+				else
+				{
+					$trim($child);
+				}
+			}
+		};
+		$trim($root);
+		$result = '';
+		foreach ($root->childNodes as $child)
+		{
+			$result .= $document->saveHTML($child);
+		}
+		return $result;
+	}
+
 	/**
 	 * Turn stored Markdown text back into what the author typed, escaped for
 	 * use inside a textarea.

@@ -305,6 +305,8 @@ class article
 			'S_CAN_EDIT'          => $this->kb->acl_kb_get_any($article_categories, 'kb_m_edit') || ($is_own_article && $this->kb->acl_kb_get_any($article_categories, 'kb_u_edit') || $this->auth->acl_get('a_manage_kb')),
 			'S_CAN_DELETE'        => $this->kb->acl_kb_get_any($article_categories, 'kb_m_delete') || ($is_own_article && $this->kb->acl_kb_get_any($article_categories, 'kb_u_delete') || $this->auth->acl_get('a_manage_kb')),
 			'S_CAN_APPROVE'       => $can_moderate || $can_review,
+			'U_CHANGE_AUTHOR'     => $status !== functions_kb::STATUS_DRAFT && $this->kb->acl_kb_get_any($article_categories, 'kb_m_change_author')
+				? $this->helper->route('phpbbmodders_knowledgebase_change_author', ['k' => $art_id]) : '',
 			'COUNT_COMMENTS'      => ($comment_topic_id) ? '[' . $this->language->lang('LEAVE_COMMENTS') . ']' : '',
 			'U_FORUM'             => generate_board_url() . '/',
 			'S_APPROVED'          => $row['approved'],
@@ -316,11 +318,8 @@ class article
 			'S_STATUS_INACTIVE'   => $status === functions_kb::STATUS_INACTIVE,
 			'S_STATUS_DRAFT'      => $status === functions_kb::STATUS_DRAFT,
 			'S_HAS_REVISION'      => in_array($status, [functions_kb::STATUS_ACTIVE, functions_kb::STATUS_INACTIVE], true) && $this->kb->article_has_pending_revision($art_id),
-			// Only the author/co-authors ever reach this branch for a
-			// draft-of-an-edit to matter - anyone else viewing the page
-			// couldn't act on it anyway, and a draft article itself can
-			// never have one (see posting.php).
-			'S_HAS_DRAFT_EDIT'    => $is_own_article && $status !== functions_kb::STATUS_DRAFT && $this->kb->article_has_draft_edit($art_id),
+			// Expose only the existence to editors; draft content remains private.
+			'S_HAS_DRAFT_EDIT'    => ($is_own_article || $this->kb->acl_kb_get_any($article_categories, 'kb_m_edit') || $this->auth->acl_get('a_manage_kb')) && $status !== functions_kb::STATUS_DRAFT && $this->kb->article_has_draft_edit($art_id),
 		]);
 
 		if ($mode != 'print' && $row['approved'])

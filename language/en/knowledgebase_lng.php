@@ -18,10 +18,21 @@ if (empty($lang) || !is_array($lang))
 }
 
 $lang = array_merge($lang, [
+	'KB_CHANGE_AUTHOR' => 'Change author',
+	'KB_CHANGE_AUTHOR_TYPE' => 'New author type',
+	'KB_CHANGE_AUTHOR_SELECT_TEAM' => 'Select a team',
+	'KB_CHANGE_AUTHOR_TEAM' => 'Knowledge Base team',
+	'KB_CHANGE_AUTHOR_EXPLAIN' => 'Choose a member or a Knowledge Base team as the new primary author. Use the field for the selected author type. Co-authors, article content, and submitted revisions are retained. This replaces the primary author; co-author and team permissions still apply.',
+	'KB_CHANGE_AUTHOR_LOG_FAILED' => 'The author could not be changed because the audit log could not be written.',
+	'KB_CHANGE_AUTHOR_INVALID' => 'Choose an active member or a configured Knowledge Base team.',
+	'KB_CHANGE_AUTHOR_PRIVATE_DRAFT' => 'Authorship cannot be transferred while a private draft or private draft edit exists. Ask its author to submit or discard it first.',
+	'KB_CHANGE_AUTHOR_CONFLICT' => 'The author or article status changed, or a private draft edit was saved. Reload the form before trying again.',
+	'LOG_LIBRARY_CHANGED_AUTHOR' => '<strong>Changed the author of article “%1$s”</strong><br>From %2$s to %3$s',
+
 	'ALPHABET'                             => 'A-B-C-D-E-F-G-H-I-J-K-L-M-N-O-P-Q-R-S-T-U-V-W-X-Y-Z',
 	'ALPHABET_NAV'                         => 'Browse by letter:',
 	'KB_ALPHABET_LETTER'                   => 'Articles starting with %s',
-	'ADD_ARTICLE'                          => 'Add article',
+	'ADD_ARTICLE'                          => 'Add Article',
 	'APPROVE'                              => 'Approve',
 	'ARTICLE'                              => 'Article',
 	'ARTICLES'                             => 'Articles',
@@ -116,6 +127,7 @@ $lang = array_merge($lang, [
 	'KB_REVISION_PREVIEW'                  => 'Pending revision (not yet live)',
 	'KB_REVIEW_REVISION'                   => 'Review revision',
 	'KB_SKIP_MESSAGE'                      => 'Don’t message the author',
+	'KB_HAS_DRAFT'                          => 'Has draft',
 	'KB_STATUS'                            => 'Status',
 	'KB_STATUS_ACTIVE'                     => 'Active',
 	'KB_STATUS_ACTIVE_EXPLAIN'             => 'Your article is visible to the public.',

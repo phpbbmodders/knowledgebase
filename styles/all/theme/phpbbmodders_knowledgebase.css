@@ -79,6 +79,19 @@ dd.action {
 	margin: 0;
 }
 
+/* Separate article links from the author fields, including the final Topics row. */
+.kb-meta ~ .postbody .kb_codebox {
+	clear: both;
+	margin-top: 12px;
+}
+
+/* phpBB 4.0 code elements are inline; contain long article URLs on mobile. */
+.kb_codebox code {
+	display: block;
+	max-width: 100%;
+	overflow-x: auto;
+}
+
 .kb_codebox input {
 	border: none;
 	color: #ffffff;
@@ -375,4 +388,21 @@ table.kb-index-table .kb-index-author {
 	clear: none;
 	padding: 0;
 	border-radius: 3px 3px 0 0;
+}
+
+/* Keep title metadata together without clearing the floating author sidebar. */
+.kb-article-heading {
+	display: flow-root;
+	margin-right: 272px;
+}
+
+.kb-meta ~ .postbody .kb-article-heading h3 {
+	float: none;
+	margin-right: 0;
+}
+
+@media (max-width: 700px) {
+	.kb-article-heading {
+		margin-right: 0;
+	}
 }
