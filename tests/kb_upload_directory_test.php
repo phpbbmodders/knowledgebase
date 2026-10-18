@@ -186,7 +186,7 @@ class kb_upload_directory_test extends \PHPUnit\Framework\TestCase
 
 	public function test_the_migration_moves_the_attachments_and_sets_the_version()
 	{
-		$migration = new \phpbbmodders\knowledgebase\migrations\version_2_0_28(new \phpbb\config\config([]), $this->createMock(\phpbb\db\driver\driver_interface::class), $this->createMock(\phpbb\db\tools\tools_interface::class), $this->root, 'php', 'phpbb_');
+		$migration = new \phpbbmodders\knowledgebase\migrations\version_2_0_28(new \phpbb\config\config([]), $this->createMock(\phpbb\db\driver\driver_interface::class), $this->createMock(\phpbb\db\tools\tools_interface::class), $this->root, 'php', 'phpbb_', []);
 		$this->legacy_file('moved.dat');
 
 		$this->assertSame(['\phpbbmodders\knowledgebase\migrations\version_2_0_27'], $migration::depends_on());

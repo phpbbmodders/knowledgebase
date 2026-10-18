@@ -41,7 +41,7 @@ class kb_search_key_migration_test extends \PHPUnit\Framework\TestCase
 			return array_shift($rows) ?? false;
 		});
 
-		$migration = new version_1_0_3(new \phpbb\config\config([]), $db, $this->createMock(\phpbb\db\tools\tools_interface::class), '', 'php', 'phpbb_');
+		$migration = new version_1_0_3(new \phpbb\config\config([]), $db, $this->createMock(\phpbb\db\tools\tools_interface::class), '', 'php', 'phpbb_', []);
 		$migration->add_key();
 
 		return $queries;
