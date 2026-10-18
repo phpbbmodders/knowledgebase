@@ -24,7 +24,7 @@ class kb_match_key_repair_test extends \PHPUnit\Framework\TestCase
 
 	private function migration($db): version_2_0_25
 	{
-		return new version_2_0_25(new \phpbb\config\config(['kb_version' => '2.0.24']), $db, $this->createMock(\phpbb\db\tools\tools_interface::class), '', 'php', 'phpbb_');
+		return new version_2_0_25(new \phpbb\config\config(['kb_version' => '2.0.24']), $db, $this->createMock(\phpbb\db\tools\tools_interface::class), '', 'php', 'phpbb_', []);
 	}
 
 	/**
