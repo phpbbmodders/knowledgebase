@@ -19,16 +19,24 @@ class kb_markdown_migration_test extends \PHPUnit\Framework\TestCase
 
 	private $db;
 	private $tools;
+	private $sqlite_fixture;
 
 	protected function setUp(): void
 	{
-		if (!class_exists(\phpbb\db\tools\sqlite3::class))
-		{
-			$this->markTestSkipped('phpBB 4.0 replaced these schema tools with Doctrine; these migrations were run on a real 4.0 board instead.');
-		}
 		$this->db = new \phpbb\db\driver\sqlite3();
-		$this->assertTrue($this->db->sql_connect(':memory:', '', '', ''));
-		$this->tools = new \phpbb\db\tools\sqlite3($this->db);
+		if (class_exists(\phpbb\db\tools\doctrine::class))
+		{
+			$this->sqlite_fixture = tempnam(sys_get_temp_dir(), 'kb-schema-');
+			$this->assertTrue($this->db->sql_connect($this->sqlite_fixture, '', '', ''));
+			$connection = \phpbb\db\doctrine\connection_factory::get_connection_from_params('sqlite3', $this->sqlite_fixture);
+			$this->tools = new \phpbb\db\tools\doctrine($connection);
+			$this->tools->set_table_prefix('phpbb_');
+		}
+		else
+		{
+			$this->assertTrue($this->db->sql_connect(':memory:', '', '', ''));
+			$this->tools = new \phpbb\db\tools\sqlite3($this->db);
+		}
 		foreach (self::TABLES as $table)
 		{
 			$this->db->sql_query('CREATE TABLE phpbb_' . $table . ' (article_id INTEGER, article_body TEXT)');
@@ -38,7 +46,9 @@ class kb_markdown_migration_test extends \PHPUnit\Framework\TestCase
 
 	protected function tearDown(): void
 	{
+		if ($this->tools instanceof \phpbb\db\tools\doctrine) $this->tools->get_connection()->close();
 		$this->db->sql_close();
+		if ($this->sqlite_fixture) unlink($this->sqlite_fixture);
 	}
 
 	private function migration(): version_2_0_16

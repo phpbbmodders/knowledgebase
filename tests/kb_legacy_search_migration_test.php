@@ -22,32 +22,47 @@ class kb_legacy_search_migration_test extends \PHPUnit\Framework\TestCase
 {
 	private $db;
 	private $tools;
+	private $sqlite_fixture;
 	private $config;
 
 	protected function setUp(): void
 	{
-		if (!class_exists(\phpbb\db\tools\sqlite3::class))
-		{
-			$this->markTestSkipped('phpBB 4.0 replaced these schema tools with Doctrine; these migrations were run on a real 4.0 board instead.');
-		}
 		$this->db = new \phpbb\db\driver\sqlite3();
-		$this->assertTrue($this->db->sql_connect(':memory:', '', '', ''));
-		$this->tools = new \phpbb\db\tools\sqlite3($this->db);
+		if (class_exists(\phpbb\db\tools\doctrine::class))
+		{
+			$this->sqlite_fixture = tempnam(sys_get_temp_dir(), 'kb-schema-');
+			$this->assertTrue($this->db->sql_connect($this->sqlite_fixture, '', '', ''));
+			$connection = \phpbb\db\doctrine\connection_factory::get_connection_from_params('sqlite3', $this->sqlite_fixture);
+			$this->tools = new \phpbb\db\tools\doctrine($connection);
+			$this->tools->set_table_prefix('phpbb_');
+		}
+		else
+		{
+			$this->assertTrue($this->db->sql_connect(':memory:', '', '', ''));
+			$this->tools = new \phpbb\db\tools\sqlite3($this->db);
+		}
 		$this->config = new \phpbb\config\config(['kb_version' => '2.0.14']);
 	}
 
 	protected function tearDown(): void
 	{
+		if ($this->tools instanceof \phpbb\db\tools\doctrine) $this->tools->get_connection()->close();
 		$this->db->sql_close();
+		if ($this->sqlite_fixture) unlink($this->sqlite_fixture);
 	}
 
 	private function migration($class, $prefix = 'phpbb_')
 	{
-		return new $class($this->config, $this->db, $this->tools, '', 'php', $prefix);
+		if ($this->tools instanceof \phpbb\db\tools\doctrine) $this->tools->set_table_prefix($prefix);
+		return new $class($this->config, $this->db, $this->tools, '', 'php', $prefix, []);
 	}
 
 	private function columns($index)
 	{
+		if ($this->tools instanceof \phpbb\db\tools\doctrine && $index === 'phpbb_kb_src_wrdmtch_un_mtch')
+		{
+			$index = \phpbb\db\doctrine\table_helper::generate_shortname('kb_src_wrdmtch') . '_un_mtch';
+		}
 		$result = $this->db->sql_query("PRAGMA index_info('" . $index . "')");
 		$columns = array_column($this->db->sql_fetchrowset($result), 'name');
 		$this->db->sql_freeresult($result);
@@ -62,7 +77,7 @@ class kb_legacy_search_migration_test extends \PHPUnit\Framework\TestCase
 			$queries[] = $sql;
 			return true;
 		});
-		$migration = new version_1_0_0($this->config, $db, $this->tools, '', 'php', 'fixture_');
+		$migration = new version_1_0_0($this->config, $db, $this->tools, '', 'php', 'fixture_', []);
 		$migration->remove_knowlege_base_ext();
 		$this->assertStringContainsString('DELETE FROM fixture_modules', $queries[2]);
 		foreach (['KNOWLEGE_BASE', 'ACP_KNOWLEGE_BASE_CONFIGURE', 'ACP_LIBRARY_MANAGE', 'ACP_LIBRARY_ARTICLES', 'ACP_LIBRARY_PERMISSIONS', 'ACP_LIBRARY_SEARCH', 'ACP_LIBRARY_LOGS'] as $name)

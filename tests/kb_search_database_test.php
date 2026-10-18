@@ -36,12 +36,25 @@ class kb_search_database_test extends \PHPUnit\Framework\TestCase
 		$this->db = $engine === 'mysql' ? new \phpbb\db\driver\mysqli() : new \phpbb\db\driver\postgres();
 		$this->db->sql_return_on_error(true);
 		$this->assertIsObject($this->db->sql_connect('127.0.0.1', $engine === 'mysql' ? 'root' : 'postgres', '', 'kb_fixture', (int) $port));
-		$this->tools = $engine === 'mysql' ? new \phpbb\db\tools\tools($this->db) : new \phpbb\db\tools\postgres($this->db);
+		if (class_exists(\phpbb\db\tools\doctrine::class))
+		{
+			$connection = \phpbb\db\doctrine\connection_factory::get_connection_from_params(
+				$engine === 'mysql' ? 'mysqli' : 'postgres', '127.0.0.1',
+				$engine === 'mysql' ? 'root' : 'postgres', '', 'kb_fixture', $port
+			);
+			$this->tools = new \phpbb\db\tools\doctrine($connection);
+			$this->tools->set_table_prefix('phpbb_');
+		}
+		else
+		{
+			$this->tools = $engine === 'mysql' ? new \phpbb\db\tools\tools($this->db) : new \phpbb\db\tools\postgres($this->db);
+		}
 		$this->class = $engine === 'mysql' ? kb_fulltext_mysql::class : kb_fulltext_postgres::class;
 		$this->config = new \phpbb\config\config(['fulltext_postgres_ts_name' => 'english', 'search_block_size' => 100, 'num_posts' => 99, 'kb_num_articles' => 3]);
 		foreach (['phpbb_kb_articles', 'phpbb_kb_search_results', 'phpbb_kb_src_wrdlist', 'phpbb_kb_src_wrdmtch', 'phpbb_kb_article_categories', SEARCH_RESULTS_TABLE] as $table)
 		{
 			$this->query('DROP TABLE IF EXISTS ' . $table);
+			if ($engine === 'postgres') $this->query('DROP SEQUENCE IF EXISTS ' . $table . '_seq');
 		}
 		$old = new \phpbbmodders\knowledgebase\migrations\version_1_0_0($this->config, $this->db, $this->tools, '', 'php', 'phpbb_', []);
 		$schema = $old->update_schema()['add_tables'];
@@ -61,6 +74,7 @@ class kb_search_database_test extends \PHPUnit\Framework\TestCase
 
 	protected function tearDown(): void
 	{
+		if ($this->tools instanceof \phpbb\db\tools\doctrine) $this->tools->get_connection()->close();
 		if ($this->db) $this->db->sql_close();
 	}
 
