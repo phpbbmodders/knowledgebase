@@ -131,7 +131,7 @@ class functions_kb
 	protected string $upload_dir;
 
 	/** @var int[]|null */
-	protected ?array $moderatable_categories_cache = null;
+	protected array|null $moderatable_categories_cache = null;
 
 	/** @var int[] Memo for get_postable_category_id(), keyed by permission */
 	protected array $postable_category_ids = [];
@@ -581,7 +581,7 @@ class functions_kb
 	 * @param string|null $extra_tab_label
 	 * @return void
 	 */
-	public function assign_nav_tabs_vars(string $active, int $cat_id = 0, ?string $extra_tab_label = null): void
+	public function assign_nav_tabs_vars(string $active, int $cat_id = 0, string|null $extra_tab_label = null): void
 	{
 		// A page with a category of its own links straight into it - but only
 		// for a visitor who holds the matching permission (kb_u_add for
@@ -762,7 +762,7 @@ class functions_kb
 	 * @param int|null $user_id             Defaults to the current user.
 	 * @return bool
 	 */
-	public function is_article_author(int $article_id, int $primary_author_id, int $primary_author_type, ?int $user_id = null): bool
+	public function is_article_author(int $article_id, int $primary_author_id, int $primary_author_type, int|null $user_id = null): bool
 	{
 		$user_id ??= (int) $this->user->data['user_id'];
 
@@ -814,7 +814,7 @@ class functions_kb
 	 * @param int|null $user_id  Defaults to the current user.
 	 * @return array<int, bool> article_id => is_author
 	 */
-	public function is_article_author_bulk(array $articles, ?int $user_id = null): array
+	public function is_article_author_bulk(array $articles, int|null $user_id = null): array
 	{
 		$user_id ??= (int) $this->user->data['user_id'];
 
@@ -1252,7 +1252,7 @@ class functions_kb
 	 * @param int $field_id
 	 * @return array|null
 	 */
-	public function get_field(int $field_id): ?array
+	public function get_field(int $field_id): array|null
 	{
 		$sql = 'SELECT *
 			FROM ' . $this->fields_table . '
@@ -1559,7 +1559,7 @@ class functions_kb
 	 * @param int|null $user_id
 	 * @return int[]
 	 */
-	public function get_user_team_groups(?int $user_id = null): array
+	public function get_user_team_groups(int|null $user_id = null): array
 	{
 		$team_group_ids = $this->get_kb_team_groups();
 		if (empty($team_group_ids))
@@ -1593,7 +1593,7 @@ class functions_kb
 	 * @param int|null $user_id
 	 * @return bool
 	 */
-	public function is_team_member(array $group_ids, ?int $user_id = null): bool
+	public function is_team_member(array $group_ids, int|null $user_id = null): bool
 	{
 		if (empty($group_ids))
 		{
@@ -1653,7 +1653,7 @@ class functions_kb
 	 * @param int $article_id
 	 * @return array|null
 	 */
-	public function get_article_revision(int $article_id): ?array
+	public function get_article_revision(int $article_id): array|null
 	{
 		$sql = 'SELECT *
 			FROM ' . $this->revisions_table . '
@@ -1733,7 +1733,7 @@ class functions_kb
 	 * @param int $article_id
 	 * @return array|null
 	 */
-	public function get_article_draft_edit(int $article_id): ?array
+	public function get_article_draft_edit(int $article_id): array|null
 	{
 		$sql = 'SELECT *
 			FROM ' . $this->draft_edits_table . '
@@ -1853,7 +1853,7 @@ class functions_kb
 	 * @return array{id: int, name: string, colour: string, url: string}|null The group's id, display
 	 *                                         name, colour (six hex digits, or empty) and a link to its member list
 	 */
-	public function get_contact_group(): ?array
+	public function get_contact_group(): array|null
 	{
 		$group_id = (int) ($this->config['kb_contact_group'] ?? 0);
 		if ($group_id <= 0)

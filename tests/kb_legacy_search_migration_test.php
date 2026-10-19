@@ -16,6 +16,7 @@ require_once dirname(__DIR__) . '/migrations/version_1_0_3.php';
 require_once dirname(__DIR__) . '/migrations/version_2_0_2.php';
 require_once dirname(__DIR__) . '/migrations/version_2_0_13.php';
 require_once dirname(__DIR__) . '/migrations/version_2_0_15.php';
+require_once dirname(__DIR__) . '/migrations/version_2_0_31.php';
 if (!defined('CONFIG_TABLE')) define('CONFIG_TABLE', 'phpbb_config');
 
 class kb_legacy_search_migration_test extends \PHPUnit\Framework\TestCase
@@ -153,6 +154,8 @@ class kb_legacy_search_migration_test extends \PHPUnit\Framework\TestCase
 
 		$repair = $this->migration(version_2_0_15::class);
 		$this->tools->perform_schema_changes($repair->update_schema());
+		// On phpBB 4.0 version_2_0_15's one-step drop and re-add is a no-op; version_2_0_31 rebuilds the index
+		$this->migration(version_2_0_31::class)->rebuild_match_index();
 		$this->assertSame(['article_id', 'word_id', 'title_match', 'descr_match'], $this->columns($table . '_un_mtch'));
 		$this->assertSame(['\phpbbmodders\knowledgebase\migrations\version_2_0_14'], version_2_0_15::depends_on());
 		$this->assertSame([['config.update', ['kb_version', '2.0.15']]], $repair->update_data());
@@ -179,6 +182,7 @@ class kb_legacy_search_migration_test extends \PHPUnit\Framework\TestCase
 		$this->db->sql_query('CREATE TABLE unrelated (id INTEGER)');
 		$this->db->sql_query('CREATE UNIQUE INDEX un_mtch ON unrelated (id)');
 		$this->tools->perform_schema_changes($this->migration(version_2_0_15::class)->update_schema());
+		$this->migration(version_2_0_31::class)->rebuild_match_index();
 		$this->assertSame(['id'], $this->columns('un_mtch'));
 		$this->assertSame(['article_id', 'word_id', 'title_match', 'descr_match'], $this->columns($table . '_un_mtch'));
 	}

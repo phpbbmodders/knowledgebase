@@ -301,7 +301,7 @@ class index
 		// group's own colour.
 		$contact_group = $this->kb->get_contact_group();
 		$contact_text = $contact_group
-			? $this->language->lang('KB_MANAGE_ARTICLES_CONTACT', '<a href="' . $contact_group['url'] . '"' . ($contact_group['colour'] ? ' style="color: #' . $contact_group['colour'] . ';"' : '') . '>' . htmlspecialchars($contact_group['name'], ENT_COMPAT, 'UTF-8') . '</a>')
+			? $this->language->lang('KB_MANAGE_ARTICLES_CONTACT', '<a href="' . $contact_group['url'] . '"' . ($contact_group['colour'] ? ' style="color: #' . $contact_group['colour'] . ';"' : '') . '>' . utf8_htmlspecialchars($contact_group['name']) . '</a>')
 			: '';
 
 		$this->template->assign_vars([

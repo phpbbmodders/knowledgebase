@@ -123,7 +123,7 @@ class alternative_styles
 	 * @param string $choice "bundled:<slug>" or "custom:<file name>"
 	 * @return array|null [kind, name], or null when the choice is not well formed
 	 */
-	public function parse_choice(string $choice): ?array
+	public function parse_choice(string $choice): array|null
 	{
 		$parts = explode(':', $choice, 2);
 		if (count($parts) !== 2)
@@ -166,7 +166,7 @@ class alternative_styles
 	 *
 	 * @return array|null [kind, name]
 	 */
-	public function active(): ?array
+	public function active(): array|null
 	{
 		if (empty($this->config['kb_alt_style_enabled']))
 		{
@@ -193,7 +193,7 @@ class alternative_styles
 	 * file (never a symbolic link) directly inside the custom folder, readable
 	 * and no larger than the limit.
 	 */
-	public function custom_file_path(string $name): ?string
+	public function custom_file_path(string $name): string|null
 	{
 		if (!preg_match(self::CUSTOM_NAME_PATTERN, $name))
 		{
