@@ -121,7 +121,7 @@ class change_author
 	}
 
 	/** Resolve only active human accounts or an explicitly configured KB team. */
-	protected function resolve_author(int $type, string $username, int $group_id, array $teams): ?array
+	protected function resolve_author(int $type, string $username, int $group_id, array $teams): array|null
 	{
 		if ($type === functions_kb::AUTHOR_TYPE_GROUP)
 		{

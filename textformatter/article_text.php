@@ -179,10 +179,10 @@ class article_text
 	{
 		if (!preg_match('#^<[rt][ >]#', $stored))
 		{
-			return htmlspecialchars($stored, ENT_COMPAT, 'UTF-8');
+			return utf8_htmlspecialchars($stored);
 		}
 
-		return htmlspecialchars($this->utils->unparse($stored), ENT_COMPAT, 'UTF-8');
+		return utf8_htmlspecialchars($this->utils->unparse($stored));
 	}
 
 	/**

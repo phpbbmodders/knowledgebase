@@ -1,0 +1,36 @@
+# EPV findings this extension keeps on purpose, checked by the epv job in
+# .github/workflows/tests.yml. One finding per line as EPV prints it, without
+# "on line N", with paths relative to the extension; give the reason above it.
+
+# These htmlspecialchars() calls keep PHP's default flags (ENT_QUOTES |
+# ENT_SUBSTITUTE), which also escape single quotes and replace invalid UTF-8;
+# utf8_htmlspecialchars() only uses ENT_COMPAT. Most escape user-supplied
+# values: attachment filenames and comments, field labels and options.
+Error: Using htmlspecialchars in /controller/acp_controller.php
+Error: Using htmlspecialchars in /controller/category.php
+Error: Using htmlspecialchars in /controller/posting.php
+Error: Using htmlspecialchars in /inc/field/kb_multi_select_field_type.php
+Error: Using htmlspecialchars in /inc/field/kb_radio_select_field_type.php
+Error: Using htmlspecialchars in /inc/field/kb_single_select_field_type.php
+
+# As above, plus article text re-encoded for XML with ENT_NOQUOTES | ENT_XML1,
+# which utf8_htmlspecialchars() can't do.
+Error: Using htmlspecialchars in /inc/functions_kb.php
+
+# Values escaped for single-quoted JavaScript strings: the search index
+# progress-bar URL (as in phpBB's own acp_search.php), the attachment filename
+# for the posting page, and the upload filter list.
+Error: Using addslashes in /controller/acp_controller.php
+Error: Using addslashes in /controller/posting.php
+Error: Using addslashes in /inc/functions_kb.php
+
+# Released migration: converts the old serialized kb_extensions setting to
+# JSON once. Released migrations must not be changed.
+Error: Using unserialize in /migrations/version_2_0_1.php
+
+# Released migrations without anything to revert: version_2_0_0 moves the
+# settings out of the old kb_config table and drops it, and version_2_0_15
+# replaces an index on kb_src_wrdmtch, which version_1_0_0's revert_schema()
+# drops. Released migrations must not be changed.
+Error: Migration file /migrations/version_2_0_0.php is missing the revert_schema() method.
+Error: Migration file /migrations/version_2_0_15.php is missing the revert_schema() method.

@@ -267,7 +267,7 @@ class acp_controller
 				'GROUP_NAME' => $group_name,
 				'S_CHECKED'  => in_array((int) $row['group_id'], $team_groups, true),
 			]);
-			$contact_group_options .= '<option value="' . (int) $row['group_id'] . '"' . ((int) $row['group_id'] === $contact_group_id ? ' selected="selected"' : '') . '>' . htmlspecialchars($group_name, ENT_COMPAT, 'UTF-8') . '</option>';
+			$contact_group_options .= '<option value="' . (int) $row['group_id'] . '"' . ((int) $row['group_id'] === $contact_group_id ? ' selected="selected"' : '') . '>' . utf8_htmlspecialchars($group_name) . '</option>';
 		}
 		$this->db->sql_freeresult($result);
 
@@ -285,7 +285,7 @@ class acp_controller
 			'ALT_STYLE_ON'             => $this->config['kb_alt_style_enabled'] ? 'checked="checked"' : '',
 			'ALT_STYLE_DISPLAY'        => $this->config['kb_alt_style_enabled'] ? '' : 'none',
 			'S_ALT_STYLE_OPTIONS'      => $this->alternative_style_options((string) $this->config['kb_alt_style']),
-			'ALT_STYLE_MISSING'        => $this->config['kb_alt_style_enabled'] ? htmlspecialchars($this->alt_styles->missing_choice(), ENT_COMPAT, 'UTF-8') : '',
+			'ALT_STYLE_MISSING'        => $this->config['kb_alt_style_enabled'] ? utf8_htmlspecialchars($this->alt_styles->missing_choice()) : '',
 			'ALT_STYLE_DIRECTORY'      => $this->alt_styles->custom_directory_label(),
 			'S_FEED_FORMAT_OPTIONS'    => $this->feed_format_options(),
 			'PER_PAGE'                 => $this->config['kb_articles_per_page'] ?? 10,
@@ -421,11 +421,11 @@ class acp_controller
 		$html = '';
 		foreach ($groups as $group_key => $choices)
 		{
-			$html .= '<optgroup label="' . htmlspecialchars($this->language->lang($group_key), ENT_COMPAT, 'UTF-8') . '">';
+			$html .= '<optgroup label="' . utf8_htmlspecialchars($this->language->lang($group_key)) . '">';
 			foreach ($choices as $value => $label)
 			{
-				$html .= '<option value="' . htmlspecialchars($value, ENT_COMPAT, 'UTF-8') . '"' . ($value === $selected ? ' selected="selected"' : '') . '>'
-					. htmlspecialchars($label, ENT_COMPAT, 'UTF-8') . '</option>';
+				$html .= '<option value="' . utf8_htmlspecialchars($value) . '"' . ($value === $selected ? ' selected="selected"' : '') . '>'
+					. utf8_htmlspecialchars($label) . '</option>';
 			}
 			$html .= '</optgroup>';
 		}

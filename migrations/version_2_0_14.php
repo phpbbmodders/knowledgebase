@@ -13,7 +13,7 @@ namespace phpbbmodders\knowledgebase\migrations;
 
 class version_2_0_14 extends \phpbb\db\migration\migration
 {
-	static public function depends_on()
+	public static function depends_on()
 	{
 		return [
 			'\phpbbmodders\knowledgebase\migrations\version_2_0_13',
