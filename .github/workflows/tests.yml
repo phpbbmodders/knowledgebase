@@ -55,3 +55,73 @@ jobs:
     with:
       EXTNAME: phpbbmodders/knowledgebase
       PHPBB_BRANCHES: '["3.3.x", "master"]'
+
+  # The extension's own PHPUnit suite (tests/*_test.php), including the
+  # MySQL and PostgreSQL tests, on phpBB 3.3.x and master. The framework jobs
+  # above find no phpunit.xml.dist here, so they do not run it.
+  phpunit:
+    name: PHPUnit - phpBB ${{ matrix.phpbb }}
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        phpbb: ['3.3.x', 'master']
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+          MYSQL_DATABASE: kb_fixture
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --host=127.0.0.1 --user=root --silent"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust
+          POSTGRES_DB: kb_fixture
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready --username=postgres --dbname=kb_fixture"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+
+    steps:
+      - name: Checkout phpBB
+        uses: actions/checkout@v4
+        with:
+          repository: phpbb/phpbb
+          ref: ${{ matrix.phpbb }}
+          path: phpBB3
+
+      - name: Checkout extension
+        uses: actions/checkout@v4
+        with:
+          path: phpBB3/phpBB/ext/phpbbmodders/knowledgebase
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: dom, intl, mbstring, mysqli, pdo_mysql, pdo_pgsql, pdo_sqlite, pgsql, sqlite3
+          coverage: none
+
+      - name: Install phpBB dependencies
+        working-directory: ./phpBB3
+        run: .github/setup-phpbb.sh none 8.2 1
+
+      - name: Run PHPUnit
+        working-directory: ./phpBB3/phpBB/ext/phpbbmodders/knowledgebase
+        env:
+          PHPBB_ROOT_PATH: ${{ github.workspace }}/phpBB3/phpBB
+          KB_TEST_MYSQL_PORT: '3306'
+          KB_TEST_POSTGRES_PORT: '5432'
+        run: php ../../../vendor/bin/phpunit --do-not-cache-result --fail-on-skipped --test-suffix _test.php tests

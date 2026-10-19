@@ -14,6 +14,7 @@ require_once __DIR__ . '/kb_search_sql_test.php';
 require_once dirname(__DIR__) . '/search/backend/kb_fulltext_native.php';
 require_once dirname(__DIR__) . '/migrations/version_1_0_0.php';
 require_once dirname(__DIR__) . '/migrations/version_2_0_15.php';
+require_once dirname(__DIR__) . '/migrations/version_2_0_31.php';
 if (!defined('IN_PHPBB')) define('IN_PHPBB', true);
 if (!defined('CONFIG_TABLE')) define('CONFIG_TABLE', 'phpbb_config');
 if (!defined('SEARCH_RESULTS_TABLE')) define('SEARCH_RESULTS_TABLE', 'phpbb_search_results');
@@ -171,6 +172,8 @@ class kb_search_database_test extends \PHPUnit\Framework\TestCase
 		$this->query('INSERT INTO phpbb_kb_src_wrdmtch (article_id, word_id, title_match, descr_match) VALUES (1, 1, 0, 0)');
 		$repair = new \phpbbmodders\knowledgebase\migrations\version_2_0_15($this->config, $this->db, $this->tools, '', 'php', 'phpbb_', []);
 		$this->tools->perform_schema_changes($repair->update_schema());
+		// On phpBB 4.0 version_2_0_15's one-step drop and re-add is a no-op; version_2_0_31 rebuilds the index
+		(new \phpbbmodders\knowledgebase\migrations\version_2_0_31($this->config, $this->db, $this->tools, '', 'php', 'phpbb_', []))->rebuild_match_index();
 		$this->query('INSERT INTO phpbb_kb_src_wrdmtch (article_id, word_id, title_match, descr_match) VALUES (1, 1, 0, 1)');
 		$this->tools->perform_schema_changes($repair->update_schema());
 		$result = $this->query('SELECT COUNT(*) AS matches FROM phpbb_kb_src_wrdmtch');

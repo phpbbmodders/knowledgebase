@@ -13,8 +13,8 @@ php /tmp/kb-phpunit.phar --do-not-cache-result --test-suffix _test.php tests
 
 Without database fixture ports, the five MySQL/PostgreSQL integration
 cases skip. The remaining tests include in-memory SQLite regression
-checks. The current GitHub workflow runs coding and extension validation
-checks; it does not run this suite.
+checks. The GitHub workflow's `phpunit` job runs this suite on phpBB 3.3.x
+and master with both database fixtures, and fails if any test is skipped.
 
 ## Disposable Database Fixtures
 
@@ -1388,3 +1388,26 @@ The canonical seed-forum `bin/seed-kb-fixtures.php` supplies the author-transfer
 moderator, co-authors and pending revision. Build a fresh board with the updated
 script before running the browser suite. Its Python helper only snapshots and
 restores the fixture; it does not create articles or grant permissions.
+
+## The suite in CI, and the search-match index on phpBB 4.0 - 10/19/2026
+
+The phpBB extension test framework only runs PHPUnit when it finds a `phpunit.xml.dist`, so CI
+never ran this suite. A `phpunit` job in `.github/workflows/tests.yml` now does, on phpBB 3.3.x
+(PHPUnit 9) and master (PHPUnit 10) with PHP 8.2, with MySQL 8.0 and PostgreSQL 16 service
+containers for the database tests. It passes `--fail-on-skipped`, so a database test that quietly
+skips fails the job.
+
+On phpBB master two tests in `kb_legacy_search_migration_test.php` and one in
+`kb_search_database_test.php` failed. `version_2_0_15` drops the `un_mtch` unique index and adds it
+back with `descr_match` in one schema change. phpBB 4.0's Doctrine database tools turn a schema
+change into one diff, and dropping and adding an index of the same name in one diff cancel out, so
+the index kept its three old columns. A board upgraded on 4.0 would then refuse a description
+match for an article and word that already has a body match. The new migration `version_2_0_31`
+drops and re-creates the index as two separate changes, which works on 3.3.x and 4.0 (on 3.3.x it
+rebuilds the same index). The three tests run it after `version_2_0_15`.
+
+Claude ran the whole suite with the disposable fixtures above: 503 tests, none skipped, pass on
+phpBB 3.3.x and master. On master PHPUnit 10 also reports 53 deprecations (data providers that
+are not static), which do not fail the run. MySQL can answer `mysqladmin ping` on its socket before it
+accepts TCP connections; tests started in that gap fail to connect, so wait a few seconds more
+after a fresh container reports ready. The CI health check pings over TCP for that reason.
