@@ -19,8 +19,8 @@ class ext extends \phpbb\extension\base
 	/** Minimum phpBB version - 3.3.19 carries the security fixes from 3.3.17-3.3.19 */
 	public const MIN_PHPBB_VERSION = '3.3.19';
 
-	/** Minimum PHP version - phpBB 4.0 itself needs 8.2, and the tests run on 8.2 and newer */
-	public const MIN_PHP_VERSION = '8.2.0';
+	/** Minimum PHP version - 8.3.36 includes security fixes. */
+	public const MIN_PHP_VERSION = '8.3.36';
 
 	/** The original package this extension can take over from; it must be disabled first. */
 	public const ORIGINAL_EXTENSION = 'sheer/knowledgebase';
@@ -57,23 +57,23 @@ class ext extends \phpbb\extension\base
 	}
 
 	/**
-	 * Require phpBB 3.3.19
+	 * Require phpBB 3.3.19 due to several security fixes in the phpBB software.
 	 *
 	 * @return bool
 	 */
 	public function check_phpbb_version()
 	{
-		return phpbb_version_compare(PHPBB_VERSION, self::MIN_PHPBB_VERSION, '>=');
+		return phpbb_version_compare(PHPBB_VERSION, '3.3.19', '>=');
 	}
 
 	/**
-	 * Require PHP 8.2
+	 * Requires PHP 8.3.36 due to security fixes.
 	 *
 	 * @return bool
 	 */
 	public function check_php_version()
 	{
-		return self::php_version_meets_minimum(PHP_VERSION);
+		return PHP_VERSION_ID >= 80336;
 	}
 
 	/**

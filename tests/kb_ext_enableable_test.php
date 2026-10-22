@@ -27,11 +27,19 @@ class kb_ext_enableable_test extends \PHPUnit\Framework\TestCase
 		$container = $this->createMock(\Symfony\Component\DependencyInjection\ContainerInterface::class);
 		$container->method('get')->willReturnCallback(fn($id) => ['language' => $language, 'ext.manager' => $manager][$id]);
 
-		$ext = (new \ReflectionClass(ext::class))->newInstanceWithoutConstructor();
+		$ext = $this->getMockBuilder(ext::class)->disableOriginalConstructor()->onlyMethods(['check_php_version'])->getMock();
+		$ext->method('check_php_version')->willReturn(true);
 		$property = new \ReflectionProperty(\phpbb\extension\base::class, 'container');
 		$property->setValue($ext, $container);
 
 		return $ext;
+	}
+
+	public function test_php_security_minimum()
+	{
+		$this->assertFalse(ext::php_version_meets_minimum('8.3.35'));
+		$this->assertTrue(ext::php_version_meets_minimum('8.3.36'));
+		$this->assertTrue(ext::php_version_meets_minimum('8.4.0'));
 	}
 
 	public function test_it_can_be_enabled_when_the_original_package_is_not_enabled()
