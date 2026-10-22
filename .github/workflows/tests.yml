@@ -29,8 +29,8 @@ jobs:
       RUN_MSSQL_JOBS: 0
       RUN_WINDOWS_JOBS: 0
 
-      PRIMARY_PHP_VERSION: '8.2'
-      PHP_VERSION_MATRIX: '["8.2", "8.3", "8.4", "8.5"]'
+      PRIMARY_PHP_VERSION: '8.3'
+      PHP_VERSION_MATRIX: '["8.3", "8.4", "8.5"]'
 
   # phpBB 4.0 (master): the same tests with the framework's master branch
   call-tests-master:
@@ -45,8 +45,8 @@ jobs:
       RUN_PGSQL_JOBS: 0
       RUN_MSSQL_JOBS: 0
       RUN_WINDOWS_JOBS: 0
-      PRIMARY_PHP_VERSION: '8.2'
-      PHP_VERSION_MATRIX: '["8.2", "8.3", "8.4", "8.5"]'
+      PRIMARY_PHP_VERSION: '8.3'
+      PHP_VERSION_MATRIX: '["8.3", "8.4", "8.5"]'
 
   # EPV (Extension Pre Validator), failing on any Fatal or Error finding not
   # listed in .github/epv-allowed.txt
@@ -110,13 +110,14 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.2'
+          php-version: '8.3'
+          update: true
           extensions: dom, intl, mbstring, mysqli, pdo_mysql, pdo_pgsql, pdo_sqlite, pgsql, sqlite3
           coverage: none
 
       - name: Install phpBB dependencies
         working-directory: ./phpBB3
-        run: .github/setup-phpbb.sh none 8.2 1
+        run: .github/setup-phpbb.sh none 8.3 1
 
       - name: Run PHPUnit
         working-directory: ./phpBB3/phpBB/ext/phpbbmodders/knowledgebase

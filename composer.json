@@ -32,7 +32,7 @@
 		}
 	],
 	"require": {
-		"php": ">=8.2",
+		"php": ">=8.3.36",
 		"phpbb/phpbb": ">=3.3.19 <4.1.0",
 		"composer/installers": "~2.0"
 	},

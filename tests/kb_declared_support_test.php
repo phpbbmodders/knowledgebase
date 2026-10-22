@@ -30,15 +30,15 @@ class kb_declared_support_test extends \PHPUnit\Framework\TestCase
 		return json_decode(file_get_contents(self::ROOT . '/composer.json'), true, 512, JSON_THROW_ON_ERROR);
 	}
 
-	public function test_composer_requires_php_8_2_or_newer()
+	public function test_composer_requires_php_8_3_36_or_newer()
 	{
-		$this->assertSame('>=8.2', $this->composer()['require']['php']);
+		$this->assertSame('>=8.3.36', $this->composer()['require']['php']);
 	}
 
 	public function test_the_extension_refuses_to_enable_below_the_same_minimum()
 	{
-		$this->assertSame('8.2.0', ext::MIN_PHP_VERSION);
-		$this->assertSame('>=' . substr(ext::MIN_PHP_VERSION, 0, 3), $this->composer()['require']['php']);
+		$this->assertSame('8.3.36', ext::MIN_PHP_VERSION);
+		$this->assertSame('>=' . ext::MIN_PHP_VERSION, $this->composer()['require']['php']);
 	}
 
 	/** @dataProvider php_versions */
@@ -53,9 +53,12 @@ class kb_declared_support_test extends \PHPUnit\Framework\TestCase
 			'8.0 is too old'            => ['8.0.30', false],
 			'8.1 is too old'            => ['8.1.31', false],
 			'8.2 development build'     => ['8.2.0-dev', false],
-			'first 8.2 release'         => ['8.2.0', true],
-			'8.2 patch release'         => ['8.2.27', true],
-			'8.3'                       => ['8.3.0', true],
+			'first 8.2 release'         => ['8.2.0', false],
+			'8.2 patch release'         => ['8.2.27', false],
+			'first 8.3 release'         => ['8.3.0', false],
+			'below security minimum'    => ['8.3.35', false],
+			'security minimum'          => ['8.3.36', true],
+			'later 8.3 patch release'   => ['8.3.37', true],
 			'8.4'                       => ['8.4.26', true],
 			'a future major version'    => ['9.0.0', true],
 		];
@@ -100,7 +103,7 @@ class kb_declared_support_test extends \PHPUnit\Framework\TestCase
 	{
 		$notes = file_get_contents(self::ROOT . '/docs/phpbb-4.0-compatibility.md');
 
-		$this->assertStringContainsString('`require.php`: `>=8.2`', $notes);
+		$this->assertStringContainsString('`require.php`: `>=8.3.36`', $notes);
 		$this->assertStringNotContainsString('`>=8.0`', $notes);
 	}
 }
