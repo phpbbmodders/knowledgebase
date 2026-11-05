@@ -86,16 +86,16 @@ class kb_declared_support_test extends \PHPUnit\Framework\TestCase
 		$this->assertContains($primary[1], $versions);
 	}
 
-	public function test_the_phpbb_requirement_and_soft_requirement_agree_and_state_the_same_minimum_as_ext_php()
+	public function test_phpbb_is_only_a_soft_requirement_stating_the_same_minimum_as_ext_php()
 	{
 		$composer = $this->composer();
-		$hard = $composer['require']['phpbb/phpbb'];
 		$soft = $composer['extra']['soft-require']['phpbb/phpbb'];
 
-		$this->assertSame('>=' . ext::MIN_PHPBB_VERSION, explode(' ', $hard)[0]);
+		// phpBB belongs only in extra.soft-require, which Composer ignores; under require, Composer would
+		// try to resolve phpBB itself.
+		$this->assertArrayNotHasKey('phpbb/phpbb', $composer['require']);
 		$this->assertSame('>=' . ext::MIN_PHPBB_VERSION, explode(',', $soft)[0]);
-		// Both caps allow phpBB 3.3.x and 4.0.x and stop at the same bound, so one cannot be changed without the other.
-		$this->assertSame('<4.1.0', explode(' ', $hard)[1]);
+		// The cap allows phpBB 3.3.x and 4.0.x.
 		$this->assertSame('<4.1.0@dev', explode(',', $soft)[1]);
 	}
 
