@@ -11,8 +11,8 @@ From `composer.json`:
 - `require.phpbb/phpbb`: `>=3.3.19 <4.1.0`
 - `extra.soft-require.phpbb/phpbb`: `>=3.3.19,<4.1.0@dev` — phpBB 3.3.x and 4.0.x,
   including 4.0 development builds. (Until 10/12/2026 both said `<4.0.0`.)
-- `require.php`: `>=8.3.36` (also enforced when the extension is enabled, by `ext.php`,
-  due to security fixes; CI uses the latest PHP 8.3 patch release)
+- `require.php`: `>=8.1.0` (also enforced when the extension is enabled, by `ext.php`;
+  phpBB 4.0 itself needs PHP 8.2 or later)
 
 phpBB 4.0.x is still in development, so specifics below are marked
 verified vs. pending as they're confirmed against real code/changelog
@@ -162,8 +162,8 @@ rendered, and an article submitted through the posting form was saved without er
    3.3.x test board give the same result as before.
 
 **Declared support.** The PHP floor was raised from 8.0 to 8.2 on 10/12/2026, then to 8.3.36
-on 10/22/2026 due to security fixes. The CI matrix lists PHP 8.3 through 8.5 and uses PHP 8.3
-as its primary version. Boards running PHP below 8.3.36 cannot enable this extension.
+on 10/22/2026 due to security fixes, and lowered to 8.1 on 11/10/2026. The CI matrix lists PHP 8.3 through 8.5 and uses PHP 8.3
+as its primary version. The phpBB 3.3 jobs also run PHP 8.1. Boards running PHP below 8.1 cannot enable this extension.
 The phpBB constraints were widened to `<4.1.0`, so
 the extension can be enabled on 4.0.x; it was enabled on a 4.0.0-a3-dev board with the constraints
 as shipped. 4.0 is still a development release, so "supported" here means "checked as below", not a
