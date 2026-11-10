@@ -35,10 +35,10 @@ class kb_ext_enableable_test extends \PHPUnit\Framework\TestCase
 		return $ext;
 	}
 
-	public function test_php_security_minimum()
+	public function test_php_minimum()
 	{
-		$this->assertFalse(ext::php_version_meets_minimum('8.3.35'));
-		$this->assertTrue(ext::php_version_meets_minimum('8.3.36'));
+		$this->assertFalse(ext::php_version_meets_minimum('8.0.30'));
+		$this->assertTrue(ext::php_version_meets_minimum('8.1.0'));
 		$this->assertTrue(ext::php_version_meets_minimum('8.4.0'));
 	}
 
