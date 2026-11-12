@@ -32,8 +32,15 @@ class version_2_0_30 extends \phpbb\db\migration\migration
 		$this->db->sql_freeresult($result);
 		if (!$exists)
 		{
+			// An explicit id, like the options version_1_0_0 inserted: those
+			// left PostgreSQL's sequence at 1, so letting it pick one fails
+			// with a duplicate key on a fresh PostgreSQL board
+			$result = $this->db->sql_query('SELECT MAX(auth_option_id) AS max_id FROM ' . $this->table_prefix . 'kb_options');
+			$next_id = (int) $this->db->sql_fetchfield('max_id') + 1;
+			$this->db->sql_freeresult($result);
+
 			$this->db->sql_query('INSERT INTO ' . $this->table_prefix . 'kb_options ' . $this->db->sql_build_array('INSERT', [
-				'auth_option' => 'kb_m_change_author', 'is_global' => 0, 'is_local' => 1,
+				'auth_option_id' => $next_id, 'auth_option' => 'kb_m_change_author', 'is_global' => 0, 'is_local' => 1,
 			]));
 		}
 	}
