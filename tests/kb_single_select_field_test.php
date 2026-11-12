@@ -61,7 +61,9 @@ class kb_single_select_field_test extends \PHPUnit\Framework\TestCase
 	{
 		$html = $this->type(kb_single_select_field_type::class)->render_posting_field(self::FIELD, self::VALUES, [5]);
 
-		$this->assertStringContainsString('<select name="field_values[7][]">', $html);
+		// The field name labels the dropdown itself
+		$this->assertStringContainsString('<select name="field_values[7][]" id="kb_field_7">', $html);
+		$this->assertStringContainsString('<label for="kb_field_7">', $html);
 		$this->assertStringContainsString('<option value="0">KB_FIELD_SELECT_PLACEHOLDER</option>', $html);
 		$this->assertStringContainsString('<option value="4">Users</option>', $html);
 		$this->assertStringContainsString('<option value="5" selected="selected">Admins &amp; &lt;i&gt;devs&lt;/i&gt;</option>', $html);
@@ -84,6 +86,15 @@ class kb_single_select_field_test extends \PHPUnit\Framework\TestCase
 
 			$this->assertStringContainsString('KB_FIELD_REQUIRED_HINT', $html);
 		}
+	}
+
+	public function test_radio_buttons_keep_a_label_without_a_target()
+	{
+		// A group of radio buttons has no single control for the field's label to point at
+		$html = $this->type(kb_radio_select_field_type::class)->render_posting_field(self::FIELD, self::VALUES, [5]);
+
+		$this->assertStringContainsString('<dt><label>Audience &lt;b&gt;', $html);
+		$this->assertStringNotContainsString('for="kb_field_', $html);
 	}
 
 	public function test_radio_buttons_offer_none_only_for_an_optional_field()

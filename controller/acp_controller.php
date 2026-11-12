@@ -1421,8 +1421,10 @@ class acp_controller
 		// move from
 		$info = $this->kb->get_kb_article_info($article_id);
 
+		add_form_key('kb_acp_articles');
 		if ($submit)
 		{
+			$this->require_form_key('kb_acp_articles');
 			$this->kb->kb_move_article($article_id, $info['article_title'], $info['article_category_id'], $to_id, $info['display_order']);
 			meta_refresh(2, $this->u_action);
 			trigger_error($this->language->lang('ARTICLE_MOVED'));
@@ -2547,6 +2549,12 @@ class acp_controller
 		];
 
 		$apply_all_permissions = $this->request->variable('apply_all_permissions', false);
+		// Saving permissions changes them, so it needs the form token
+		// permissions_module adds to every form on its pages
+		if ($apply_all_permissions || $this->request->is_set_post('submit'))
+		{
+			$this->require_form_key('kb_acp_permissions');
+		}
 
 		if (!empty($user_id) && $user_mode != 'group')
 		{

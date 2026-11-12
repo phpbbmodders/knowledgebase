@@ -1,7 +1,9 @@
 // Load every main Knowledge Base page and every Knowledge Base ACP module as
 // the seeded administrator, and fail on a server error, a PHP error or
-// phpBB's SQL error page. Read-only: it opens pages and submits nothing but
-// the login forms, so it suits any seed-forum board on any database.
+// phpBB's SQL error page. Then check two refusals: an ACP category move link
+// without its hash, and the approve page for the seeded kb_reader. Read-only:
+// it opens pages and submits nothing but the login forms, so it suits any
+// seeded seed-forum board on any database.
 //
 // KB_TEST_URL is the board's base URL, without a trailing slash. Routes go
 // through app.php, so the board needs no clean-URL rewriting.
@@ -16,6 +18,10 @@ const password = 'KbTest1234!';
 
 // Text that only shows up when a page broke
 const ERROR_MARKERS = ['SQL ERROR', 'Fatal error', 'Parse error', 'Uncaught', 'General Error', '[phpBB Debug]', 'Warning</b>:', 'Notice</b>:', 'Deprecated</b>:'];
+
+// phpBB's English messages for a refused form or page (seed-forum boards are English)
+const FORM_INVALID = 'The submitted form was invalid';
+const NOT_AUTHORISED = 'You are not authorised to access this area';
 
 // phpBB refuses a form submitted within two seconds of it being made
 async function waitForFormAge(page) {
@@ -58,6 +64,13 @@ async function waitForFormAge(page) {
 		return body;
 	}
 
+	// A page that must be refused, showing phpBB's message for that
+	async function expectText(label, url, text, tab = page) {
+		const response = await tab.goto(url, ready);
+		const shown = await tab.locator('body').innerText();
+		results.push({label, status: response ? response.status() : 0, problems: shown.includes(text) ? [] : [`expected "${text}"`]});
+	}
+
 	try {
 		// Board login
 		await page.goto(`${base}/ucp.php?mode=login`, ready);
@@ -95,6 +108,21 @@ async function waitForFormAge(page) {
 		const modules = await page.locator('#menu a[href*="i=-phpbbmodders-knowledgebase-acp-"]').evaluateAll(links => links.map(link => [link.textContent.trim(), link.href]));
 		if (!modules.length) throw new Error('No Knowledge Base modules in the ACP menu');
 		for (const [label, href] of modules) await check(`acp ${label}`, href);
+
+		// Refusals: a category move link without its hash, and the approve
+		// page for a member who is neither a moderator nor on the article's team
+		const manage = '/adm/index.php?i=-phpbbmodders-knowledgebase-acp-manage_module&mode=manage';
+		await expectText('acp move without hash refused', `${base}${manage}&action=move_up&f=1&sid=${await sessionCookie(page)}`, FORM_INVALID);
+		const reader = await browser.newPage();
+		reader.setDefaultTimeout(120000);
+		await reader.route(/\.(css|js|png|gif|jpe?g|svg|ico|woff2?|ttf)(\?|$)/, route => route.abort());
+		await reader.goto(`${base}/ucp.php?mode=login`, ready);
+		await reader.locator('#username').fill('kb_reader');
+		await reader.locator('#password').fill(password);
+		await waitForFormAge(reader);
+		await reader.locator('[name="login"][type="submit"]').click();
+		await reader.waitForURL(url => !url.search.includes('mode=login'), ready);
+		await expectText('approve page refused for kb_reader', `${base}/app.php/knowledgebase/approve?id=${new URL(article).searchParams.get('k')}`, NOT_AUTHORISED, reader);
 	} finally {
 		await browser.close();
 	}

@@ -1566,3 +1566,48 @@ workers for `serve-board.py` (a browser's unused early connection held the singl
 
 The PHPUnit suite passes on phpBB 3.3.x and master with the MySQL and PostgreSQL fixtures above:
 511 tests, none skipped.
+
+## Maintenance pass: form tokens, the approve page and labels - 11/12/2026
+
+A validation of the whole extension found four problems:
+
+- ACP category management read the category id as a string and put it into SQL, ran move up,
+  move down and sync from plain links, and added, edited and deleted categories without checking
+  a form token. A forged link or page could make an administrator run SQL or delete a category.
+  The id is now an integer, the links carry a link hash and the forms are checked.
+- Moving an article in the ACP and saving Knowledge Base permissions did not check the form token.
+- The approve page showed the title, description and pending revision text of unapproved articles
+  to any registered member, whatever their Knowledge Base access. Only moderators and the members
+  of the team the article is assigned to may open it now.
+- Smaller: three attachment modes in `attachments_info.php` asked for less permission than the
+  installed modules, and the minimum-version message used `%1s` instead of `%1$s`.
+
+`kb_acp_csrf_test.php` now covers the article move and both ways of saving permissions; those
+three cases fail on the code before the fix. `tests/browser/kb_page_sweep.js` also checks that a
+category move link without its hash and the approve page for `kb_reader` are refused.
+
+An axe-core run (WCAG 2.2 A and AA, desktop and phone widths, with keyboard focus checks) through
+`phpbb-test-board/page_a11y.py`, on the index, a category, an article, the posting form, the queue,
+the approve page and two ACP pages, found controls without an accessible name: the category
+dropdown, the copy-link boxes, the article text box, custom-field dropdowns, the queue's team and
+action menus, and in the ACP the category picker, the new-category box and the file-size unit menu.
+Each is now labelled, and the Teams block of the ACP configuration page uses valid definition-list
+markup. What remains is prosilver's own markup (header menus, footer links, the pagination list,
+plupload's hidden file input), the inactive tabs' contrast, which comes from prosilver's tab colours
+and differs per style, and small touch targets in the article lists and queue rows.
+
+phpbb-release-tools gained a Knowledge Base feature check (`check_knowledgebase` in
+`feature_checks.py`): the ACP adds a category and refuses its form without a token and a move link
+without a hash; a member submits an article that other members cannot read, nor open its approve
+page, until a moderator assigns it to a team, marks it reviewed and approves it; then members read
+it and the Knowledge Base search finds it. On the code before this pass, exactly the three refusal
+checks fail.
+
+Claude ran, on fresh seed-forum boards with the full fixtures for phpBB 3.3.19 and 4.0.0-a3-dev on
+SQLite, MySQL 8.4, MariaDB, PostgreSQL 16 and MSSQL (ten boards): the page sweep (26 of 26 on each),
+the feature check with its disable, purge and enable round trip (14 of 14 on each), and a second
+disable, purge and enable that left nothing behind and finished all 43 migrations. An upgrade from
+the current development build's code (`313eac3`, 40 migrations) on SQLite and MySQL boards migrated
+to 43 and passed the sweep and the feature check. The PHPUnit suite passes on phpBB 3.3.x and
+master with the MySQL and PostgreSQL fixtures: 578 tests, none skipped. EPV and phpcs are clean on
+both branches.

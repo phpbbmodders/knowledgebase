@@ -64,7 +64,7 @@ class kb_single_select_field_type extends kb_multi_select_field_type
 			$options .= '<option value="' . (int) $value['value_id'] . '"' . $is_selected . '>' . htmlspecialchars($value['value_label']) . '</option>';
 		}
 
-		return $this->wrap_posting_field($field, '<select name="field_values[' . (int) $field['field_id'] . '][]">' . $options . '</select>');
+		return $this->wrap_posting_field($field, '<select name="field_values[' . (int) $field['field_id'] . '][]" id="kb_field_' . (int) $field['field_id'] . '">' . $options . '</select>', 'kb_field_' . (int) $field['field_id']);
 	}
 
 	/**
@@ -73,14 +73,18 @@ class kb_single_select_field_type extends kb_multi_select_field_type
 	 *
 	 * @param array  $field
 	 * @param string $widget
+	 * @param string $label_for Id of the widget's control, when it is a single one
 	 * @return string
 	 */
-	protected function wrap_posting_field(array $field, string $widget): string
+	protected function wrap_posting_field(array $field, string $widget, string $label_for = ''): string
 	{
+		// Only a single control can be the label's target; a group of radio
+		// buttons keeps its own labels
+		$for = $label_for !== '' ? ' for="' . $label_for . '"' : '';
 		$hint = !empty($field['field_required']) ? '<br><span>' . $this->language->lang('KB_FIELD_REQUIRED_HINT') . '</span>' : '';
 
 		return '<dl style="clear: left;">
-			<dt><label>' . htmlspecialchars($field['field_name']) . $this->language->lang('COLON') . '</label>' . $hint . '</dt>
+			<dt><label' . $for . '>' . htmlspecialchars($field['field_name']) . $this->language->lang('COLON') . '</label>' . $hint . '</dt>
 			<dd>' . $widget . '</dd>
 		</dl>';
 	}

@@ -75,6 +75,7 @@ $lang = array_merge($lang, [
 	'KB_APPROVE_REVISION'                  => 'Approve revision',
 	'KB_ASSIGN'                            => 'Assign',
 	'KB_ASSIGN_TO'                         => 'Assign to team',
+	'KB_QUEUE_ACTION'                      => 'Action',
 	'KB_CHANGELOG_REPLY_SUBJECT'           => 'Re: %s',
 	'KB_CHANGELOG_SUBMITTED'               => 'Article submitted by %s.',
 	'KB_CHANGELOG_REVISION_SUBMITTED'      => 'New revision submitted by %s.',

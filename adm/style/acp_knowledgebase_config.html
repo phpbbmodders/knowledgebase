@@ -231,14 +231,15 @@
 			<dd>
 				<input type="number" id="extgroup_filesize" min="0" max="999999999999999" step="any" name="max_filesize"
 					value="{{ EXTGROUP_FILESIZE }}"/>
-				<label><select name="size_select"> {{ S_EXT_GROUP_SIZE_OPTIONS }}</select></label>
+				<label><select name="size_select" aria-label="{{ lang('ATTACH_MAX_FILESIZE') }}"> {{ S_EXT_GROUP_SIZE_OPTIONS }}</select></label>
 			</dd>
 		</dl>
 	</fieldset>
 	<fieldset>
 		<legend>{{ lang('KB_TEAMS') }}</legend>
-		<dl>{{ lang('KB_TEAMS_EXPLAIN') }}</dl>
+		<p>{{ lang('KB_TEAMS_EXPLAIN') }}</p>
 		<dl>
+			<dt>{{ lang('KB_TEAMS') }}{{ lang('COLON') }}</dt>
 			{% for row in loops.team_group %}
 				<dd>
 					<label>

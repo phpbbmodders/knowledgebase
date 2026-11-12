@@ -324,7 +324,6 @@ class approve
 
 		$kb_article_info = $this->kb->get_kb_article_info($art_id);
 		$kb_category_info = $this->kb->get_cat_info($kb_article_info['article_category_id']);
-		$category_name = $kb_category_info['category_name'];
 		$status = (int) $kb_article_info['status'];
 
 		// A draft was never submitted - not even reachable by a moderator
@@ -338,6 +337,13 @@ class approve
 		$is_moderator = $this->user->data['user_type'] == USER_FOUNDER ||
 			$this->auth->acl_get('a_manage_kb') ||
 			$this->kb->acl_kb_get_any($this->kb->get_article_categories($art_id), 'kb_m_approve');
+
+		// The page shows unapproved articles and pending revisions in full,
+		// so only moderators and the team reviewing the article may open it
+		if (!$is_moderator && !($effective_team_id && $this->kb->is_team_member([$effective_team_id])))
+		{
+			trigger_error('NOT_AUTHORISED');
+		}
 
 		// Actions submitted from the Administration queue's own row form
 		// (deactivate/reactivate/review) should return there, not to the

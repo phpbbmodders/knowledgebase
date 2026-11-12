@@ -94,6 +94,10 @@ class permissions_module
 		$delete = $request->variable('delete', false);
 		$category_id = $all_cats ? $admin_controller->make_array_categoryid() : $request->variable('category_id', [0]);
 
+		// The token for every form on these pages; get_mask() checks it
+		// before saving permissions
+		add_form_key('kb_acp_permissions');
+
 		// Map usernames to ids and vice versa
 		if ($usernames)
 		{

@@ -14,6 +14,9 @@ browsing on for the category-tree capture and restores its previous setting.
 The current fixture is the seed-forum board at `http://localhost:8102`.
 
 The two ACP pages are taken in full, so a setting further down the page is not cut off.
+The ACP configuration page and the two introduction shots (11/12/2026) come from
+`phpbb-release-tools/phpbb-test-board/screenshots.py` instead, on a board built by its
+`setup-board.sh` with seed-forum's standard fixtures, which is why they are narrower than the rest.
 
 ## The flat article index
 
@@ -65,9 +68,9 @@ Results of a search on the Knowledge Base's own search page.
 
 ## ACP configuration
 
-**Extensions > Knowledge Base > Configuration**, the whole page: the announcement and changelog forums, hierarchical browsing, the alternative stylesheet, the **Recent changes feed** (RSS, Atom or both), the number of articles per page, the description length and the sorting order, then the attachment settings, the review teams and the contact group.
+**Extensions > Knowledge Base > Configuration**, the whole page: the announcement and changelog forums, hierarchical browsing, the introduction above the index, the alternative stylesheet, the **Recent changes feed** (RSS, Atom or both), the number of articles per page, the description length and the sorting order, then the attachment settings, the review teams and the contact group.
 
-<a href="07-acp-configuration.png"><img src="07-acp-configuration.png" width="960" height="1094" alt="The configuration page in the ACP"></a>
+<a href="07-acp-configuration.png"><img src="07-acp-configuration.png" width="960" height="1277" alt="The configuration page in the ACP"></a>
 
 ## Knowledge Base articles in the board's search
 
@@ -111,3 +114,15 @@ A blocked transfer appears in the extension's Notice tab, with the board styling
 Markdown headings, lists and emphasis render in a shortened search excerpt rather than appearing as source syntax.
 
 <a href="16-markdown-search.png"><img src="16-markdown-search.png" width="960" height="673" alt="Rendered Markdown search"></a>
+
+## Index introduction
+
+With **Show an introduction** ticked in the ACP configuration, a short text sits under the Knowledge Base title on the index. It can be BBCode or Markdown; a new board gets a default text, and it is off until switched on.
+
+<a href="17-index-introduction.png"><img src="17-index-introduction.png" width="960" height="675" alt="The Knowledge Base index with an introduction under its title"></a>
+
+## ACP introduction settings
+
+The **Configuration** block of the ACP configuration page with **Show an introduction** ticked: the introduction text, which starts as the default text, and whether it is written in Markdown.
+
+<a href="18-acp-introduction.png"><img src="18-acp-introduction.png" width="960" height="807" alt="The introduction settings in the ACP configuration"></a>

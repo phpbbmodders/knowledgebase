@@ -1,7 +1,7 @@
 {
 	"name": "phpbbmodders/knowledgebase",
 	"type": "phpbb-extension",
-	"description": "Knowledge Base",
+	"description": "A knowledge base for phpBB: categorised articles in Markdown or BBCode, with revisions, an approval workflow, search, and RSS and Atom feeds.",
 	"homepage": "https://www.phpbbmodders.com/",
 	"version": "2.1.0-a1-dev",
 	"keywords": [
