@@ -113,6 +113,6 @@ class version_2_0_32 extends \phpbb\db\migration\migration
 	 */
 	protected function importer()
 	{
-		return new kinerity_import($this->db, $this->db_tools, $this->table_prefix);
+		return new kinerity_import($this->db, $this->db_tools, $this->table_prefix, (string) ($this->config['default_lang'] ?? 'en'));
 	}
 }

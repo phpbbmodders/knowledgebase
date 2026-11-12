@@ -48,8 +48,6 @@ class kinerity_import
 	/** Largest value the number_articles column (USINT) holds. */
 	public const MAX_ARTICLE_COUNT = 65535;
 
-	/** Name of the category made for articles kinerity filed in no category. */
-	public const FALLBACK_CATEGORY_NAME = 'Imported articles without a category';
 
 	/** kinerity article_visibility values (kinerity\knowledgebase\constants). */
 	public const KINERITY_DISAPPROVED = 0;
@@ -110,17 +108,31 @@ class kinerity_import
 	protected driver_interface $db;
 	protected tools_interface $db_tools;
 	protected string $table_prefix;
+	protected string $language;
 
 	/**
 	 * @param driver_interface $db
 	 * @param tools_interface  $db_tools
 	 * @param string           $table_prefix The board's table prefix, such as phpbb_
+	 * @param string           $language     The board's default language, for the text it writes
 	 */
-	public function __construct(driver_interface $db, tools_interface $db_tools, string $table_prefix)
+	public function __construct(driver_interface $db, tools_interface $db_tools, string $table_prefix, string $language = 'en')
 	{
 		$this->db = $db;
 		$this->db_tools = $db_tools;
 		$this->table_prefix = $table_prefix;
+		$this->language = $language;
+	}
+
+	/**
+	 * Name of the category made for articles kinerity filed in no category,
+	 * in the board's default language.
+	 *
+	 * @return string As stored: HTML-escaped like user input
+	 */
+	public function fallback_category_name(): string
+	{
+		return htmlspecialchars(default_content::lang($this->language, 'KB_IMPORTED_NO_CATEGORY'), ENT_COMPAT, 'UTF-8');
 	}
 
 	/**
@@ -776,7 +788,7 @@ class kinerity_import
 		// One already made by an earlier or a parallel request is used again
 		$result = $this->db->sql_query_limit('SELECT category_id
 			FROM ' . $this->table_prefix . "kb_categories
-			WHERE category_name = '" . $this->db->sql_escape(self::FALLBACK_CATEGORY_NAME) . "'
+			WHERE category_name = '" . $this->db->sql_escape($this->fallback_category_name()) . "'
 				AND parent_id = 0
 			ORDER BY category_id", 1);
 		$existing = (int) $this->db->sql_fetchfield('category_id');
@@ -793,7 +805,7 @@ class kinerity_import
 			'left_id'          => $right + 1,
 			'right_id'         => $right + 2,
 			'category_parents' => '',
-			'category_name'    => self::FALLBACK_CATEGORY_NAME,
+			'category_name'    => $this->fallback_category_name(),
 			'category_details' => '',
 			'number_articles'  => 0,
 		];

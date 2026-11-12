@@ -15,6 +15,7 @@ if (!defined('IN_PHPBB')) define('IN_PHPBB', true);
 if (!defined('CONFIG_TABLE')) define('CONFIG_TABLE', 'phpbb_config');
 require_once (getenv('PHPBB_ROOT_PATH') ?: dirname(__DIR__, 4)) . '/includes/functions.php';
 require_once dirname(__DIR__) . '/inc/functions_kb.php';
+require_once dirname(__DIR__) . '/inc/default_content.php';
 require_once dirname(__DIR__) . '/inc/kinerity_import.php';
 foreach (glob(dirname(__DIR__) . '/migrations/*.php') as $migration_file)
 {
@@ -499,7 +500,7 @@ line two</t>'],
 		// An emoji phpBB stored as an entity stays one, for MySQL's utf8 tables
 		$this->assertSame('Rocket &#128640; launch', $linux['category_details']);
 
-		$fallback = array_values(array_filter($categories, fn($row) => $row['category_name'] === kinerity_import::FALLBACK_CATEGORY_NAME));
+		$fallback = array_values(array_filter($categories, fn($row) => $row['category_name'] === 'Imported articles without a category'));
 		$this->assertCount(1, $fallback);
 		$this->assertSame([0, 9, 10], [(int) $fallback[0]['parent_id'], (int) $fallback[0]['left_id'], (int) $fallback[0]['right_id']]);
 	}
@@ -533,7 +534,7 @@ line two</t>'],
 		$this->assertSame([0, functions_kb::STATUS_INACTIVE], [(int) $this->new_article(5)['approved'], (int) $this->new_article(5)['status']]);
 
 		// No category, or only a category kinerity no longer has: the fallback category
-		$fallback_id = (int) $this->rows("SELECT category_id FROM phpbb_kb_categories WHERE category_name = '" . kinerity_import::FALLBACK_CATEGORY_NAME . "'")[0]['category_id'];
+		$fallback_id = (int) $this->rows("SELECT category_id FROM phpbb_kb_categories WHERE category_name = '" . 'Imported articles without a category' . "'")[0]['category_id'];
 		$this->assertSame($fallback_id, (int) $this->new_article(6)['article_category_id']);
 		$this->assertSame($fallback_id, (int) $this->new_article(7)['article_category_id']);
 
@@ -676,7 +677,7 @@ line two</t>'],
 
 		$this->importer()->finish(new \phpbb\config\config([]));
 		$this->assertCount(8, $this->rows('SELECT article_id FROM phpbb_kb_articles'));
-		$this->assertSame(1, (int) $this->rows("SELECT COUNT(*) AS total FROM phpbb_kb_categories WHERE category_name = '" . kinerity_import::FALLBACK_CATEGORY_NAME . "'")[0]['total']);
+		$this->assertSame(1, (int) $this->rows("SELECT COUNT(*) AS total FROM phpbb_kb_categories WHERE category_name = '" . 'Imported articles without a category' . "'")[0]['total']);
 	}
 
 	/** @dataProvider engines */
@@ -696,7 +697,7 @@ line two</t>'],
 		$this->run_until_done($this->importer(kinerity_import_racing::class), 'import_articles');
 		$this->assertCount(8, $this->rows('SELECT article_id FROM phpbb_kb_articles'));
 		$this->assertCount(1, $this->rows('SELECT article_id FROM phpbb_kb_article_categories'));
-		$this->assertSame(1, (int) $this->rows("SELECT COUNT(*) AS total FROM phpbb_kb_categories WHERE category_name = '" . kinerity_import::FALLBACK_CATEGORY_NAME . "'")[0]['total']);
+		$this->assertSame(1, (int) $this->rows("SELECT COUNT(*) AS total FROM phpbb_kb_categories WHERE category_name = '" . 'Imported articles without a category' . "'")[0]['total']);
 
 		// Every backup row points at an article that exists, and none twice
 		$new_ids = array_map('intval', array_column($this->rows('SELECT kb_new_id FROM phpbb_kb_kinerity_articles'), 'kb_new_id'));
@@ -839,5 +840,16 @@ line two</t>'],
 		$fitted = kinerity_import::fit_escaped(str_repeat('é', 300), 255);
 		$this->assertSame(255, mb_strlen($fitted));
 		$this->assertStringEndsWith("\u{2026}", $fitted);
+	}
+
+	public function test_the_fallback_category_name_comes_from_the_language_file()
+	{
+		$db = $this->createMock(\phpbb\db\driver\driver_interface::class);
+		$tools = $this->createMock(\phpbb\db\tools\tools_interface::class);
+		$this->assertSame('Imported articles without a category', (new kinerity_import($db, $tools, 'phpbb_'))->fallback_category_name());
+		// A board language without the file falls back to English
+		$this->assertSame('Imported articles without a category', (new kinerity_import($db, $tools, 'phpbb_', 'xx'))->fallback_category_name());
+		$this->assertSame('KB_NO_SUCH_KEY', default_content::lang('en', 'KB_NO_SUCH_KEY'));
+		$this->assertSame('Imported articles without a category', default_content::lang('../../etc', 'KB_IMPORTED_NO_CATEGORY'));
 	}
 }

@@ -42,6 +42,6 @@ class kinerity_tables_set_aside extends \phpbb\db\migration\migration
 	 */
 	public function set_aside()
 	{
-		(new kinerity_import($this->db, $this->db_tools, $this->table_prefix))->set_aside();
+		(new kinerity_import($this->db, $this->db_tools, $this->table_prefix, (string) ($this->config['default_lang'] ?? 'en')))->set_aside();
 	}
 }

@@ -143,9 +143,9 @@ foreach ($backup_categories as $old_id => $row)
 check('every kinerity category converted once', !in_array(0, $map, true) && count(array_unique($map)) === count($map) && !array_diff($map, array_keys($categories)),
 	count($backup_categories) . ' kinerity, ' . count($categories) . ' now');
 
-$fallback = array_keys(array_filter($categories, fn($row) => $row['category_name'] === kinerity_import::FALLBACK_CATEGORY_NAME && !in_array((int) $row['category_id'], $map, true)));
-$extra = array_diff(array_keys($categories), $map, $fallback);
-check('no unexpected categories', !$extra, $extra ? 'ids ' . implode(', ', array_slice($extra, 0, 10)) : (count($fallback) . ' fallback category'));
+// The only category the import adds beyond kinerity's: the one for articles in no category
+$fallback = array_values(array_diff(array_keys($categories), $map));
+check('at most one category besides kinerity\'s (for articles in none)', count($fallback) <= 1, count($fallback) . ' extra');
 
 // Parents from the kinerity tree, as the import works them out
 $sorted = $backup_categories;
