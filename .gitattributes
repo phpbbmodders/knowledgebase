@@ -12,3 +12,4 @@ composer.lock     export-ignore
 phpunit.xml.*     export-ignore
 tests             export-ignore
 docs              export-ignore
+.editorconfig     export-ignore

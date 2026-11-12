@@ -1,6 +1,21 @@
 # Knowledge Base
 
-A knowledge base for phpBB: articles organised in categories, with attachments, Markdown or BBCode text, revisions, an approval workflow, search, and its own permission system, all managed from the ACP.
+[![Tests](https://github.com/phpbbmodders/knowledgebase/actions/workflows/tests.yml/badge.svg)](https://github.com/phpbbmodders/knowledgebase/actions/workflows/tests.yml) [![Lint](https://github.com/phpbbmodders/knowledgebase/actions/workflows/lint.yml/badge.svg)](https://github.com/phpbbmodders/knowledgebase/actions/workflows/lint.yml)
+
+A knowledge base for phpBB: categorised articles in Markdown or BBCode, with revisions, an approval workflow, search, and RSS and Atom feeds.
+
+## Features
+
+- Articles in categories, shown as one flat index with a category dropdown (the default) or as a category tree, in each member's board style, with an optional colour stylesheet.
+- Articles written in BBCode or Markdown, with attachments, custom fields (a dropdown, radio buttons or a checkbox list, each optionally required) and a plain-text description.
+- Private drafts, revisions, and an approval queue where moderators assign, review, approve or reject articles and edits; authors get notifications and, by default, private messages.
+- Co-authors, and **Change author** to hand an article to another member or a Knowledge Base team. Every transfer is logged.
+- Article status (draft, pending, pending revision) on article pages, category lists and queues, without showing what a draft says.
+- Search with phpBB-style native, MySQL fulltext or PostgreSQL fulltext backends, and a Knowledge Base block in the board's own search results.
+- A recent changes page with RSS and Atom feeds, optional comment topics, and an optional changelog forum.
+- Its own per-category permissions, managed with the rest of the settings in the ACP.
+- An optional introduction above the article index, in BBCode or Markdown.
+- Takes over the data of the original `sheer/knowledgebase` extension, and imports `kinerity/knowledgebase`.
 
 ## Screenshots
 
@@ -17,15 +32,11 @@ A knowledge base for phpBB: articles organised in categories, with attachments, 
 
 More screenshots, including the article form, the approval queue and the ACP settings: [docs/images/screenshots](docs/images/screenshots/README.md).
 
-Primary authorship of submitted articles can be transferred to another active
-member or a configured KB team using **Change author** on the article page.
-Grant moderators **Can change the primary author of submitted articles** in
-Knowledge Base category permissions. KB administrators already have access.
-Transfers are logged and retain co-authors and submitted revisions. Private
-drafts and articles with private draft edits must be submitted or discarded
-before authorship can change.
+## Requirements
 
-Article pages show status below the category. Category lists and review queues also show status, pending revisions, and “Has draft” for authors and authorized editors. Draft contents remain private. Markdown search excerpts retain their formatting.
+- phpBB 3.3.19 or later; phpBB 4.0 works too (tested with its development version)
+- PHP 8.1 or later
+- MySQL/MariaDB, PostgreSQL, SQLite or MSSQL
 
 ## Installation
 
@@ -83,17 +94,17 @@ sudo chmod -R 775 store
 
 Without shell access, set the `store` folder and everything in it to 775 with your FTP program (777 only if your host allows nothing else). Reload the Configuration page: the message goes away as soon as the folders can be made. Attachments that earlier versions kept in `ext/phpbbmodders/knowledgebase/files/` are moved across when the extension is updated; any that could not be moved stay in that folder and keep the old problem, so run the commands above and disable and enable the extension again.
 
-## Automated testing
-
-See [Testing](docs/testing.md) for local regression tests and disposable
-MySQL/PostgreSQL fixtures. The current GitHub workflow runs coding and
-extension validation checks, not these regression tests.
-
-[![Tests](https://github.com/phpbbmodders/knowledgebase/actions/workflows/tests.yml/badge.svg)](https://github.com/phpbbmodders/knowledgebase/actions/workflows/tests.yml)
-
 ## TODO
 
 Ideas not yet built, practical and speculative alike: [`docs/TODO.md`](docs/TODO.md).
+
+## Contributing
+
+Contributions are welcome!
+
+- **Bug reports**: [Open an issue](https://github.com/phpbbmodders/knowledgebase/issues).
+- **Everything else** (questions, feature requests, ideas, general discussion): [Use Discussions](https://github.com/orgs/phpbbmodders/discussions), or the [community forum](https://www.phpbbmodders.com/community/).
+- Pull requests are welcome for bug fixes or discussed features. See [Testing](docs/testing.md) for the PHPUnit suite and the browser checks.
 
 ## Acknowledgments
 
@@ -101,7 +112,6 @@ Based on the original [knowledgebase](https://github.com/sutrus/knowledgebase) e
 
 - Code review, bug fixes, and documentation assisted by [Claude](https://www.anthropic.com/claude).
 - Code review, bug fixes, and documentation assisted by [Codex](https://openai.com/codex/).
-
 
 ## License
 

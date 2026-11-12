@@ -43,7 +43,7 @@ class ext extends \phpbb\extension\base
 		if (!$this->check_phpbb_version() || !$this->check_php_version())
 		{
 			$language->add_lang('install_failed', 'phpbbmodders/knowledgebase');
-			$messages[] = $language->lang('INSTALL_FAILED_VERSION', self::MIN_PHPBB_VERSION, PHPBB_VERSION, self::MIN_PHP_VERSION, PHP_VERSION);
+			$messages[] = $language->lang('KB_NOT_ENABLEABLE', self::MIN_PHPBB_VERSION, PHPBB_VERSION, self::MIN_PHP_VERSION, PHP_VERSION);
 		}
 
 		// The original sheer/knowledgebase package shares this extension's
