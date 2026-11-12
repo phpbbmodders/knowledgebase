@@ -125,7 +125,7 @@
 						{% endif %}
 					</div>
 					<div id="message-box" class="message-box">
-						<textarea name="message" id="message" rows="15" cols="76" tabindex="4" onselect="storeCaret(this);"
+						<textarea name="message" id="message" rows="15" cols="76" tabindex="4" aria-label="{{ lang('MESSAGE_BODY') }}" onselect="storeCaret(this);"
 							onclick="storeCaret(this);" onkeyup="storeCaret(this);" onfocus="initInsertions();"
 							class="inputbox">{{ MESSAGE }}</textarea>
 					</div>

@@ -46,7 +46,7 @@
 						{{ S_FORM_TOKEN }}
 						<input type="hidden" name="redirect_queue" value="1">
 						<input type="hidden" name="action" value="assign">
-						<select name="team_id">{{ art_row.TEAM_OPTIONS }}</select>
+						<select name="team_id" aria-label="{{ lang('KB_ASSIGN_TO') }}">{{ art_row.TEAM_OPTIONS }}</select>
 						<button class="button2" type="submit">{{ lang('KB_ASSIGN') }}</button>
 					</form>&nbsp;
 				{% endif %}
@@ -64,7 +64,7 @@
 					<form method="post" action="{{ art_row.S_ACTION }}">
 						{{ S_FORM_TOKEN }}
 						<input type="hidden" name="redirect_queue" value="1">
-						<select name="action">
+						<select name="action" aria-label="{{ lang('KB_QUEUE_ACTION') }}">
 							{% if art_row.S_STATUS_NEW and art_row.S_CAN_REVIEW %}
 								<option value="review">{{ lang('KB_MARK_REVIEWED') }}</option>
 							{% endif %}

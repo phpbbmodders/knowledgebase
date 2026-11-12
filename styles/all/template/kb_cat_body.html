@@ -5,9 +5,9 @@
 {% if S_FLAT_LAYOUT %}
 	<div class="panel">
 		<div class="inner">
-			<strong>{{ lang('KB_NARROW_CATEGORY') }}</strong><br>
+			<label for="kb_category_select"><strong>{{ lang('KB_NARROW_CATEGORY') }}</strong></label><br>
 			<form method="get" action="{{ S_ACTION }}">
-				<select name="id" onchange="this.form.submit();">
+				<select name="id" id="kb_category_select" onchange="this.form.submit();">
 					<option value="0">{{ lang('KB_ALL_CATEGORIES') }}</option>
 					{{ CATS_OPTIONS }}
 				</select>

@@ -47,12 +47,12 @@
 				<p>{{ lang('LINK_TO_ARTICLE') }}{{ lang('COLON') }} <a class="buttoncopy"
 						data-copytarget="#bbcode">{{ lang('COPY_TO_BUFFER') }}</a></p>
 				<code>{{ U_ARTICLE }}</code>
-				<input value="{{ U_ARTICLE }}" id="bbcode" type="text">
+				<input value="{{ U_ARTICLE }}" id="bbcode" type="text" aria-label="{{ lang('LINK_TO_ARTICLE') }}">
 				<hr>
 				<p>{{ lang('DIRECT_LINK') }}{{ lang('COLON') }} <a class="buttoncopy"
 						data-copytarget="#link">{{ lang('COPY_TO_BUFFER') }}</a></p>
 				<code>{{ U_DIRECT_LINK }}</code>
-				<input value="{{ U_DIRECT_LINK }}" id="link" type="text">
+				<input value="{{ U_DIRECT_LINK }}" id="link" type="text" aria-label="{{ lang('DIRECT_LINK') }}">
 			</div>
 			<ul class="post-buttons">
 				{% if (not S_APPROVED or S_HAS_REVISION) and S_CAN_APPROVE %}

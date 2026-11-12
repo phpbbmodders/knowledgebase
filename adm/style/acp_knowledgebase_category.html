@@ -203,7 +203,7 @@
 			<fieldset class="quick">
 				{{ lang('SELECT_CATEGORY') }}{{ lang('COLON') }}
 				<label>
-					<select name="parent_id"
+					<select name="parent_id" aria-label="{{ lang('SELECT_CATEGORY') }}"
 						onchange="if(this.options[this.selectedIndex].value !== -1){ this.form.submit(); }">{{ CATS_BOX }}
 					</select>
 				</label>
@@ -214,7 +214,7 @@
 		{% endif %}
 		<fieldset class="quick">
 			<input type="hidden" name="action" value="add"/>
-			<label><input type="text" name="category_name" value="" maxlength="255"/></label>
+			<label><input type="text" name="category_name" value="" maxlength="255" aria-label="{{ lang('ADD_CATEGORY') }}"/></label>
 			<input class="button2" name="addcat" type="submit" value="{{ lang('ADD_CATEGORY') }}"/>
 			{{ S_FORM_TOKEN }}
 		</fieldset>
