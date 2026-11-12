@@ -406,3 +406,10 @@ table.kb-index-table .kb-index-author {
 		margin-right: 0;
 	}
 }
+
+/* Introduction text under the Knowledge Base title */
+.kb-intro {
+	margin: 0 0 10px;
+	font-size: 1.1em;
+	line-height: 1.4em;
+}

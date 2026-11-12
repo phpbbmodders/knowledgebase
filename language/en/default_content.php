@@ -25,4 +25,5 @@ if (empty($lang) || !is_array($lang))
 
 $lang = array_merge($lang, [
 	'KB_IMPORTED_NO_CATEGORY' => 'Imported articles without a category',
+	'KB_INTRO_DEFAULT_TEXT'   => 'This section contains detailed articles elaborating on some of the common issues users encounter. Articles submitted by members of the community are checked for accuracy by the team. If you do not find the answer to your question here, we recommend looking through the forums as well as using the search.',
 ]);

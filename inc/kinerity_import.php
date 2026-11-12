@@ -132,7 +132,7 @@ class kinerity_import
 	 */
 	public function fallback_category_name(): string
 	{
-		return htmlspecialchars(default_content::lang($this->language, 'KB_IMPORTED_NO_CATEGORY'), ENT_COMPAT, 'UTF-8');
+		return utf8_htmlspecialchars(default_content::lang($this->language, 'KB_IMPORTED_NO_CATEGORY'));
 	}
 
 	/**
@@ -619,7 +619,7 @@ class kinerity_import
 	 */
 	public static function category_details(string $stored): string
 	{
-		return self::fit_escaped(self::encode_supplementary(htmlspecialchars(self::plain_text($stored), ENT_COMPAT, 'UTF-8')), self::TEXT_COLUMN_LENGTH);
+		return self::fit_escaped(self::encode_supplementary(utf8_htmlspecialchars(self::plain_text($stored))), self::TEXT_COLUMN_LENGTH);
 	}
 
 	/**
@@ -659,7 +659,7 @@ class kinerity_import
 			// Never end on part of an entity such as &#128640; (characters
 			// phpBB stores as entities stay entities in $plain)
 			$cut = preg_replace('/&#?[0-9a-z]*$/i', '', mb_substr($plain, 0, $keep, 'UTF-8'));
-			$fitted = htmlspecialchars(rtrim($cut), ENT_COMPAT, 'UTF-8') . "\u{2026}";
+			$fitted = utf8_htmlspecialchars(rtrim($cut)) . "\u{2026}";
 			if (mb_strlen($fitted, 'UTF-8') <= $length)
 			{
 				return $fitted;

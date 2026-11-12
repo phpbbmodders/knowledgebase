@@ -34,6 +34,7 @@ use phpbbmodders\knowledgebase\inc\feed;
 use phpbbmodders\knowledgebase\inc\field\kb_field_type_factory;
 use phpbbmodders\knowledgebase\inc\icon;
 use phpbbmodders\knowledgebase\inc\functions_kb;
+use phpbbmodders\knowledgebase\inc\intro;
 use phpbbmodders\knowledgebase\inc\upload_directory;
 use phpbbmodders\knowledgebase\search\kb_search_backend_factory;
 
@@ -165,6 +166,9 @@ class acp_controller
 	 * @param string                    $kb_groups_table
 	 * @param alternative_styles        $alt_styles
 	 */
+	/** @var intro|null The index introduction text; optional so older callers still build */
+	protected intro|null $intro;
+
 	public function __construct(
 		driver_interface $db, config $config, db_text $config_text, helper $helper, manager $ext_manager,
 		language $language, auth $auth, request_interface $request, template $template, user $user,
@@ -173,9 +177,10 @@ class acp_controller
 		kb_field_type_factory $field_factory,
 		string $phpbb_root_path, string $php_ext, string $articles_table, string $categories_table,
 		string $logs_table, string $attachments_table, string $options_table, string $kb_users_table,
-		string $kb_groups_table, alternative_styles $alt_styles
+		string $kb_groups_table, alternative_styles $alt_styles, intro|null $intro = null
 	)
 	{
+		$this->intro = $intro;
 		$this->db = $db;
 		$this->config = $config;
 		$this->config_text = $config_text;
@@ -282,6 +287,10 @@ class acp_controller
 			'EXTGROUP_FILESIZE'        => $max_filesize,
 			'ADVANCED_FORM'            => $announce_forum_id ? '' : 'none',
 			'HIERARCHICAL_INDEX_ON'    => $this->config['kb_hierarchical_index'] ? 'checked="checked"' : '',
+			'INTRO_ON'                 => $this->intro && $this->intro->is_enabled() ? 'checked="checked"' : '',
+			'INTRO_DISPLAY'            => $this->intro && $this->intro->is_enabled() ? '' : 'none',
+			'INTRO_TEXT'               => $this->intro ? $this->intro->for_edit() : '',
+			'INTRO_MARKDOWN_ON'        => $this->intro && $this->intro->is_markdown() ? 'checked="checked"' : '',
 			'ALT_STYLE_ON'             => $this->config['kb_alt_style_enabled'] ? 'checked="checked"' : '',
 			'ALT_STYLE_DISPLAY'        => $this->config['kb_alt_style_enabled'] ? '' : 'none',
 			'S_ALT_STYLE_OPTIONS'      => $this->alternative_style_options((string) $this->config['kb_alt_style']),
@@ -360,6 +369,14 @@ class acp_controller
 		$this->config->set('kb_font_icon', $kb_font_icon);
 
 		$this->config->set('kb_hierarchical_index', $this->request->variable('hierarchical_index', 0) ? 1 : 0);
+		if ($this->intro)
+		{
+			$this->intro->save(
+				(bool) $this->request->variable('intro_enabled', 0),
+				utf8_normalize_nfc($this->request->variable('intro_text', '', true)),
+				(bool) $this->request->variable('intro_markdown', 0)
+			);
+		}
 		$this->config->set('kb_feed_format', $feed_format);
 		$this->save_alternative_style();
 		$this->save_announcement_forum();

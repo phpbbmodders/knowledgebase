@@ -18,6 +18,7 @@ services:
             - '@phpbbmodders.knowledgebase.inc'
             - '%tables.articles_table%'
             - '%tables.categories_table%'
+            - '@phpbbmodders.knowledgebase.intro'
 
     phpbbmodders.knowledgebase.controller.category:
         class: phpbbmodders\knowledgebase\controller\category
@@ -34,6 +35,7 @@ services:
             - '@phpbbmodders.knowledgebase.inc'
             - '%tables.articles_table%'
             - '%tables.categories_table%'
+            - '@phpbbmodders.knowledgebase.intro'
 
     phpbbmodders.knowledgebase.controller.recent_changes:
         class: phpbbmodders\knowledgebase\controller\recent_changes
@@ -262,6 +264,14 @@ services:
             # Argument order differs between 3.3.x and 4.0; the renderer class copes with either.
             - [configure_user, ['@user', '@config', '@auth']]
 
+    phpbbmodders.knowledgebase.intro:
+        class: phpbbmodders\knowledgebase\inc\intro
+        arguments:
+            - '@config'
+            - '@config_text'
+            - '@phpbbmodders.knowledgebase.article_text'
+            - '@template'
+
     phpbbmodders.knowledgebase.article_text:
         class: phpbbmodders\knowledgebase\textformatter\article_text
         arguments:
@@ -346,6 +356,7 @@ services:
             - '%tables.kb_users_table%'
             - '%tables.kb_groups_table%'
             - '@phpbbmodders.knowledgebase.alternative_styles'
+            - '@phpbbmodders.knowledgebase.intro'
 
     phpbbmodders.knowledgebase.controller.set_order:
         class: phpbbmodders\knowledgebase\controller\set_order
