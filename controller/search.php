@@ -320,7 +320,9 @@ class search
 		{
 			$sql_sort = $sort_by_sql[$sort_key] . (($sort_dir == 'a') ? ' ASC' : ' DESC');
 
-			$sql = 'SELECT DISTINCT a.*, u.user_id, u.username, u.user_colour
+			// No DISTINCT: one user per article, and MSSQL cannot compare the
+			// text columns DISTINCT would have to
+			$sql = 'SELECT a.*, u.user_id, u.username, u.user_colour
 					FROM ' . $this->articles_table . ' a
 					LEFT JOIN ' . USERS_TABLE . ' u ON (a.author_id = u.user_id AND a.author_type = 0)
 					WHERE ' . $this->db->sql_in_set('article_id', $id_ary) . '

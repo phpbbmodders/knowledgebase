@@ -54,8 +54,12 @@ class version_1_0_5 extends \phpbb\db\migration\migration
 
 	public function add_config()
 	{
-		$sql = 'INSERT INTO ' . $this->table_prefix . 'kb_config' . ' (config_name, config_value) VALUES
-			(\'sort_type\', 0)';
+		// A string: config_value is a text column, which MSSQL will not
+		// compare with or fill from a number
+		$sql = 'INSERT INTO ' . $this->table_prefix . 'kb_config ' . $this->db->sql_build_array('INSERT', [
+			'config_name'  => 'sort_type',
+			'config_value' => '0',
+		]);
 		$this->db->sql_query($sql);
 	}
 }

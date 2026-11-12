@@ -261,7 +261,9 @@ class posting
 		$delete_allowed = $edit_allowed = $article_author_id = false;
 		if ($mode === 'edit' || $mode === 'delete')
 		{
-			$sql = 'SELECT DISTINCT a.*, c.category_name, c.category_id
+			// No DISTINCT: one category per article, and MSSQL cannot compare
+			// the text columns DISTINCT would have to
+			$sql = 'SELECT a.*, c.category_name, c.category_id
 				FROM ' . $this->articles_table . ' a, ' . $this->categories_table . ' c
 				WHERE article_id = ' . $art_id . '
 					AND (c.category_id = a.article_category_id)';
