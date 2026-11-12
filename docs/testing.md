@@ -1411,3 +1411,79 @@ phpBB 3.3.x and master. On master PHPUnit 10 also reports 53 deprecations (data 
 are not static), which do not fail the run. MySQL can answer `mysqladmin ping` on its socket before it
 accepts TCP connections; tests started in that gap fail to connect, so wait a few seconds more
 after a fresh container reports ready. The CI health check pings over TCP for that reason.
+
+## Importing from kinerity/knowledgebase - 11/12/2026
+
+New migrations `kinerity_tables_set_aside` (which `version_1_0_0` now depends on) and
+`version_2_0_32`, with `inc/kinerity_import.php`, import a board's `kinerity/knowledgebase` data
+when this extension is enabled; see [Moving from kinerity/knowledgebase](upgrading-from-kinerity.md).
+
+**PHPUnit.** `tests/kb_kinerity_import_test.php` builds this extension's real tables from every
+migration's `update_schema()`, so a column the import writes that a later migration removed fails
+the test (it caught `bbcode_bitfield`, dropped by `version_1_0_3`). It covers moving kinerity's
+tables aside and retrying that, kinerity 1.0.x without `article_edit_name`, the category tree,
+plain-text details (including an emoji phpBB stored as an entity, which MySQL's utf8 tables cannot
+hold raw), each article state, the lowest category as primary and the rest cross-listed, articles
+in no category or only a deleted one, counters, permissions per group and user on every category,
+the board-wide read and admin permissions, kinerity's settings, notification types and extension
+entry removed, an import stopped part way, two requests converting the same batch at once, a purge
+followed by a second import, a board that never ran kinerity, and a board that already has
+categories. It runs on SQLite, MySQL and PostgreSQL, and on PostgreSQL also with a sequence made the
+phpBB 3.3 way, which phpBB 4.0's tools leave behind when the table is dropped (without dropping it
+too, this extension's table of the same name cannot be created). The full suite, 559 tests, passes on
+phpBB 3.3.x and master with the MySQL 8.0 and PostgreSQL 16 fixtures, none skipped.
+
+**Boards.** Claude built boards with seed-forum's `config/kinerity-33.yml`, `kinerity-40.yml` and
+`kinerity-33-mssql.yml` and their `-switch` configs, and `bin/seed-kinerity-fixtures.php`: 2,000
+categories up to five levels deep and 50,000 articles (about 40,000 approved, 4,000 waiting, 3,000
+deleted and 3,000 denied; 14,000 in two to four categories; about 1,000 in no category or only a
+deleted one; 70,000 category links), plus kinerity's own roles, a group and two members with
+permissions of their own, and a kinerity notification. kinerity was enabled in the ACP (it cannot be
+enabled from phpBB's command line; see below), seeded, disabled, and this extension enabled.
+`tests/board/kinerity_import_check.php` then compared every backup row with what was imported.
+
+| phpBB | Database | Enabled through | Articles | Time | Result |
+| --- | --- | --- | --- | --- | --- |
+| 3.3 | MySQL 8.4 | command line | 50,000 | 262 s | all 35 checks pass |
+| 3.3 | PostgreSQL 16 | ACP | 50,000 | one page load | all 35 checks pass |
+| 3.3 | SQLite | command line | 50,000 | 132 s | all 35 checks pass |
+| 4.0 | MySQL 8.4 | command line | 50,000 | 246 s | all 35 checks pass |
+| 4.0 | PostgreSQL 16 | ACP | 50,000 | 278 s, 2 attempts | all 35 checks pass |
+
+`tests/browser/kb_kinerity_import.js` (14 checks, ids from `kb_kinerity_import_ids.php`) passed on a
+phpBB 3.3 PostgreSQL board: guests refused as kinerity refused them, a member sees the imported
+articles and sections, BBCode formatted, special characters shown once, a cross-listed article in its
+second category, a deactivated article hidden, waiting articles in the queue as New, the ACP pages,
+no kinerity module left, and search after building the index.
+
+**Found and fixed on the way.**
+- phpBB's ACP enables an extension in one page load (`meta_refresh()` only sets a template value;
+  the loop carries on), so a large import outlasts nginx's 60 seconds and ends on a 504 while PHP
+  carries on. On these boards PHP finished it. An admin who enables again meanwhile starts a second
+  import of the same batch; that created 12,000 duplicate articles on the 4.0 PostgreSQL board. Each
+  backup row is now claimed inside the batch's transaction before it is converted (`kb_new_id` is set
+  to -1 where it is still 0, and only the request that changed the row goes on), and the fallback
+  category is reused. The rebuilt board, with the same two overlapping attempts, passed. Retrying in
+  the ACP also needs the cache purged first, or phpBB stops on a duplicate key in its extension list;
+  the guide says so.
+- Two existing bugs stopped this extension from being enabled on a new PostgreSQL board at all
+  (`version_2_0_30`'s option id, `version_2_0_31`'s index name on phpBB 3.3); fixed separately with
+  `tests/kb_options_id_migration_test.php`.
+
+**kinerity itself**, as found by the fixture (not changed here): its first migration reads the
+current user's name, so it cannot be enabled from phpBB's command line; on PostgreSQL it inserts its
+sample category and article with id 1 without moving the sequences on, so the next insert fails; its
+article list loads every article at once and runs out of memory with tens of thousands; and it stops
+with an error on an article with no category. `SEED_KINERITY_LEFTOVERS=0` leaves those articles out
+for boards meant to be viewed in kinerity.
+
+**MSSQL.** kinerity cannot be installed on MSSQL: its first migration inserts its sample category
+with a fixed id, which MSSQL refuses for an identity column. So no board can bring kinerity data from
+MSSQL, and there is no MSSQL row above. Trying it showed that this extension cannot be enabled on a
+new MSSQL board either: `version_1_0_0` stops on its own fixed-id permission options in the same way,
+and, with that worked around, on a later step that compares an `ntext` column with a number. That
+is a separate piece of work, not part of this change.
+
+**Not covered.** Boards upgraded from phpBB 3.3 to 4.0 with kinerity data (the sequence case is
+covered by PHPUnit only); a custom style; kinerity versions before 1.2.1 on a board (1.0.x's missing
+column is covered by PHPUnit only); MariaDB.

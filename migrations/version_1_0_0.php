@@ -16,7 +16,12 @@ class version_1_0_0 extends \phpbb\db\migration\migration
 {
 	public static function depends_on()
 	{
-		return ['\phpbb\db\migration\data\v310\dev'];
+		// kinerity_tables_set_aside moves the kinerity/knowledgebase tables
+		// that share this extension's table names out of the way first
+		return [
+			'\phpbb\db\migration\data\v310\dev',
+			'\phpbbmodders\knowledgebase\migrations\kinerity_tables_set_aside',
+		];
 	}
 
 	/**
