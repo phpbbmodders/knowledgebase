@@ -1411,3 +1411,63 @@ phpBB 3.3.x and master. On master PHPUnit 10 also reports 53 deprecations (data 
 are not static), which do not fail the run. MySQL can answer `mysqladmin ping` on its socket before it
 accepts TCP connections; tests started in that gap fail to connect, so wait a few seconds more
 after a fresh container reports ready. The CI health check pings over TCP for that reason.
+
+## Enabling on MSSQL - 11/12/2026
+
+The extension could not be enabled on a fresh MSSQL board, on phpBB 3.3 or 4.0:
+
+- `version_1_0_0` inserts the seven `kb_options` rows with fixed ids. MSSQL refuses an explicit
+  value for an identity column unless `IDENTITY_INSERT` is on, so the insert now switches it on
+  and off around the rows on MSSQL, the way phpBB's own installer fills its ACL options.
+- `version_1_0_0` and `version_1_0_5` put numbers into `kb_config.config_value`, a text column
+  (`ntext` on MSSQL), which MSSQL refuses ("Operand type clash: int is incompatible with ntext").
+  The values are now strings.
+- `version_1_0_0` ran its extension-group query twice and never freed the first result, and
+  `version_2_0_0` never freed its `kb_config` result. MSSQL then refused the next transaction
+  ("New transaction is not allowed because there are other threads running in the session").
+
+Once enabled, two more things failed on MSSQL:
+
+- Adding the first category added 1 to `MAX(right_id)` of an empty table. phpBB's MSSQL driver
+  returns that NULL as an empty string, and `'' + 1` is a TypeError in PHP 8. Moving a category
+  to the root had the same sum. Both now cast to an integer.
+- Search, the article edit form and article comments used `SELECT DISTINCT` over rows with text
+  columns, which MSSQL cannot compare. Each join matches one row (one author, one category, one
+  poster), so `DISTINCT` is dropped.
+
+`kb_mssql_migration_test.php` (5 tests) checks the `IDENTITY_INSERT` statements on MSSQL and
+their absence elsewhere, the string config values, and that no result is left open.
+`kb_acp_first_category_test.php` checks the first root category with both NULL and an empty
+string from `MAX()`. Both files fail on the code before this change.
+
+`tests/browser/kb_page_sweep.js` is a read-only check for any seeded board: it logs in as the
+seed-forum administrator, opens the index, a category, an article, search, the queue, Manage
+Your Articles, recent changes and its RSS feed, the add and edit forms, and every Knowledge Base
+ACP module, and fails on a server error, a PHP error or phpBB's SQL error page. It loads only the
+HTML (styles, scripts and images are skipped), because PHP's built-in server serves them slowly.
+
+```bash
+KB_TEST_URL=http://localhost:8171 node /path/to/playwright-skill/run.js tests/browser/kb_page_sweep.js
+```
+
+Claude built a fresh seed-forum board with the full Knowledge Base fixtures for each of phpBB
+3.3.19 and 4.0.0-a3-dev on SQLite, MySQL 8.4, MariaDB, PostgreSQL 16 and MSSQL (SQL Server 2022),
+ten boards. On each, the sweep loaded 24 of 24 pages cleanly, and disabling, purging and enabling
+again through phpBB's CLI left no Knowledge Base migrations, tables, settings or ACP modules after
+the purge and all 40 migrations done after the enable. MSSQL boards run PHP 8.4 in seed-forum's
+driver image and are served with `bin/serve-board.py`; on a 3.3 board served that way, turn
+`enable_mod_rewrite` off first, since PHP's built-in server rewrites no clean URLs.
+
+The PostgreSQL boards fail on `main` at `version_2_0_30` (duplicate key in `kb_options`); the
+branch `fix/postgres-kb-options-id` fixes that, so the PostgreSQL boards ran this change merged
+with that branch. That branch gives the new option an explicit id, which MSSQL also only takes
+with `IDENTITY_INSERT` on: whichever of the two lands second needs the same wrapper in
+`version_2_0_30::add_permission()`. The MSSQL 3.3 board was run again on that combination, with
+the wrapper added, and passed the sweep and the lifecycle too.
+
+Building these boards needed three seed-forum fixes: a cache purge after enabling (seeds could not
+find the extension's services), GD in the MSSQL PHP image (the image fixtures), and several
+workers for `serve-board.py` (a browser's unused early connection held the single one).
+
+The PHPUnit suite passes on phpBB 3.3.x and master with the MySQL and PostgreSQL fixtures above:
+511 tests, none skipped.
