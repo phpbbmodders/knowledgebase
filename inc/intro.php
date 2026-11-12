@@ -56,7 +56,7 @@ class intro
 	 */
 	public static function stored_plain_text(string $text): string
 	{
-		return '<t>' . htmlspecialchars($text, ENT_COMPAT, 'UTF-8') . '</t>';
+		return '<t>' . utf8_htmlspecialchars($text) . '</t>';
 	}
 
 	/**
