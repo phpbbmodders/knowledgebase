@@ -18,12 +18,12 @@ if (!defined('PHPBB_VERSION')) define('PHPBB_VERSION', '3.3.19');
 
 class kb_ext_enableable_test extends \PHPUnit\Framework\TestCase
 {
-	private function ext(bool $original_enabled): ext
+	private function ext(bool $original_enabled, bool $kinerity_enabled = false): ext
 	{
 		$language = $this->getMockBuilder(\phpbb\language\language::class)->disableOriginalConstructor()->getMock();
 		$language->method('lang')->willReturnCallback(fn() => implode('|', func_get_args()));
 		$manager = $this->getMockBuilder(\phpbb\extension\manager::class)->disableOriginalConstructor()->getMock();
-		$manager->method('is_enabled')->willReturnCallback(fn($name) => $original_enabled && $name === 'sheer/knowledgebase');
+		$manager->method('is_enabled')->willReturnCallback(fn($name) => ($original_enabled && $name === 'sheer/knowledgebase') || ($kinerity_enabled && $name === 'kinerity/knowledgebase'));
 		$container = $this->createMock(\Symfony\Component\DependencyInjection\ContainerInterface::class);
 		$container->method('get')->willReturnCallback(fn($id) => ['language' => $language, 'ext.manager' => $manager][$id]);
 
@@ -50,5 +50,18 @@ class kb_ext_enableable_test extends \PHPUnit\Framework\TestCase
 	public function test_it_refuses_while_the_original_package_is_enabled_and_says_which()
 	{
 		$this->assertSame(['INSTALL_FAILED_ORIGINAL_ENABLED|sheer/knowledgebase'], $this->ext(true)->is_enableable());
+	}
+
+	public function test_it_refuses_while_kinerity_knowledgebase_is_enabled_and_says_which()
+	{
+		$this->assertSame(['INSTALL_FAILED_KINERITY_ENABLED|kinerity/knowledgebase'], $this->ext(false, true)->is_enableable());
+	}
+
+	public function test_it_lists_both_refusals_when_both_packages_are_enabled()
+	{
+		$this->assertSame(
+			['INSTALL_FAILED_ORIGINAL_ENABLED|sheer/knowledgebase', 'INSTALL_FAILED_KINERITY_ENABLED|kinerity/knowledgebase'],
+			$this->ext(true, true)->is_enableable()
+		);
 	}
 }

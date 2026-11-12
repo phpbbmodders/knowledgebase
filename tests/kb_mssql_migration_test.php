@@ -14,6 +14,7 @@ require_once __DIR__ . '/kb_extensions_test.php';
 require_once dirname(__DIR__) . '/migrations/version_1_0_0.php';
 require_once dirname(__DIR__) . '/migrations/version_1_0_5.php';
 require_once dirname(__DIR__) . '/migrations/version_2_0_0.php';
+require_once dirname(__DIR__) . '/migrations/version_2_0_30.php';
 
 /**
  * The first migrations stopped the extension from being enabled on a fresh MSSQL
@@ -43,6 +44,7 @@ class kb_mssql_migration_test extends \PHPUnit\Framework\TestCase
 		$rowsets = [
 			'extension_groups' => [['extension' => 'png', 'group_name' => 'IMAGES'], ['extension' => 'zip', 'group_name' => 'ARCHIVES']],
 			'max_filesize'     => [['config_value' => '262144']],
+			'MAX(auth_option_id)' => [['max_id' => '7']],
 			'kb_config'        => $kb_config,
 		];
 		$rows = [];
@@ -146,6 +148,27 @@ class kb_mssql_migration_test extends \PHPUnit\Framework\TestCase
 		$this->migration(version_1_0_5::class, 'mssqlnative')->add_config();
 
 		$this->assertSame(["INSERT INTO phpbb_kb_config (config_name, config_value) VALUES ('sort_type', '0')"], $this->queries);
+	}
+
+	public function test_mssql_adds_the_change_author_option_with_identity_insert_on()
+	{
+		$this->migration(version_2_0_30::class, 'mssqlnative')->add_permission();
+
+		$this->assertSame([
+			"SELECT auth_option_id FROM phpbb_kb_options WHERE auth_option = 'kb_m_change_author'",
+			'SELECT MAX(auth_option_id) AS max_id FROM phpbb_kb_options',
+			'SET IDENTITY_INSERT phpbb_kb_options ON',
+			"INSERT INTO phpbb_kb_options (auth_option_id, auth_option, is_global, is_local) VALUES (8, 'kb_m_change_author', 0, 1)",
+			'SET IDENTITY_INSERT phpbb_kb_options OFF',
+		], $this->queries);
+	}
+
+	public function test_other_databases_add_the_change_author_option_without_identity_insert()
+	{
+		$this->migration(version_2_0_30::class, 'postgres')->add_permission();
+
+		$this->assertCount(3, $this->queries);
+		$this->assertStringStartsWith('INSERT INTO phpbb_kb_options', $this->queries[2]);
 	}
 
 	public function test_reading_the_old_kb_config_frees_its_result()

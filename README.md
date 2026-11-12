@@ -48,6 +48,10 @@ Upgrading from the original `sheer/knowledgebase` extension? See
 [Upgrading from the original](docs/upgrading-from-original.md): your data carries
 over.
 
+Moving from the `kinerity/knowledgebase` extension? See
+[Moving from kinerity/knowledgebase](docs/upgrading-from-kinerity.md): enabling this extension
+imports its categories, articles and permissions.
+
 Attachments are stored under `store/phpbbmodders_knowledgebase/files/` in the board's own folder,
 with the rest of phpBB's data, so they stay when the extension's folder is replaced to upgrade it.
 The folder is made when the extension is enabled and has its own `.htaccess`. **That only works on
