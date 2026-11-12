@@ -75,9 +75,21 @@ class manage_module
 
 		$action = $request->variable('action', '');
 		$update = ($request->is_set_post('update'));
-		$category_id = $request->variable('f', '');
+		$category_id = $request->variable('f', 0);
 		$parent_id = $request->variable('parent_id', 0);
 		$copy_perm_from_id = $request->variable('cat_perm_from', 0);
+
+		// Every change below needs this page's form token (add, edit,
+		// delete) or its link hash (move up/down, sync)
+		add_form_key('kb_acp_manage');
+		if ($update && !check_form_key('kb_acp_manage'))
+		{
+			trigger_error($language->lang('FORM_INVALID') . adm_back_link($this->u_action . '&amp;parent_id=' . $parent_id), E_USER_WARNING);
+		}
+		if (in_array($action, ['move_up', 'move_down', 'sync'], true) && !check_link_hash($request->variable('hash', ''), 'kb_acp_manage'))
+		{
+			trigger_error($language->lang('FORM_INVALID') . adm_back_link($this->u_action . '&amp;parent_id=' . $parent_id), E_USER_WARNING);
+		}
 
 		if ($update)
 		{
@@ -331,11 +343,11 @@ class manage_module
 						'CATEGORY_DESCR' => $row['category_details'],
 						'ARTICLES'       => $row['number_articles'],
 						'U_CATEGORY'     => $this->u_action . '&amp;parent_id=' . $row['category_id'],
-						'U_MOVE_UP'      => $url . '&amp;action=move_up',
-						'U_MOVE_DOWN'    => $url . '&amp;action=move_down',
+						'U_MOVE_UP'      => $url . '&amp;action=move_up&amp;hash=' . generate_link_hash('kb_acp_manage'),
+						'U_MOVE_DOWN'    => $url . '&amp;action=move_down&amp;hash=' . generate_link_hash('kb_acp_manage'),
 						'U_EDIT'         => $url . '&amp;action=edit',
 						'U_DELETE'       => $url . '&amp;action=delete',
-						'U_SYNC'         => $url . '&amp;action=sync',
+						'U_SYNC'         => $url . '&amp;action=sync&amp;hash=' . generate_link_hash('kb_acp_manage'),
 					]
 				);
 			} while ($row = $db->sql_fetchrow($result));

@@ -33,17 +33,17 @@ class attachments_info
 				],
 				'orphan'      => [
 					'title' => 'ACP_LIBRARY_ATTACHMENTS_ORPHAN',
-					'auth'  => 'ext_phpbbmodders/knowledgebase && acl_a_board',
+					'auth'  => 'ext_phpbbmodders/knowledgebase && acl_a_board && acl_a_manage_kb',
 					'cat'   => ['ACP_KNOWLEDGE_BASE'],
 				],
 				'extra_files' => [
 					'title' => 'ACP_LIBRARY_ATTACHMENTS_EXTRA_FILES',
-					'auth'  => 'ext_phpbbmodders/knowledgebase && acl_a_board',
+					'auth'  => 'ext_phpbbmodders/knowledgebase && acl_a_board && acl_a_manage_kb',
 					'cat'   => ['ACP_KNOWLEDGE_BASE'],
 				],
 				'lost_files'  => [
 					'title' => 'ACP_LIBRARY_ATTACHMENTS_LOST_FILES',
-					'auth'  => 'ext_phpbbmodders/knowledgebase && acl_a_board',
+					'auth'  => 'ext_phpbbmodders/knowledgebase && acl_a_board && acl_a_manage_kb',
 					'cat'   => ['ACP_KNOWLEDGE_BASE'],
 				],
 			],

@@ -96,7 +96,28 @@ class kb_acp_csrf_test extends \PHPUnit\Framework\TestCase
 			['search_index', ['id', 'index'], [], ['action' => 'create', 'hash' => 'kb_acp_search_create_valid'], ''],
 			['search_index', ['id', 'index'], ['continue'], ['action' => 'create'], 'probe,create,1'],
 			['search_index', ['id', 'index'], ['cancel'], [], 'probe,create,1'],
+			['get_mask', ['setting', 'group', [2], [1], false], ['submit'], [], ''],
+			['get_mask', ['setting', 'group', [2], [1], false], [], ['apply_all_permissions' => true], ''],
 		];
+	}
+
+	public function test_forged_article_move_is_rejected_before_moving()
+	{
+		$this->request_values(['submit'], ['aid' => 5, 'to_id' => 2]);
+		$kb = $this->createMock(\phpbbmodders\knowledgebase\inc\functions_kb::class);
+		$kb->method('get_kb_article_info')->willReturn(['article_title' => 'A', 'article_category_id' => 1, 'display_order' => 1]);
+		$kb->expects($this->never())->method('kb_move_article');
+		$this->inject('kb', $kb);
+		try
+		{
+			$this->controller->move_article();
+		}
+		catch (\RuntimeException $error)
+		{
+			$this->assertSame('FORM_INVALID', $error->getMessage());
+			return;
+		}
+		$this->fail('A forged article move must be rejected');
 	}
 
 	/** @dataProvider batch_keys */
