@@ -85,6 +85,11 @@ tables are kept, unchanged.
   A group or user that already has a setting for `u_kb_view` or `a_manage_kb`
   keeps it.
 
+- **The introduction text** kinerity showed above its index. This extension's
+  own introduction (Extensions → Knowledge Base → Configuration) starts out
+  with kinerity's text and is switched on after an import, so visitors still
+  see it. Edit it or switch it off there.
+
 ## What is removed
 
 After the import, kinerity's permissions (with their settings in roles,

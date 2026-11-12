@@ -1487,3 +1487,23 @@ is a separate piece of work, not part of this change.
 **Not covered.** Boards upgraded from phpBB 3.3 to 4.0 with kinerity data (the sequence case is
 covered by PHPUnit only); a custom style; kinerity versions before 1.2.1 on a board (1.0.x's missing
 column is covered by PHPUnit only); MariaDB.
+
+## Introduction text on the index - 11/12/2026
+
+`inc/intro.php` shows an administrator's introduction under the Knowledge Base title, on the
+hierarchical index and on the flat index (all categories). It is set on the ACP configuration page:
+a switch, the text, and whether it is Markdown; BBCode, smilies and links work as in an article,
+through the same `article_text` service. Migration `version_2_0_33` adds it switched off, holding
+the text kinerity/knowledgebase showed, and switches it on on a board imported from kinerity.
+
+`tests/kb_intro_test.php` covers the stored default text, nothing shown while switched off or empty,
+saving BBCode and Markdown, emptying it, and the migration's steps and its kinerity check.
+
+Claude ran the migration on the phpBB 3.3 PostgreSQL board imported from kinerity: it came up
+switched on with kinerity's text, in the same place as on the kinerity board beside it. In the ACP,
+the text was saved as BBCode (bold, a link, a smiley, `&` and quotes) and came back unchanged in the
+editor, then as Markdown (bold, a link, inline code); both displayed formatted on the flat index. It
+also showed on the hierarchical index, and nothing showed once it was switched off.
+
+Not covered: a board that never ran kinerity in a browser (the migration's off-by-default path is
+covered by PHPUnit), and other languages (the default text is English, as kinerity's was).
