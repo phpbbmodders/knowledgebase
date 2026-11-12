@@ -39,9 +39,19 @@ class version_2_0_30 extends \phpbb\db\migration\migration
 			$next_id = (int) $this->db->sql_fetchfield('max_id') + 1;
 			$this->db->sql_freeresult($result);
 
+			// MSSQL only takes an explicit id with IDENTITY_INSERT on
+			$identity_insert = strpos($this->db->get_sql_layer(), 'mssql') === 0;
+			if ($identity_insert)
+			{
+				$this->db->sql_query('SET IDENTITY_INSERT ' . $this->table_prefix . 'kb_options ON');
+			}
 			$this->db->sql_query('INSERT INTO ' . $this->table_prefix . 'kb_options ' . $this->db->sql_build_array('INSERT', [
 				'auth_option_id' => $next_id, 'auth_option' => 'kb_m_change_author', 'is_global' => 0, 'is_local' => 1,
 			]));
+			if ($identity_insert)
+			{
+				$this->db->sql_query('SET IDENTITY_INSERT ' . $this->table_prefix . 'kb_options OFF');
+			}
 		}
 	}
 

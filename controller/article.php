@@ -236,7 +236,8 @@ class article
 		if ($comment_topic_id)
 		{
 			$count = -1;
-			$sql = 'SELECT DISTINCT p.poster_id, p.post_time, p.post_subject, p.post_text, p.bbcode_uid, p.bbcode_bitfield, u.user_id, u.username
+			// No DISTINCT: one user per post, and MSSQL cannot compare post_text
+			$sql = 'SELECT p.poster_id, p.post_time, p.post_subject, p.post_text, p.bbcode_uid, p.bbcode_bitfield, u.user_id, u.username
 				FROM ' . POSTS_TABLE . ' p, ' . USERS_TABLE . ' u
 				WHERE p.topic_id = ' . (int) $comment_topic_id . '
 				AND (p.poster_id = u.user_id)

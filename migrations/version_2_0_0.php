@@ -41,6 +41,8 @@ class version_2_0_0 extends \phpbb\db\migration\migration
 		{
 			$this->config[$row['config_name']] = $row['config_value'];
 		}
+		// MSSQL refuses to start a transaction while a result is still open
+		$this->db->sql_freeresult($result);
 
 		// Drop table
 		return [

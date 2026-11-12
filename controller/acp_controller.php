@@ -1928,8 +1928,10 @@ class acp_controller
 				$row = $this->db->sql_fetchrow($result);
 				$this->db->sql_freeresult($result);
 
-				$category_data_sql['left_id'] = $row['right_id'] + 1;
-				$category_data_sql['right_id'] = $row['right_id'] + 2;
+				// MAX() of an empty table is NULL, which MSSQL's driver
+				// returns as an empty string
+				$category_data_sql['left_id'] = (int) $row['right_id'] + 1;
+				$category_data_sql['right_id'] = (int) $row['right_id'] + 2;
 			}
 
 			$sql = 'INSERT INTO ' . $this->categories_table . ' ' . $this->db->sql_build_array('INSERT', $category_data_sql);
@@ -2094,7 +2096,8 @@ class acp_controller
 			$row = $this->db->sql_fetchrow($result);
 			$this->db->sql_freeresult($result);
 
-			$diff = '+ ' . ($row['right_id'] - $from_data['left_id'] + 1);
+			// (int): MAX() over no rows is NULL, an empty string from MSSQL's driver
+			$diff = '+ ' . ((int) $row['right_id'] - (int) $from_data['left_id'] + 1);
 		}
 
 		$sql = 'UPDATE ' . $this->categories_table . '

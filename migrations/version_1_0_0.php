@@ -346,7 +346,6 @@ class version_1_0_0 extends \phpbb\db\migration\migration
 			FROM ' . $this->table_prefix . 'extensions e, ' . $this->table_prefix . 'extension_groups g
 			WHERE e.group_id = g.group_id
 			AND g.allow_group = 1';
-		$this->db->sql_query($sql);
 		$result = $this->db->sql_query($sql);
 		while ($row = $this->db->sql_fetchrow($result))
 		{
@@ -388,18 +387,23 @@ class version_1_0_0 extends \phpbb\db\migration\migration
 		$result = $this->db->sql_query($sql);
 		$row = $this->db->sql_fetchrow($result);
 		$this->db->sql_freeresult($result);
+		// Every value is a string: config_value is a text column, and MSSQL
+		// refuses to put a number into one ("Operand type clash: int is
+		// incompatible with ntext")
+		$rows = [
+			'allow_attachments' => '0',
+			'max_filesize'      => (string) $max_filesize,
+			'extensions'        => $extensions,
+			'thumbnail'         => '0',
+			'max_attachments'   => '1',
+		];
 		if (empty($row))
 		{
-			$sql = 'INSERT INTO ' . $this->table_prefix . 'kb_config' . ' (config_name, config_value) VALUES
-				(\'allow_attachments\', 0),
-				(\'anounce\', 0),
-				(\'articles_per_page\', 10),
-				(\'forum_id\', 0),
-				(\'max_filesize\', ' . $max_filesize . '),
-				(\'extensions\', \'' . $extensions . '\'),
-				(\'thumbnail\', 0),
-				(\'max_attachments\', 1)
-				';
+			$rows += [
+				'anounce'           => '0',
+				'articles_per_page' => '10',
+				'forum_id'          => '0',
+			];
 		}
 		else
 		{
@@ -413,15 +417,14 @@ class version_1_0_0 extends \phpbb\db\migration\migration
 				$sql = 'ALTER TABLE ' . $this->table_prefix . 'kb_config CHANGE config_value config_value TEXT CHARACTER SET utf8 COLLATE utf8_bin';
 				$this->db->sql_query($sql);
 			}
-			$sql = 'INSERT INTO ' . $this->table_prefix . 'kb_config' . ' (config_name, config_value) VALUES
-				(\'allow_attachments\', 0),
-				(\'max_filesize\', ' . $max_filesize . '),
-				(\'extensions\', \'' . $extensions . '\'),
-				(\'thumbnail\', 0),
-				(\'max_attachments\', 1)
-				';
 		}
-		$this->db->sql_query($sql);
+
+		$sql_ary = [];
+		foreach ($rows as $config_name => $config_value)
+		{
+			$sql_ary[] = ['config_name' => $config_name, 'config_value' => $config_value];
+		}
+		$this->db->sql_multi_insert($this->table_prefix . 'kb_config', $sql_ary);
 	}
 
 	public function update_kb_options_table()
@@ -451,7 +454,19 @@ class version_1_0_0 extends \phpbb\db\migration\migration
 					'is_local'       => 1,
 				];
 			}
+
+			// MSSQL only takes the fixed ids above with IDENTITY_INSERT on,
+			// the same way phpBB's own installer fills its ACL options
+			$identity_insert = strpos($this->db->get_sql_layer(), 'mssql') === 0;
+			if ($identity_insert)
+			{
+				$this->db->sql_query('SET IDENTITY_INSERT ' . $this->table_prefix . 'kb_options ON');
+			}
 			$this->db->sql_multi_insert($this->table_prefix . 'kb_options', $sql_ary);
+			if ($identity_insert)
+			{
+				$this->db->sql_query('SET IDENTITY_INSERT ' . $this->table_prefix . 'kb_options OFF');
+			}
 		}
 	}
 
