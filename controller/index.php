@@ -22,6 +22,7 @@ use phpbb\request\request_interface;
 use phpbb\template\template;
 use phpbb\user;
 use phpbbmodders\knowledgebase\inc\functions_kb;
+use phpbbmodders\knowledgebase\inc\intro;
 
 class index
 {
@@ -77,12 +78,16 @@ class index
 	 * @param string             $articles_table
 	 * @param string             $categories_table
 	 */
+	/** @var intro|null The index introduction text */
+	protected intro|null $intro;
+
 	public function __construct(
 		driver_interface $db, config $config, helper $helper, language $language, auth $auth,
 		request_interface $request, template $template, user $user, pagination $pagination, functions_kb $kb,
-		string $articles_table, string $categories_table
+		string $articles_table, string $categories_table, intro|null $intro = null
 	)
 	{
+		$this->intro = $intro;
 		$this->db = $db;
 		$this->config = $config;
 		$this->helper = $helper;
@@ -178,6 +183,7 @@ class index
 		]);
 
 		$this->kb->assign_nav_tabs_vars('index');
+		$this->intro?->assign();
 
 		return $this->helper->render('@phpbbmodders_knowledgebase/kb_index_body.html', $this->language->lang('LIBRARY'));
 	}

@@ -38,6 +38,8 @@ The Knowledge Base follows each member's board style. It starts as a flat articl
 index (one list of every article, with a category dropdown); hierarchical category
 browsing and an optional colour stylesheet (a bundled one, or your own CSS file) are
 set on the same ACP page; see the [styling guide](docs/TODO/archive/styling/README.md).
+The same page can switch on a short introduction above the article index, written in
+BBCode or Markdown; it is off until you switch it on.
 
 A search of the board also shows the matching articles in a **Knowledge Base** block above
 the forum results, with an **Also search the Knowledge Base** option in the advanced search.

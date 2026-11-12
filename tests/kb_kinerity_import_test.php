@@ -12,6 +12,7 @@ namespace phpbbmodders\knowledgebase\inc;
 
 require_once __DIR__ . '/kb_extensions_test.php';
 if (!defined('IN_PHPBB')) define('IN_PHPBB', true);
+require_once (getenv('PHPBB_ROOT_PATH') ?: dirname(__DIR__, 4)) . '/includes/utf/utf_tools.php';
 if (!defined('CONFIG_TABLE')) define('CONFIG_TABLE', 'phpbb_config');
 require_once (getenv('PHPBB_ROOT_PATH') ?: dirname(__DIR__, 4)) . '/includes/functions.php';
 require_once dirname(__DIR__) . '/inc/functions_kb.php';

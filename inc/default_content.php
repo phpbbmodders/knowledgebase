@@ -33,11 +33,8 @@ class default_content
 				continue;
 			}
 
+			// The language file checks IN_PHPBB, which phpBB always defines
 			$lang = [];
-			if (!defined('IN_PHPBB'))
-			{
-				define('IN_PHPBB', true);
-			}
 			include $file;
 			if (isset($lang[$key]))
 			{
