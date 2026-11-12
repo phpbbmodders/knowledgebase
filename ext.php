@@ -25,6 +25,9 @@ class ext extends \phpbb\extension\base
 	/** The original package this extension can take over from; it must be disabled first. */
 	public const ORIGINAL_EXTENSION = 'sheer/knowledgebase';
 
+	/** Another knowledge base this extension can import from; it must be disabled first. */
+	public const KINERITY_EXTENSION = 'kinerity/knowledgebase';
+
 	/**
 	 * Check whether the extension can be enabled.
 	 * The current phpBB version should meet or exceed
@@ -51,6 +54,15 @@ class ext extends \phpbb\extension\base
 		{
 			$language->add_lang('install_failed', 'phpbbmodders/knowledgebase');
 			$messages[] = $language->lang('INSTALL_FAILED_ORIGINAL_ENABLED', self::ORIGINAL_EXTENSION);
+		}
+
+		// kinerity/knowledgebase uses the same table names and /kb pages.
+		// Once it is disabled, enabling this one imports its data (see
+		// migrations kinerity_tables_set_aside and version_2_0_32).
+		if ($this->container->get('ext.manager')->is_enabled(self::KINERITY_EXTENSION))
+		{
+			$language->add_lang('install_failed', 'phpbbmodders/knowledgebase');
+			$messages[] = $language->lang('INSTALL_FAILED_KINERITY_ENABLED', self::KINERITY_EXTENSION);
 		}
 
 		return $messages ?: true;
