@@ -1430,7 +1430,7 @@ entry removed, an import stopped part way, two requests converting the same batc
 followed by a second import, a board that never ran kinerity, and a board that already has
 categories. It runs on SQLite, MySQL and PostgreSQL, and on PostgreSQL also with a sequence made the
 phpBB 3.3 way, which phpBB 4.0's tools leave behind when the table is dropped (without dropping it
-too, this extension's table of the same name cannot be created). The full suite, 558 tests, passes on
+too, this extension's table of the same name cannot be created). The full suite, 559 tests, passes on
 phpBB 3.3.x and master with the MySQL 8.0 and PostgreSQL 16 fixtures, none skipped.
 
 **Boards.** Claude built boards with seed-forum's `config/kinerity-33.yml`, `kinerity-40.yml` and
