@@ -1643,3 +1643,26 @@ settings still follow the switch with JavaScript on. Claude ran it and `kb_page_
 seed-forum SQLite boards for phpBB 3.3.19 and 4.0.0-a3-dev (9 of 9, and 26 of 26 pages, on both).
 A phpBB 3.3 board seeded by seed-forum turns clean URLs on, which PHP's built-in web server cannot
 route; turn `enable_mod_rewrite` off on such a board before running the browser checks through it.
+
+## The ACP permission trace - 11/12/2026
+
+A validation report from another phpBB developer's tool listed two missing language keys,
+`KB_TRACE_GROUP_NEVER_TOTAL_NEVER` and its `_LOCAL` form: the trace shows them when a group is set
+to NEVER and the total is already NEVER. They are added, worded as phpBB's own trace.
+
+Opening the trace page to test them showed that it could not open at all:
+
+- `build_auth_option_statement()` put a single permission name into SQL without quotes, unlike
+  phpBB's own version of the function. The name comes from the trace page's address, so a crafted
+  link opened by an administrator could run SQL of its choosing. The name is now a quoted string. Its
+  `LIKE` branch also lacked the space before `LIKE`.
+- The group and user queries joined `group_id IN (...)` and `user_id = N` to the next condition
+  without a space (`2AND`).
+
+`tests/kb_acp_auth_option_statement_test.php` runs the option filter against a SQLite table: a
+single name, a name with SQL in it, a `LIKE` pattern and a list. Three of its four tests fail on
+the code before the fix. `tests/browser/kb_page_sweep.js` now also opens the trace for the
+administrator in the first category, which fails with an SQL error on the old code. On the fixed code,
+with two of the administrator's groups set to NEVER, the trace shows every row in words. Claude ran
+the sweep (27 of 27) and `kb_form_access.js` (9 of 9) on the phpBB 3.3.19 and 4.0.0-a3-dev SQLite
+boards.

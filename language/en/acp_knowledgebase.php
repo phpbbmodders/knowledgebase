@@ -225,6 +225,7 @@ $lang = array_merge($lang, [
 'LOG_LIBRARY_PERMISSION_ADD'                 => 'Adding or changing user/group access to category <strong>%1s</strong><br> %2s',
 'LOG_LIBRARY_CONFIG'                         => '<strong>Reconfigured the Knowledge Base</strong>',
 
+'KB_TRACE_GROUP_NEVER_TOTAL_NEVER_LOCAL' => 'This group’s permission for this category is set to <strong>NEVER</strong> like the total result so the old result is kept.',
 'KB_TRACE_GROUP_NEVER_TOTAL_NO_LOCAL'  => 'This group’s permission for this category is set to <strong>NEVER</strong> which becomes the new total value because it wasn’t set yet (set to <strong>NO</strong>).',
 'KB_TRACE_GROUP_NEVER_TOTAL_YES_LOCAL' => 'This group’s permission for this category is set to <strong>NEVER</strong> which overwrites the total <strong>YES</strong> to a <strong>NEVER</strong> for this user.',
 'KB_TRACE_GROUP_NO_LOCAL'              => 'The permission is <strong>NO</strong> for this group within this category so the old total value is kept.',
@@ -234,6 +235,7 @@ $lang = array_merge($lang, [
 
 // Same as the _LOCAL versions above, but for the global (non-category) trace view -
 // controller/acp_controller.php picks between the two sets based on whether a category_id is present.
+'KB_TRACE_GROUP_NEVER_TOTAL_NEVER' => 'This group’s permission is set to <strong>NEVER</strong> like the total result so the old result is kept.',
 'KB_TRACE_GROUP_NEVER_TOTAL_NO'  => 'This group’s permission is set to <strong>NEVER</strong> which becomes the new total value because it wasn’t set yet (set to <strong>NO</strong>).',
 'KB_TRACE_GROUP_NEVER_TOTAL_YES' => 'This group’s permission is set to <strong>NEVER</strong> which overwrites the total <strong>YES</strong> to a <strong>NEVER</strong> for this user.',
 'KB_TRACE_GROUP_NO'              => 'The permission is <strong>NO</strong> for this group so the old total value is kept.',
