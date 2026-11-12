@@ -81,12 +81,10 @@
 				<span>{{ lang('KB_INTRO_ENABLE_EXPLAIN') }}</span>
 			</dt>
 			<dd>
-				<input name="intro_enabled" id="intro_enabled" type="checkbox" value="1"
-					onClick="document.getElementById('intro_options').style.display = this.checked ? '' : 'none';"
-					{{ INTRO_ON }}/>
+				<input name="intro_enabled" id="intro_enabled" type="checkbox" value="1" {{ INTRO_ON }}/>
 			</dd>
 		</dl>
-		<div id="intro_options" style="display: {{ INTRO_DISPLAY }};">
+		<div id="intro_options">
 			<dl>
 				<dt>
 					<label for="intro_text">{{ lang('KB_INTRO_TEXT') }}{{ lang('COLON') }}</label><br>

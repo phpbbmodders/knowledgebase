@@ -10,4 +10,15 @@
 			$icon.attr('class', '');
 		}
 	});
+	// The introduction's text and Markdown options show only while it is
+	// switched on. They are in the page from the start, so the setting still
+	// works without JavaScript.
+	let $introEnabled = $('#intro_enabled');
+	let $introOptions = $('#intro_options');
+	if ($introEnabled.length && $introOptions.length) {
+		$introOptions.toggle($introEnabled.prop('checked'));
+		$introEnabled.on('change', function() {
+			$introOptions.toggle(this.checked);
+		});
+	}
 })(jQuery);

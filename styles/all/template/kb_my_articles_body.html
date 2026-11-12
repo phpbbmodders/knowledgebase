@@ -24,6 +24,7 @@
 
 <form method="get" action="{{ S_ACTION }}" class="action-bar bar-top">
 	<label><input type="checkbox" name="drafts_only" value="1" onchange="this.form.submit();"{% if S_DRAFTS_ONLY %} checked="checked"{% endif %}> {{ lang('KB_DRAFTS_ONLY') }}</label>
+	<noscript><button class="button2" type="submit">{{ lang('GO') }}</button></noscript>
 </form>
 
 <div class="forumbg forumbg-table kb-listing">

@@ -288,7 +288,6 @@ class acp_controller
 			'ADVANCED_FORM'            => $announce_forum_id ? '' : 'none',
 			'HIERARCHICAL_INDEX_ON'    => $this->config['kb_hierarchical_index'] ? 'checked="checked"' : '',
 			'INTRO_ON'                 => $this->intro && $this->intro->is_enabled() ? 'checked="checked"' : '',
-			'INTRO_DISPLAY'            => $this->intro && $this->intro->is_enabled() ? '' : 'none',
 			'INTRO_TEXT'               => $this->intro ? $this->intro->for_edit() : '',
 			'INTRO_MARKDOWN_ON'        => $this->intro && $this->intro->is_markdown() ? 'checked="checked"' : '',
 			'ALT_STYLE_ON'             => $this->config['kb_alt_style_enabled'] ? 'checked="checked"' : '',
