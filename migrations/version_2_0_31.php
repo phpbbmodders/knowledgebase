@@ -55,6 +55,28 @@ class version_2_0_31 extends \phpbb\db\migration\migration
 			return;
 		}
 
+		// On PostgreSQL, version_1_0_3 created the index as plain un_mtch, but
+		// phpBB 3.3's tools find it by that name and then drop
+		// {table}_un_mtch, which does not exist. Drop whichever is there by
+		// its real name instead.
+		if ($this->db->get_sql_layer() === 'postgres' && !($this->db_tools instanceof \phpbb\db\tools\doctrine))
+		{
+			// Only this table's: another table may own an index called un_mtch
+			$result = $this->db->sql_query("SELECT indexname
+				FROM pg_indexes
+				WHERE tablename = '" . $this->db->sql_escape($table) . "'
+					AND " . $this->db->sql_in_set('indexname', ['un_mtch', $table . '_un_mtch']));
+			$indexes = array_column($this->db->sql_fetchrowset($result), 'indexname');
+			$this->db->sql_freeresult($result);
+
+			foreach ($indexes as $index)
+			{
+				$this->db->sql_query('DROP INDEX ' . $index);
+			}
+			$this->db_tools->sql_create_unique_index($table, 'un_mtch', self::MATCH_INDEX_COLUMNS);
+			return;
+		}
+
 		// phpBB 4.0 stores the index under the shortened table name, for example
 		// kbsrcwrdmtch_un_mtch, and only finds it by that full name
 		$stored_name = 'un_mtch';
