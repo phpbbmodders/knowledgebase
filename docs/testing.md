@@ -1593,8 +1593,8 @@ dropdown, the copy-link boxes, the article text box, custom-field dropdowns, the
 action menus, and in the ACP the category picker, the new-category box and the file-size unit menu.
 Each is now labelled, and the Teams block of the ACP configuration page uses valid definition-list
 markup. What remains is prosilver's own markup (header menus, footer links, the pagination list,
-plupload's hidden file input), the inactive tabs' contrast, which comes from prosilver's tab colours
-and differs per style, and small touch targets in the article lists and queue rows.
+plupload's hidden file input). The inactive tabs' contrast and the small touch targets in the
+article lists and queue rows were fixed afterwards (next section).
 
 phpbb-release-tools gained a Knowledge Base feature check (`check_knowledgebase` in
 `feature_checks.py`): the ACP adds a category and refuses its form without a token and a move link
@@ -1611,3 +1611,35 @@ the current development build's code (`313eac3`, 40 migrations) on SQLite and My
 to 43 and passed the sweep and the feature check. The PHPUnit suite passes on phpBB 3.3.x and
 master with the MySQL and PostgreSQL fixtures: 578 tests, none skipped. EPV and phpcs are clean on
 both branches.
+
+## Tab contrast, touch targets, labels and forms without JavaScript - 11/12/2026
+
+Follow-ups from the maintenance pass:
+
+- The inactive tabs showed prosilver's grey-blue text (`#536482`) on its tab colour (`#BACCD9`),
+  3.7:1 for small bold text that needs 4.5:1. They now use the board's dark text colour
+  (`#28313F`), about 8.8:1 on the same background. A style with dark tabs can change it in an
+  alternative stylesheet.
+- Article title links in the lists were 13 to 17px high, and the queue's buttons and menus 19 to 21px.
+  All are now at least 24px (WCAG 2.2, 2.5.8).
+- Three fields on the posting form (post as, also list in, Markdown) and the ACP field type menu had
+  two labels: the row's own `label for` and another wrapped around the field. The wrapping one is
+  gone.
+- The ACP introduction settings were hidden by the server and shown only by a script, so they could
+  not be reached without JavaScript. They are now in the page from the start, and the script hides
+  them while the introduction is off. The custom-field filter and the "drafts only" box submit on
+  change; they now get a Go button when JavaScript is off.
+- `.gitignore` is left out of release archives.
+
+`tests/browser/kb_form_access.js` checks each of these on a seeded board, as the administrator,
+with and without JavaScript:
+
+```bash
+KB_TEST_URL=http://localhost:8241 node /path/to/playwright-skill/run.js tests/browser/kb_form_access.js
+```
+
+On the code before the fix, 7 of its 9 checks fail; the two that pass check that the introduction
+settings still follow the switch with JavaScript on. Claude ran it and `kb_page_sweep.js` on fresh
+seed-forum SQLite boards for phpBB 3.3.19 and 4.0.0-a3-dev (9 of 9, and 26 of 26 pages, on both).
+A phpBB 3.3 board seeded by seed-forum turns clean URLs on, which PHP's built-in web server cannot
+route; turn `enable_mod_rewrite` off on such a board before running the browser checks through it.
