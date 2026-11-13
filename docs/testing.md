@@ -1593,8 +1593,8 @@ dropdown, the copy-link boxes, the article text box, custom-field dropdowns, the
 action menus, and in the ACP the category picker, the new-category box and the file-size unit menu.
 Each is now labelled, and the Teams block of the ACP configuration page uses valid definition-list
 markup. What remains is prosilver's own markup (header menus, footer links, the pagination list,
-plupload's hidden file input), the inactive tabs' contrast, which comes from prosilver's tab colours
-and differs per style, and small touch targets in the article lists and queue rows.
+plupload's hidden file input). The inactive tabs' contrast and the small touch targets in the
+article lists and queue rows were fixed afterwards (next section).
 
 phpbb-release-tools gained a Knowledge Base feature check (`check_knowledgebase` in
 `feature_checks.py`): the ACP adds a category and refuses its form without a token and a move link
@@ -1611,3 +1611,58 @@ the current development build's code (`313eac3`, 40 migrations) on SQLite and My
 to 43 and passed the sweep and the feature check. The PHPUnit suite passes on phpBB 3.3.x and
 master with the MySQL and PostgreSQL fixtures: 578 tests, none skipped. EPV and phpcs are clean on
 both branches.
+
+## Tab contrast, touch targets, labels and forms without JavaScript - 11/12/2026
+
+Follow-ups from the maintenance pass:
+
+- The inactive tabs showed prosilver's grey-blue text (`#536482`) on its tab colour (`#BACCD9`),
+  3.7:1 for small bold text that needs 4.5:1. They now use the board's dark text colour
+  (`#28313F`), about 8.8:1 on the same background. A style with dark tabs can change it in an
+  alternative stylesheet.
+- Article title links in the lists were 13 to 17px high, and the queue's buttons and menus 19 to 21px.
+  All are now at least 24px (WCAG 2.2, 2.5.8).
+- Three fields on the posting form (post as, also list in, Markdown) and the ACP field type menu had
+  two labels: the row's own `label for` and another wrapped around the field. The wrapping one is
+  gone.
+- The ACP introduction settings were hidden by the server and shown only by a script, so they could
+  not be reached without JavaScript. They are now in the page from the start, and the script hides
+  them while the introduction is off. The custom-field filter and the "drafts only" box submit on
+  change; they now get a Go button when JavaScript is off.
+- `.gitignore` is left out of release archives.
+
+`tests/browser/kb_form_access.js` checks each of these on a seeded board, as the administrator,
+with and without JavaScript:
+
+```bash
+KB_TEST_URL=http://localhost:8241 node /path/to/playwright-skill/run.js tests/browser/kb_form_access.js
+```
+
+On the code before the fix, 7 of its 9 checks fail; the two that pass check that the introduction
+settings still follow the switch with JavaScript on. Claude ran it and `kb_page_sweep.js` on fresh
+seed-forum SQLite boards for phpBB 3.3.19 and 4.0.0-a3-dev (9 of 9, and 26 of 26 pages, on both).
+A phpBB 3.3 board seeded by seed-forum turns clean URLs on, which PHP's built-in web server cannot
+route; turn `enable_mod_rewrite` off on such a board before running the browser checks through it.
+
+## The ACP permission trace - 11/12/2026
+
+A validation report from another phpBB developer's tool listed two missing language keys,
+`KB_TRACE_GROUP_NEVER_TOTAL_NEVER` and its `_LOCAL` form: the trace shows them when a group is set
+to NEVER and the total is already NEVER. They are added, worded as phpBB's own trace.
+
+Opening the trace page to test them showed that it could not open at all:
+
+- `build_auth_option_statement()` put a single permission name into SQL without quotes, unlike
+  phpBB's own version of the function. The name comes from the trace page's address, so a crafted
+  link opened by an administrator could run SQL of its choosing. The name is now a quoted string. Its
+  `LIKE` branch also lacked the space before `LIKE`.
+- The group and user queries joined `group_id IN (...)` and `user_id = N` to the next condition
+  without a space (`2AND`).
+
+`tests/kb_acp_auth_option_statement_test.php` runs the option filter against a SQLite table: a
+single name, a name with SQL in it, a `LIKE` pattern and a list. Three of its four tests fail on
+the code before the fix. `tests/browser/kb_page_sweep.js` now also opens the trace for the
+administrator in the first category, which fails with an SQL error on the old code. On the fixed code,
+with two of the administrator's groups set to NEVER, the trace shows every row in words. Claude ran
+the sweep (27 of 27) and `kb_form_access.js` (9 of 9) on the phpBB 3.3.19 and 4.0.0-a3-dev SQLite
+boards.

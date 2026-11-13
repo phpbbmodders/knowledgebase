@@ -13,3 +13,4 @@ phpunit.xml.*     export-ignore
 tests             export-ignore
 docs              export-ignore
 .editorconfig     export-ignore
+.gitignore        export-ignore

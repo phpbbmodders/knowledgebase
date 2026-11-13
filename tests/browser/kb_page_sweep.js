@@ -1,5 +1,6 @@
 // Load every main Knowledge Base page and every Knowledge Base ACP module as
-// the seeded administrator, and fail on a server error, a PHP error or
+// the seeded administrator, plus the ACP permission trace, and fail on a
+// server error, a PHP error or
 // phpBB's SQL error page. Then check two refusals: an ACP category move link
 // without its hash, and the approve page for the seeded kb_reader. Read-only:
 // it opens pages and submits nothing but the login forms, so it suits any
@@ -108,6 +109,8 @@ async function waitForFormAge(page) {
 		const modules = await page.locator('#menu a[href*="i=-phpbbmodders-knowledgebase-acp-"]').evaluateAll(links => links.map(link => [link.textContent.trim(), link.href]));
 		if (!modules.length) throw new Error('No Knowledge Base modules in the ACP menu');
 		for (const [label, href] of modules) await check(`acp ${label}`, href);
+		// The permission trace pop-up for the admin (user 2) in the first category
+		await check('acp permission trace', `${base}/adm/index.php?i=-phpbbmodders-knowledgebase-acp-permissions_module&mode=permissions&action=trace&user_id=2&category_id=1&auth=kb_u_add&sid=${await sessionCookie(page)}`);
 
 		// Refusals: a category move link without its hash, and the approve
 		// page for a member who is neither a moderator nor on the article's team

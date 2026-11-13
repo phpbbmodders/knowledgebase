@@ -29,7 +29,7 @@
 				{% if not S_EDIT_POST and S_CAN_POST_AS_TEAM %}
 					<dl style="clear: left;">
 						<dt><label for="post_as_group">{{ lang('KB_POST_AS') }}{{ lang('COLON') }}</label></dt>
-						<dd><label><select name="post_as_group" id="post_as_group">{{ TEAM_OPTIONS }}</select></label></dd>
+						<dd><select name="post_as_group" id="post_as_group">{{ TEAM_OPTIONS }}</select></dd>
 					</dl>
 				{% endif %}
 				{% if S_CAN_CHOOSE_SUBMIT_AS %}
@@ -66,8 +66,8 @@
 				<dl style="clear: left;">
 					<dt><label for="cross_categories">{{ lang('KB_CROSS_CATEGORIES') }}{{ lang('COLON') }}</label><br>
 						<span>{{ lang('KB_CROSS_CATEGORIES_EXPLAIN') }}</span></dt>
-					<dd><label><select name="cross_categories[]" id="cross_categories" multiple="multiple"
-								size="6">{{ CROSS_CATS_BOX }}</select></label></dd>
+					<dd><select name="cross_categories[]" id="cross_categories" multiple="multiple"
+								size="6">{{ CROSS_CATS_BOX }}</select></dd>
 				</dl>
 				{{ FIELD_WIDGETS }}
 				<dl style="clear: left;">
@@ -92,7 +92,7 @@
 					<dl style="clear: left;">
 						<dt><label for="article_markdown">{{ lang('KB_USE_MARKDOWN') }}{{ lang('COLON') }}</label><br>
 							<span>{{ lang('KB_USE_MARKDOWN_EXPLAIN') }}</span></dt>
-						<dd><label><input type="checkbox" name="article_markdown" id="article_markdown" value="1"{% if S_ARTICLE_MARKDOWN %} checked="checked"{% endif %}/> {{ lang('YES') }}</label>
+						<dd><input type="checkbox" name="article_markdown" id="article_markdown" value="1"{% if S_ARTICLE_MARKDOWN %} checked="checked"{% endif %}/> {{ lang('YES') }}
 							<input type="hidden" name="article_markdown_form" value="1"/></dd>
 					</dl>
 					{% INCLUDEJS '@phpbbmodders_knowledgebase/js/markdown_toggle.js' %}

@@ -292,6 +292,25 @@ table.kb-index-table .kb-index-author {
 }
 
 /*
+ * Touch targets at least 24px high (WCAG 2.2, 2.5.8): the article title links
+ * and the queue's buttons and menus sat closer together than that on a phone.
+ */
+table.kb-index-table td:first-child > a {
+	display: inline-block;
+	min-height: 24px;
+	line-height: 24px;
+}
+
+table.kb-index-table .button2,
+table.kb-index-table select {
+	display: inline-block;
+	box-sizing: border-box;
+	min-height: 24px;
+	min-width: 24px;
+	vertical-align: middle;
+}
+
+/*
  * Headings in article text. Markdown articles can use all six levels, which
  * a forum post never does: prosilver paints an h1 white and large because it
  * expects the board name in the header there (so an article's own title
@@ -364,6 +383,17 @@ table.kb-index-table .kb-index-author {
 	border-radius: 3px 3px 0 0;
 	text-decoration: none;
 	font-size: 0.95em;
+}
+
+/*
+ * prosilver's grey-blue tab text is too faint for these small labels on its
+ * tab colour (3.7:1). The board's dark text colour keeps the style's tab
+ * background and passes WCAG AA (4.5:1). An alternative stylesheet can change
+ * it for a style with dark tabs.
+ */
+.tabs.kb-tabs .kb-tab:not(.kb-tab-active) > a,
+.tabs.kb-tabs .kb-tab:not(.kb-tab-active) > a:hover {
+	color: #28313f;
 }
 
 .tabs.kb-tabs .kb-tab-active > a,
