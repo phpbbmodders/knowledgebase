@@ -11,6 +11,8 @@
 namespace phpbbmodders\knowledgebase\textformatter;
 
 require_once __DIR__ . '/kb_extensions_test.php';
+if (!defined('IN_PHPBB')) define('IN_PHPBB', true);
+require_once (getenv('PHPBB_ROOT_PATH') ?: dirname(__DIR__, 4)) . '/includes/utf/utf_tools.php';
 require_once dirname(__DIR__) . '/textformatter/article_text.php';
 
 if (!defined('OPTION_FLAG_BBCODE')) define('OPTION_FLAG_BBCODE', 1);

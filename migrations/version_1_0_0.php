@@ -347,31 +347,13 @@ class version_1_0_0 extends \phpbb\db\migration\migration
 			WHERE e.group_id = g.group_id
 			AND g.allow_group = 1';
 		$result = $this->db->sql_query($sql);
+		// Each allowed extension once, under its group's name
+		$xt = [];
 		while ($row = $this->db->sql_fetchrow($result))
 		{
-			$extensions[] = $row;
+			$xt[$row['group_name']][] = $row['extension'];
 		}
 		$this->db->sql_freeresult($result);
-
-		foreach ($extensions as $extension)
-		{
-			$names[] = $extension['group_name'];
-		}
-		$names = array_values(array_unique($names));
-
-		foreach ($extensions as $extension)
-		{
-			foreach ($names as $name)
-			{
-				foreach ($extension as $ext)
-				{
-					if ($extension['group_name'] == $name)
-					{
-						$xt[$name][] = $extension['extension'];
-					}
-				}
-			}
-		}
 
 		$extensions = serialize($xt);
 
@@ -407,8 +389,12 @@ class version_1_0_0 extends \phpbb\db\migration\migration
 		}
 		else
 		{
-			$sql = 'ALTER TABLE ' . $this->table_prefix . 'kb_config DROP COLUMN is_dynamic';
-			$this->db->sql_query($sql);
+			// phpBB's database tools, which also drop the column's default
+			// constraint first on MSSQL, where a plain DROP COLUMN fails
+			if ($this->db_tools->sql_column_exists($this->table_prefix . 'kb_config', 'is_dynamic'))
+			{
+				$this->db_tools->sql_column_remove($this->table_prefix . 'kb_config', 'is_dynamic');
+			}
 			// MySQL-specific CHANGE/CHARACTER SET syntax - only meaningful (and
 			// only valid) on a MySQL-family driver; other DBMS keep whatever
 			// collation the column already had, which is harmless here.

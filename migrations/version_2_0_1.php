@@ -45,7 +45,8 @@ class version_2_0_1 extends \phpbb\db\migration\migration
 
 		if (!str_starts_with($extensions, '{'))
 		{
-			$extensions = json_encode(unserialize($extensions));
+			// The old setting holds only arrays and strings, so objects are refused
+			$extensions = json_encode(unserialize($extensions, ['allowed_classes' => false]));
 		}
 
 		return [
