@@ -25,7 +25,8 @@ Error: Using addslashes in /controller/posting.php
 Error: Using addslashes in /inc/functions_kb.php
 
 # Released migration: converts the old serialized kb_extensions setting to
-# JSON once. Released migrations must not be changed.
+# JSON once, refusing objects (allowed_classes false). EPV flags any
+# unserialize() call.
 Error: Using unserialize in /migrations/version_2_0_1.php
 
 # Released migrations without anything to revert: version_2_0_0 moves the
