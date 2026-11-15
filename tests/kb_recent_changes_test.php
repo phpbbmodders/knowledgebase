@@ -12,6 +12,7 @@
 namespace phpbbmodders\knowledgebase;
 
 require_once __DIR__ . '/kb_extensions_test.php';
+require_once dirname(__DIR__) . '/inc/functions_kb.php';
 require_once dirname(__DIR__) . '/inc/feed.php';
 require_once dirname(__DIR__) . '/migrations/version_2_0_29.php';
 require_once dirname(__DIR__) . '/controller/recent_changes.php';

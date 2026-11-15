@@ -41,14 +41,15 @@ class stylesheet
 	/**
 	 * The stylesheet named by the "f" query parameter.
 	 *
-	 * @return Response The CSS, a 304 when the browser's copy is current, or a 404
+	 * @return Response The CSS, a 304 when the browser's copy is current, or an empty 404
+	 *                  (a stylesheet request is never shown, so it carries no text)
 	 */
 	public function serve(): Response
 	{
 		$path = $this->alt_styles->custom_file_path($this->request->variable('f', ''));
 		if ($path === null)
 		{
-			return new Response('Not found', 404, ['Content-Type' => 'text/plain; charset=UTF-8']);
+			return new Response('', 404, ['Content-Type' => 'text/plain; charset=UTF-8']);
 		}
 
 		$modified = (int) filemtime($path);
@@ -72,7 +73,7 @@ class stylesheet
 		$css = file_get_contents($path);
 
 		return $css === false
-			? new Response('Not found', 404, ['Content-Type' => 'text/plain; charset=UTF-8'])
+			? new Response('', 404, ['Content-Type' => 'text/plain; charset=UTF-8'])
 			: new Response($css, 200, $headers);
 	}
 }

@@ -112,7 +112,8 @@ dd.action {
 
 .kb_codebox code {
 	font: 105% Monaco, "Andale Mono", "Courier New", Courier, monospace;
-	color: #2e8b57;
+	/* A darker green than prosilver's #2e8b57 (4.25:1 on white), which passes WCAG AA at 6:1 */
+	color: #237047;
 	display: inline-block;
 	overflow: auto;
 	margin-bottom: -5px;

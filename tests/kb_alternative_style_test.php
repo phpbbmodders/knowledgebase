@@ -12,6 +12,8 @@
 namespace phpbbmodders\knowledgebase\controller;
 
 require_once __DIR__ . '/kb_extensions_test.php';
+if (!defined('IN_PHPBB')) define('IN_PHPBB', true);
+require_once (getenv('PHPBB_ROOT_PATH') ?: dirname(__DIR__, 4)) . '/includes/utf/utf_tools.php';
 require_once dirname(__DIR__) . '/inc/alternative_styles.php';
 require_once dirname(__DIR__) . '/controller/stylesheet.php';
 require_once dirname(__DIR__) . '/event/listener.php';
@@ -344,6 +346,7 @@ class kb_alternative_style_test extends \PHPUnit\Framework\TestCase
 
 		$this->assertSame(404, $response->getStatusCode());
 		$this->assertStringNotContainsString('secret', $response->getContent());
+		$this->assertSame('', $response->getContent());
 		$this->assertSame('text/plain; charset=UTF-8', $response->headers->get('Content-Type'));
 	}
 

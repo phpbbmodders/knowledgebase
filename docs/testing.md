@@ -1666,3 +1666,26 @@ administrator in the first category, which fails with an SQL error on the old co
 with two of the administrator's groups set to NEVER, the trace shows every row in words. Claude ran
 the sweep (27 of 27) and `kb_form_access.js` (9 of 9) on the phpBB 3.3.19 and 4.0.0-a3-dev SQLite
 boards.
+
+## Link-box contrast, legacy migration steps and stand-alone tests - 11/12/2026
+
+- The article link boxes used `#2e8b57` on white, 4.25:1; they now use `#237047`, about 6:1.
+  `tests/browser/kb_form_access.js` checks it (10 checks now); the check fails on the old colour.
+- The stylesheet route answers a missing file with an empty 404 instead of English text.
+- `version_1_0_0`'s `set_default_config()` listed every allowed file extension twice (once per
+  column of the query's row) and read undefined variables when no extension group was allowed. It
+  now lists each extension once. Its step for boards with an older settings table drops
+  `kb_config.is_dynamic` through phpBB's database tools, which also remove the column's default on
+  MSSQL first, instead of a plain `ALTER TABLE ... DROP COLUMN`.
+- `version_2_0_1` unserializes the old `kb_extensions` setting with `allowed_classes => false`.
+- `kb_alternative_style_test.php`, `kb_article_text_test.php`, `kb_board_search_test.php` and
+  `kb_recent_changes_test.php` used phpBB's `utf_tools.php` or `functions_kb.php` without loading
+  them, so they failed (or stopped silently, since `utf_tools.php` exits without `IN_PHPBB`) when
+  run alone. Every test file now passes on its own as well as in the suite.
+
+`tests/kb_legacy_migration_test.php` runs the old-settings step on SQLite, MySQL and PostgreSQL and
+checks that an object in the old setting is never created. Claude ran the PHPUnit suite on phpBB
+3.3.x and master with the MySQL and PostgreSQL fixtures (586 tests, none skipped), every test file
+alone, EPV on both branches and phpcs, and `kb_form_access.js` (10 of 10) and `kb_page_sweep.js`
+(27 of 27) on phpBB 3.3.19 and 4.0.0-a3-dev SQLite boards.
+

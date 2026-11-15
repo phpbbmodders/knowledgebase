@@ -5,7 +5,8 @@
 // - the custom-field filter and the "drafts only" box have a Go button when
 //   JavaScript is off (both normally submit on change);
 // - no field on the add-article form, nor the ACP field type menu, has more than one label;
-// - the inactive tabs' text passes WCAG AA contrast (4.5:1) on its background;
+// - the inactive tabs' text and the article link boxes pass WCAG AA contrast
+//   (4.5:1) on their background;
 // - article title links and the queue's buttons and menus are at least 24px
 //   high on a phone.
 // Read-only: it submits nothing but the login forms.
@@ -108,6 +109,19 @@ function contrast(fore, back) {
 		}));
 		const weak = tabs.filter(([, fore, back]) => !/rgba\(0, 0, 0, 0\)/.test(back) && contrast(fore, back) < 4.5);
 		record('inactive tabs pass 4.5:1 contrast', tabs.length > 0 && weak.length === 0, weak.map(([text]) => text).join(', '));
+
+		// The link boxes on an article: their text on the nearest painted background
+		await js.goto(`${base}/app.php/knowledgebase/article?k=1`, ready);
+		const boxes = await js.locator('.kb_codebox code').evaluateAll(codes => codes.map(code => {
+			let element = code, back = 'rgba(0, 0, 0, 0)';
+			while (element && /rgba\(0, 0, 0, 0\)|transparent/.test(back)) {
+				back = getComputedStyle(element).backgroundColor;
+				element = element.parentElement;
+			}
+			return [getComputedStyle(code).color, back];
+		}));
+		const faint = boxes.filter(([fore, back]) => contrast(fore, back) < 4.5);
+		record('article link boxes pass 4.5:1 contrast', boxes.length > 0 && faint.length === 0, faint.map(([fore]) => fore).join(', '));
 
 		// Touch targets on a phone: article title links, and the queue's buttons and menus
 		await js.setViewportSize({width: 375, height: 812});
